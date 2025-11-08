@@ -77,8 +77,12 @@
       "type": "runtime"
     },
     {
+      "name": "cdk8s-plus-28",
+      "type": "runtime"
+    },
+    {
       "name": "cdk8s",
-      "version": "^2.3.33",
+      "version": "^2.68.0",
       "type": "runtime"
     },
     {

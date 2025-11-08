@@ -8,7 +8,6 @@
 !/LICENSE
 !/.npmignore
 logs
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -30,6 +29,12 @@ jspm_packages/
 *.tgz
 .yarn-integrity
 .cache
+dist/
+.env
+.env.*
+!.env.example
+cdk.out/
+*.log
 /test-reports/
 junit.xml
 /coverage/
