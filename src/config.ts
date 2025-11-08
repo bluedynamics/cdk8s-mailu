@@ -368,8 +368,9 @@ export interface MailuChartConfig {
 
   /**
    * Storage configuration
+   * Optional - only required if components need persistent storage
    */
-  readonly storage: StorageConfig;
+  readonly storage?: StorageConfig;
 
   /**
    * Component toggles

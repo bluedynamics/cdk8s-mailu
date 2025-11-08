@@ -3,6 +3,7 @@ import * as kplus from 'cdk8s-plus-28';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from './config';
 import { AdminConstruct } from './constructs/admin-construct';
+import { FrontConstruct } from './constructs/front-construct';
 
 /**
  * Mailu Mail Server Chart
@@ -64,6 +65,7 @@ export class MailuChart extends Chart {
    * Component constructs (public to allow access if needed)
    */
   public adminConstruct?: AdminConstruct;
+  public frontConstruct?: FrontConstruct;
 
   constructor(scope: Construct, id: string, config: MailuChartConfig, props?: ChartProps) {
     super(scope, id, props);
@@ -175,11 +177,13 @@ export class MailuChart extends Chart {
 
   /**
    * Creates the Front component (Nginx frontend)
-   * TODO: Implement in front-construct.ts
    */
   private createFrontComponent(): void {
-    // Placeholder - will be implemented in separate construct file
-    console.warn('Front component not yet implemented');
+    this.frontConstruct = new FrontConstruct(this, 'front', {
+      config: this.config,
+      namespace: this.mailuNamespace,
+      sharedConfigMap: this.sharedConfigMap,
+    });
   }
 
   /**
