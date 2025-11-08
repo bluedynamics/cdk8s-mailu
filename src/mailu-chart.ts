@@ -2,6 +2,7 @@ import { Chart, ChartProps } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-28';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from './config';
+import { AdminConstruct } from './constructs/admin-construct';
 
 /**
  * Mailu Mail Server Chart
@@ -54,6 +55,16 @@ export class MailuChart extends Chart {
    */
   public readonly config: MailuChartConfig;
 
+  /**
+   * Shared ConfigMap with environment variables
+   */
+  private readonly sharedConfigMap: kplus.ConfigMap;
+
+  /**
+   * Component constructs (public to allow access if needed)
+   */
+  public adminConstruct?: AdminConstruct;
+
   constructor(scope: Construct, id: string, config: MailuChartConfig, props?: ChartProps) {
     super(scope, id, props);
 
@@ -67,7 +78,7 @@ export class MailuChart extends Chart {
     });
 
     // Create shared ConfigMap with environment variables
-    this.createSharedConfigMap();
+    this.sharedConfigMap = this.createSharedConfigMap();
 
     // Deploy core components (always enabled)
     if (config.components?.admin !== false) {
@@ -153,11 +164,13 @@ export class MailuChart extends Chart {
 
   /**
    * Creates the Admin component (web UI)
-   * TODO: Implement in admin-construct.ts
    */
   private createAdminComponent(): void {
-    // Placeholder - will be implemented in separate construct file
-    console.warn('Admin component not yet implemented');
+    this.adminConstruct = new AdminConstruct(this, 'admin', {
+      config: this.config,
+      namespace: this.mailuNamespace,
+      sharedConfigMap: this.sharedConfigMap,
+    });
   }
 
   /**

@@ -125,33 +125,39 @@ export interface StorageConfig {
    * Default storage class for all PVCs
    * @example "longhorn", "standard", "gp2"
    */
-  readonly storageClass: string;
+  readonly storageClass?: string;
 
   /**
    * Admin component storage (data + DKIM keys)
    */
-  readonly admin: ComponentStorageConfig;
+  readonly admin?: ComponentStorageConfig;
 
   /**
    * Postfix component storage (mail queue)
    */
-  readonly postfix: ComponentStorageConfig;
+  readonly postfix?: ComponentStorageConfig;
 
   /**
    * Dovecot component storage (mailboxes - largest)
    */
-  readonly dovecot: ComponentStorageConfig;
+  readonly dovecot?: ComponentStorageConfig;
 
   /**
    * Rspamd component storage (learned spam data)
    */
-  readonly rspamd: ComponentStorageConfig;
+  readonly rspamd?: ComponentStorageConfig;
 
   /**
    * ClamAV component storage (virus signatures)
    * Only used if clamav component is enabled
    */
   readonly clamav?: ComponentStorageConfig;
+
+  /**
+   * Webmail component storage (Roundcube data)
+   * Only used if webmail component is enabled
+   */
+  readonly webmail?: ComponentStorageConfig;
 }
 
 /**
