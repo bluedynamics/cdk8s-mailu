@@ -3,6 +3,7 @@ import * as kplus from 'cdk8s-plus-28';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from './config';
 import { AdminConstruct } from './constructs/admin-construct';
+import { ClamavConstruct } from './constructs/clamav-construct';
 import { DovecotConstruct } from './constructs/dovecot-construct';
 import { FrontConstruct } from './constructs/front-construct';
 import { PostfixConstruct } from './constructs/postfix-construct';
@@ -74,6 +75,7 @@ export class MailuChart extends Chart {
   public dovecotConstruct?: DovecotConstruct;
   public rspamdConstruct?: RspamdConstruct;
   public webmailConstruct?: WebmailConstruct;
+  public clamavConstruct?: ClamavConstruct;
 
   constructor(scope: Construct, id: string, config: MailuChartConfig, props?: ChartProps) {
     super(scope, id, props);
@@ -240,11 +242,13 @@ export class MailuChart extends Chart {
 
   /**
    * Creates the ClamAV component (antivirus)
-   * TODO: Implement in clamav-construct.ts
    */
   private createClamavComponent(): void {
-    // Placeholder - will be implemented in separate construct file
-    console.warn('ClamAV component not yet implemented');
+    this.clamavConstruct = new ClamavConstruct(this, 'clamav', {
+      config: this.config,
+      namespace: this.mailuNamespace,
+      sharedConfigMap: this.sharedConfigMap,
+    });
   }
 
   /**
