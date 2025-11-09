@@ -9,6 +9,7 @@ import { FrontConstruct } from './constructs/front-construct';
 import { PostfixConstruct } from './constructs/postfix-construct';
 import { RspamdConstruct } from './constructs/rspamd-construct';
 import { WebmailConstruct } from './constructs/webmail-construct';
+import { validateDomainFormat, validateCidrFormat } from './utils/validators';
 
 /**
  * Mailu Mail Server Chart
@@ -79,6 +80,20 @@ export class MailuChart extends Chart {
 
   constructor(scope: Construct, id: string, config: MailuChartConfig, props?: ChartProps) {
     super(scope, id, props);
+
+    // Validate critical configuration values
+    validateDomainFormat(config.domain, 'domain');
+    validateCidrFormat(config.subnet, 'subnet');
+
+    // Validate all hostnames
+    config.hostnames.forEach((hostname, index) => {
+      validateDomainFormat(hostname, `hostnames[${index}]`);
+    });
+
+    // Validate initial account domain if configured
+    if (config.mailu?.initialAccount?.domain) {
+      validateDomainFormat(config.mailu.initialAccount.domain, 'mailu.initialAccount.domain');
+    }
 
     this.config = config;
 
