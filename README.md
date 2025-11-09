@@ -75,7 +75,86 @@ kubectl create secret generic mailu-admin-password \
   --from-literal=password=$(openssl rand -base64 16)
 ```
 
-### 2. Create a Deployment Script
+### 2. Find Your Kubernetes Pod Network Subnet
+
+Mailu requires the pod network CIDR to distinguish internal (trusted) traffic from external traffic. This is used for:
+- Postfix relay trust configuration (`mynetworks`)
+- Anti-spam scoring (internal traffic bypasses certain checks)
+- Rate limiting and authentication decisions
+
+**Method 1: Inspect Pod IPs**
+
+```bash
+# Get pod IPs from any namespace
+kubectl get pods -o wide -A | grep -v "HOST IP" | head -10
+
+# Example output:
+# NAMESPACE     NAME                    IP           NODE
+# kube-system   coredns-xyz             10.42.0.5    node1
+# default       nginx-abc               10.42.1.8    node2
+# monitoring    prometheus-def          10.42.2.3    node3
+
+# If you see IPs starting with 10.42.x.x, your subnet is: 10.42.0.0/16
+# If you see IPs starting with 10.244.x.x, your subnet is: 10.244.0.0/16
+```
+
+**Method 2: Check Node Pod CIDR (requires cluster admin)**
+
+```bash
+# Get pod CIDR from first node
+kubectl get nodes -o jsonpath='{.items[0].spec.podCIDR}'
+# Output: 10.42.0.0/16
+
+# Check all nodes (for multi-node clusters)
+kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.podCIDR}{"\n"}{end}'
+```
+
+**Method 3: Query Cluster Info**
+
+```bash
+# Search for cluster CIDR in cluster config
+kubectl cluster-info dump | grep -i "cluster-cidr"
+# or
+kubectl cluster-info dump | grep -i "service-cluster-ip-range"
+```
+
+**Method 4: Check CNI Configuration**
+
+```bash
+# For K3S (default: 10.42.0.0/16)
+kubectl get nodes -o jsonpath='{.items[0].spec.podCIDR}'
+
+# For kubeadm clusters
+kubectl get cm -n kube-system kubeadm-config -o yaml | grep podSubnet
+
+# For Calico
+kubectl get ippool -o yaml | grep cidr
+
+# For Flannel
+kubectl get cm -n kube-flannel kube-flannel-cfg -o yaml | grep Network
+```
+
+**Common Default Subnets:**
+- K3S: `10.42.0.0/16`
+- kubeadm: `10.244.0.0/16`
+- GKE: `10.0.0.0/14` or `10.4.0.0/14`
+- EKS: `10.0.0.0/16` (varies by VPC)
+- AKS: `10.244.0.0/16`
+
+**Why This Matters:**
+
+Without the correct subnet, Mailu components cannot communicate properly:
+```yaml
+# ❌ Wrong subnet configured: 192.168.0.0/16
+# Pod rspamd (10.42.1.5) connects to Postfix
+# Postfix sees: "Untrusted external IP" → REJECTED
+
+# ✅ Correct subnet configured: 10.42.0.0/16
+# Pod rspamd (10.42.1.5) connects to Postfix
+# Postfix sees: "Trusted internal pod network" → ACCEPTED
+```
+
+### 3. Create a Deployment Script
 
 Create a file `mailu.ts`:
 
@@ -119,7 +198,7 @@ new MailuChart(app, 'mailu', {
 app.synth();
 ```
 
-### 3. Generate Manifests
+### 4. Generate Manifests
 
 ```bash
 npx ts-node mailu.ts
@@ -127,7 +206,7 @@ npx ts-node mailu.ts
 
 This generates `dist/mailu.k8s.yaml` containing all Kubernetes resources.
 
-### 4. Deploy to Kubernetes
+### 5. Deploy to Kubernetes
 
 ```bash
 kubectl apply -f dist/mailu.k8s.yaml
