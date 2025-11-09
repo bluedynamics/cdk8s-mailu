@@ -402,6 +402,125 @@ Add the key as a TXT record:
 default._domainkey.example.com.  IN  TXT  "v=DKIM1; k=rsa; p=<PUBLIC_KEY>"
 ```
 
+## Troubleshooting
+
+### Front Pod CrashLoopBackOff - nginx Configuration Errors
+
+**Symptoms:**
+- Front pod stuck in `CrashLoopBackOff`
+- Logs show: `nginx: [emerg] invalid number of arguments in "location" directive`
+- Or: `nginx: [emerg] invalid port in upstream`
+
+**Root Cause:**
+Missing or incorrectly configured environment variables required by Mailu's nginx template.
+
+**Required Environment Variables (Fixed in v0.2.0+):**
+
+The library now automatically sets these variables in the shared ConfigMap:
+
+1. **`WEB_ADMIN`** and **`WEB_WEBMAIL`**: URL paths for admin interface and webmail
+   - Default: `/admin` and `/webmail`
+   - Required for nginx location directives
+
+2. **`ADMIN_ADDRESS`**, **`FRONT_ADDRESS`**, **`WEBMAIL_ADDRESS`**: Service discovery
+   - Must use **full Kubernetes DNS names**: `<service-name>.<namespace>.svc.cluster.local`
+   - Short names fail DNS resolution due to CDK8S hash-based naming
+   - **Important**: Do NOT include ports - nginx template adds them automatically
+
+**Fix (Already Applied in v0.2.0+):**
+
+The `updateConfigMapWithServiceDiscovery()` method now:
+- Uses full DNS names for all service addresses
+- Called at end of constructor (after all components created)
+- Properly sets `WEBMAIL_ADDRESS` when webmail is enabled
+
+### Traefik TLS Termination for Mail Protocols
+
+**Background:**
+
+Mailu's `TLS_FLAVOR` setting controls how TLS certificates are handled:
+- `cert`: Expects cert files at `/certs/`, creates HTTP→HTTPS redirect server
+- `mail`: Expects cert files, main nginx listens on port 80
+- `notls`: No TLS handling in Mailu
+
+**HTTP 301 Redirect Loop Issue:**
+
+When using Kubernetes Ingress/Traefik with `TLS_FLAVOR=cert`:
+1. Traefik terminates HTTPS, forwards HTTP to Mailu
+2. Mailu's redirect server receives HTTP on port 80
+3. Redirects to HTTPS → Traefik receives → forwards HTTP → **infinite loop**
+
+**Solution: Traefik TLS Termination**
+
+Configure `TLS_FLAVOR=notls` and let Traefik/Ingress handle ALL TLS:
+
+**Benefits:**
+- Centralized TLS certificate management (one cert for all protocols)
+- No cert files needed in Mailu containers
+- Nginx listens on port 80 without redirect (no loop)
+- Pod network traffic is secure (internal to cluster)
+
+**Implementation Example:**
+
+```typescript
+import { TlsOption } from '@/imports/traefik-tlsoption-traefik.io';
+
+// Create TLSOption matching Mailu's security settings
+const mailTlsOption = new TlsOption(this, 'mail-tls', {
+  metadata: {
+    name: 'mailu-mail-tls',
+    namespace: 'mailu',
+  },
+  spec: {
+    minVersion: 'VersionTLS12',  // Match Mailu's tls.conf
+    cipherSuites: [
+      'TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256',
+      'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256',
+      'TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384',
+      'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384',
+      'TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305',
+      'TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305',
+    ],
+  },
+});
+
+// Configure IngressRouteTCP with TLS termination
+const imapsRoute = new IngressRouteTcp(this, 'imaps', {
+  spec: {
+    entryPoints: ['imaps'],
+    routes: [{
+      match: 'HostSNI(`*`)',
+      services: [{ name: frontService.name, port: 993 }],
+    }],
+    tls: {
+      secretName: 'mailu-tls',  // Let's Encrypt cert from cert-manager
+      options: {
+        name: 'mailu-mail-tls',  // Use custom TLS options
+        namespace: 'mailu',
+      },
+    },
+  },
+});
+```
+
+**Key Points:**
+- Use `secretName` instead of `passthrough: true`
+- Reference the TLSOption to match Mailu's cipher suites
+- Apply to SMTPS (465), IMAPS (993), POP3S (995)
+- Keep submission (587) and IMAP (143) without TLS (use STARTTLS)
+
+### DNS Resolution Issues
+
+**Symptom:**
+- Logs show: `<service-name> could not be resolved (3: Host not found)`
+- Auth requests fail with 502 errors
+
+**Fix:**
+Use full Kubernetes DNS names in service discovery (already implemented):
+```
+<service-name>.<namespace>.svc.cluster.local
+```
+
 ## Development
 
 ### Build
