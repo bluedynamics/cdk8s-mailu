@@ -1,7 +1,8 @@
-import { Size, Duration } from 'cdk8s';
+import { Duration } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-28';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from '../config';
+import { parseMemorySize, parseCpuMillis, parseStorageSize } from '../utils/resource-parser';
 
 export interface DovecotConstructProps {
   readonly config: MailuChartConfig;
@@ -40,7 +41,7 @@ export class DovecotConstruct extends Construct {
         namespace: namespace.name,
       },
       accessModes: [kplus.PersistentVolumeAccessMode.READ_WRITE_ONCE],
-      storage: Size.gibibytes(parseInt(config.storage?.dovecot?.size?.replace('Gi', '') || '50')),
+      storage: parseStorageSize(config.storage?.dovecot?.size || '50Gi'),
       storageClassName: config.storage?.storageClass,
     });
 
@@ -76,17 +77,15 @@ export class DovecotConstruct extends Construct {
       resources: config.resources?.dovecot
         ? {
           cpu: {
-            request: kplus.Cpu.millis(
-              parseInt(config.resources.dovecot.requests?.cpu?.replace('m', '') || '200'),
-            ),
+            request: parseCpuMillis(config.resources.dovecot.requests?.cpu || '200m'),
             limit: config.resources.dovecot.limits?.cpu
-              ? kplus.Cpu.millis(parseInt(config.resources.dovecot.limits.cpu.replace('m', '') || '1000'))
+              ? parseCpuMillis(config.resources.dovecot.limits.cpu)
               : undefined,
           },
           memory: {
-            request: this.parseMemorySize(config.resources.dovecot.requests?.memory || '1Gi'),
+            request: parseMemorySize(config.resources.dovecot.requests?.memory || '1Gi'),
             limit: config.resources.dovecot.limits?.memory
-              ? this.parseMemorySize(config.resources.dovecot.limits.memory)
+              ? parseMemorySize(config.resources.dovecot.limits.memory)
               : undefined,
           },
         }
@@ -185,18 +184,5 @@ export class DovecotConstruct extends Construct {
         },
       ],
     });
-  }
-
-  /**
-   * Parse memory size string (e.g., "512Mi", "1Gi") to Size object
-   */
-  private parseMemorySize(sizeStr: string): Size {
-    if (sizeStr.endsWith('Gi')) {
-      return Size.gibibytes(parseInt(sizeStr.replace('Gi', '')));
-    } else if (sizeStr.endsWith('Mi')) {
-      return Size.mebibytes(parseInt(sizeStr.replace('Mi', '')));
-    }
-    // Default to mebibytes if no unit specified
-    return Size.mebibytes(parseInt(sizeStr));
   }
 }

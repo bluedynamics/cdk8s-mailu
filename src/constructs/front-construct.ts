@@ -1,7 +1,8 @@
-import { Size, Duration } from 'cdk8s';
+import { Duration } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-28';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from '../config';
+import { parseMemorySize, parseCpuMillis } from '../utils/resource-parser';
 
 export interface FrontConstructProps {
   readonly config: MailuChartConfig;
@@ -63,17 +64,15 @@ export class FrontConstruct extends Construct {
       resources: config.resources?.front
         ? {
           cpu: {
-            request: kplus.Cpu.millis(
-              parseInt(config.resources.front.requests?.cpu?.replace('m', '') || '100'),
-            ),
+            request: parseCpuMillis(config.resources.front.requests?.cpu || '100m'),
             limit: config.resources.front.limits?.cpu
-              ? kplus.Cpu.millis(parseInt(config.resources.front.limits.cpu.replace('m', '') || '500'))
+              ? parseCpuMillis(config.resources.front.limits.cpu)
               : undefined,
           },
           memory: {
-            request: this.parseMemorySize(config.resources.front.requests?.memory || '256Mi'),
+            request: parseMemorySize(config.resources.front.requests?.memory || '256Mi'),
             limit: config.resources.front.limits?.memory
-              ? this.parseMemorySize(config.resources.front.limits.memory)
+              ? parseMemorySize(config.resources.front.limits.memory)
               : undefined,
           },
         }
@@ -182,16 +181,4 @@ export class FrontConstruct extends Construct {
     });
   }
 
-  /**
-   * Parse memory size string (e.g., "512Mi", "1Gi") to Size object
-   */
-  private parseMemorySize(sizeStr: string): Size {
-    if (sizeStr.endsWith('Gi')) {
-      return Size.gibibytes(parseInt(sizeStr.replace('Gi', '')));
-    } else if (sizeStr.endsWith('Mi')) {
-      return Size.mebibytes(parseInt(sizeStr.replace('Mi', '')));
-    }
-    // Default to mebibytes if no unit specified
-    return Size.mebibytes(parseInt(sizeStr));
-  }
 }

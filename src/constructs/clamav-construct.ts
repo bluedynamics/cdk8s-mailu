@@ -1,7 +1,8 @@
-import { Size, Duration } from 'cdk8s';
+import { Duration } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-28';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from '../config';
+import { parseMemorySize, parseCpuMillis, parseStorageSize } from '../utils/resource-parser';
 
 export interface ClamavConstructProps {
   readonly config: MailuChartConfig;
@@ -40,9 +41,7 @@ export class ClamavConstruct extends Construct {
       metadata: {
         namespace: namespace.name,
       },
-      storage: Size.gibibytes(
-        parseInt(config.storage?.clamav?.size?.replace('Gi', '') || '15'),
-      ),
+      storage: parseStorageSize(config.storage?.clamav?.size || '15Gi'),
       storageClassName: config.storage?.clamav?.storageClass || config.storage?.storageClass,
       accessModes: [kplus.PersistentVolumeAccessMode.READ_WRITE_ONCE],
     });
@@ -78,17 +77,15 @@ export class ClamavConstruct extends Construct {
       resources: config.resources?.clamav
         ? {
           cpu: {
-            request: kplus.Cpu.millis(
-              parseInt(config.resources.clamav.requests?.cpu?.replace('m', '') || '500'),
-            ),
+            request: parseCpuMillis(config.resources.clamav.requests?.cpu || '500m'),
             limit: config.resources.clamav.limits?.cpu
-              ? kplus.Cpu.millis(parseInt(config.resources.clamav.limits.cpu.replace('m', '') || '2000'))
+              ? parseCpuMillis(config.resources.clamav.limits.cpu)
               : undefined,
           },
           memory: {
-            request: this.parseMemorySize(config.resources.clamav.requests?.memory || '2Gi'),
+            request: parseMemorySize(config.resources.clamav.requests?.memory || '2Gi'),
             limit: config.resources.clamav.limits?.memory
-              ? this.parseMemorySize(config.resources.clamav.limits.memory)
+              ? parseMemorySize(config.resources.clamav.limits.memory)
               : undefined,
           },
         }
@@ -160,18 +157,5 @@ export class ClamavConstruct extends Construct {
         },
       ],
     });
-  }
-
-  /**
-   * Parse memory size string (e.g., "512Mi", "1Gi") to Size object
-   */
-  private parseMemorySize(sizeStr: string): Size {
-    if (sizeStr.endsWith('Gi')) {
-      return Size.gibibytes(parseInt(sizeStr.replace('Gi', '')));
-    } else if (sizeStr.endsWith('Mi')) {
-      return Size.mebibytes(parseInt(sizeStr.replace('Mi', '')));
-    }
-    // Default to mebibytes if no unit specified
-    return Size.mebibytes(parseInt(sizeStr));
   }
 }

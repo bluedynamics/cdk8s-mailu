@@ -1,7 +1,8 @@
-import { Size, Duration } from 'cdk8s';
+import { Duration } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-28';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from '../config';
+import { parseMemorySize, parseCpuMillis, parseStorageSize } from '../utils/resource-parser';
 
 export interface WebmailConstructProps {
   readonly config: MailuChartConfig;
@@ -38,9 +39,7 @@ export class WebmailConstruct extends Construct {
       metadata: {
         namespace: namespace.name,
       },
-      storage: Size.gibibytes(
-        parseInt(config.storage?.webmail?.size?.replace('Gi', '') || '5'),
-      ),
+      storage: parseStorageSize(config.storage?.webmail?.size || '5Gi'),
       storageClassName: config.storage?.webmail?.storageClass || config.storage?.storageClass,
       accessModes: [kplus.PersistentVolumeAccessMode.READ_WRITE_ONCE],
     });
@@ -76,17 +75,15 @@ export class WebmailConstruct extends Construct {
       resources: config.resources?.webmail
         ? {
           cpu: {
-            request: kplus.Cpu.millis(
-              parseInt(config.resources.webmail.requests?.cpu?.replace('m', '') || '100'),
-            ),
+            request: parseCpuMillis(config.resources.webmail.requests?.cpu || '100m'),
             limit: config.resources.webmail.limits?.cpu
-              ? kplus.Cpu.millis(parseInt(config.resources.webmail.limits.cpu.replace('m', '') || '500'))
+              ? parseCpuMillis(config.resources.webmail.limits.cpu)
               : undefined,
           },
           memory: {
-            request: this.parseMemorySize(config.resources.webmail.requests?.memory || '256Mi'),
+            request: parseMemorySize(config.resources.webmail.requests?.memory || '256Mi'),
             limit: config.resources.webmail.limits?.memory
-              ? this.parseMemorySize(config.resources.webmail.limits.memory)
+              ? parseMemorySize(config.resources.webmail.limits.memory)
               : undefined,
           },
         }
@@ -179,18 +176,5 @@ export class WebmailConstruct extends Construct {
         },
       ],
     });
-  }
-
-  /**
-   * Parse memory size string (e.g., "512Mi", "1Gi") to Size object
-   */
-  private parseMemorySize(sizeStr: string): Size {
-    if (sizeStr.endsWith('Gi')) {
-      return Size.gibibytes(parseInt(sizeStr.replace('Gi', '')));
-    } else if (sizeStr.endsWith('Mi')) {
-      return Size.mebibytes(parseInt(sizeStr.replace('Mi', '')));
-    }
-    // Default to mebibytes if no unit specified
-    return Size.mebibytes(parseInt(sizeStr));
   }
 }
