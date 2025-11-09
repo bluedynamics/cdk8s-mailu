@@ -17,26 +17,61 @@ We are committed to providing a welcoming and inclusive environment. Please be r
 
 ### Setting Up Development Environment
 
-1. **Fork and Clone**
+1. **Fork the Repository**
+
+   First, create your own fork of the repository:
+   - Visit https://github.com/bluedynamics/cdk8s-mailu
+   - Click the "Fork" button in the top-right corner
+   - This creates a copy of the repository under your GitHub account
+
+2. **Clone Your Fork**
+
+   Clone your forked repository to your local machine:
    ```bash
    git clone https://github.com/YOUR_USERNAME/cdk8s-mailu.git
    cd cdk8s-mailu
    ```
 
-2. **Install Dependencies**
+3. **Add Upstream Remote**
+
+   Add the original repository as an upstream remote to stay in sync:
+   ```bash
+   git remote add upstream https://github.com/bluedynamics/cdk8s-mailu.git
+   git fetch upstream
+   ```
+
+4. **Install Dependencies**
    ```bash
    pnpm install
    ```
 
-3. **Build the Project**
+5. **Build the Project**
    ```bash
    pnpm run build
    ```
 
-4. **Run Tests**
+6. **Run Tests**
    ```bash
    pnpm test
    ```
+
+### Keeping Your Fork Up to Date
+
+Before starting new work, sync your fork with the upstream repository:
+
+```bash
+# Fetch latest changes from upstream
+git fetch upstream
+
+# Switch to your main branch
+git checkout main
+
+# Merge upstream changes
+git merge upstream/main
+
+# Push updates to your fork
+git push origin main
+```
 
 ## Development Workflow
 
