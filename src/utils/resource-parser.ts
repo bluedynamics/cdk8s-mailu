@@ -1,5 +1,5 @@
 import { Size } from 'cdk8s';
-import * as kplus from 'cdk8s-plus-28';
+import * as kplus from 'cdk8s-plus-33';
 import { validateSizeFormat, validateCpuFormat } from './validators';
 
 /**

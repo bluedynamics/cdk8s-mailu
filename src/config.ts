@@ -158,6 +158,12 @@ export interface StorageConfig {
    * Only used if webmail component is enabled
    */
   readonly webmail?: ComponentStorageConfig;
+
+  /**
+   * Webdav component storage (calendars and contacts)
+   * Only used if webdav component is enabled
+   */
+  readonly webdav?: ComponentStorageConfig;
 }
 
 /**
@@ -389,6 +395,8 @@ export interface MailuChartConfig {
     readonly rspamd?: ResourcesConfig;
     readonly webmail?: ResourcesConfig;
     readonly clamav?: ResourcesConfig;
+    readonly fetchmail?: ResourcesConfig;
+    readonly webdav?: ResourcesConfig;
   };
 
   /**

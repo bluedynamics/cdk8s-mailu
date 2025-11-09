@@ -1,5 +1,5 @@
 import { Testing } from 'cdk8s';
-import * as kplus from 'cdk8s-plus-28';
+import * as kplus from 'cdk8s-plus-33';
 import { MailuChartConfig } from '../src/config';
 import { RspamdConstruct } from '../src/constructs/rspamd-construct';
 

@@ -1,5 +1,5 @@
 import { Duration } from 'cdk8s';
-import * as kplus from 'cdk8s-plus-28';
+import * as kplus from 'cdk8s-plus-33';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from '../config';
 import { parseMemorySize, parseCpuMillis, parseStorageSize } from '../utils/resource-parser';
@@ -61,6 +61,10 @@ export class RspamdConstruct extends Construct {
           'app.kubernetes.io/name': 'mailu-rspamd',
           'app.kubernetes.io/component': 'rspamd',
         },
+      },
+      securityContext: {
+        // Mailu containers run as root for privileged operations
+        ensureNonRoot: false,
       },
     });
 

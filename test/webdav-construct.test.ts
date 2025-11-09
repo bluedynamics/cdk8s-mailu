@@ -1,9 +1,9 @@
 import { Testing } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-33';
 import { MailuChartConfig } from '../src/config';
-import { AdminConstruct } from '../src/constructs/admin-construct';
+import { WebdavConstruct } from '../src/constructs/webdav-construct';
 
-describe('AdminConstruct', () => {
+describe('WebdavConstruct', () => {
   let chart: any;
   let namespace: kplus.Namespace;
   let sharedConfigMap: kplus.ConfigMap;
@@ -43,7 +43,7 @@ describe('AdminConstruct', () => {
       },
       storage: {
         storageClass: 'standard',
-        admin: {
+        webdav: {
           size: '5Gi',
         },
       },
@@ -51,7 +51,7 @@ describe('AdminConstruct', () => {
   });
 
   test('creates all required resources', () => {
-    const construct = new AdminConstruct(chart, 'admin', {
+    const construct = new WebdavConstruct(chart, 'webdav', {
       config,
       namespace,
       sharedConfigMap,
@@ -75,18 +75,18 @@ describe('AdminConstruct', () => {
     const deployments = manifests.filter(m => m.kind === 'Deployment');
     expect(deployments).toHaveLength(1);
     expect(deployments[0].spec.replicas).toBe(1);
-    expect(deployments[0].metadata.labels['app.kubernetes.io/name']).toBe('mailu-admin');
-    expect(deployments[0].metadata.labels['app.kubernetes.io/component']).toBe('admin');
+    expect(deployments[0].metadata.labels['app.kubernetes.io/name']).toBe('mailu-webdav');
+    expect(deployments[0].metadata.labels['app.kubernetes.io/component']).toBe('webdav');
 
     // Should create Service
     const services = manifests.filter(m => m.kind === 'Service');
     expect(services).toHaveLength(1);
     expect(services[0].spec.type).toBe('ClusterIP');
-    expect(services[0].spec.ports[0].port).toBe(80);
+    expect(services[0].spec.ports[0].port).toBe(5232);
   });
 
   test('configures container with correct image', () => {
-    new AdminConstruct(chart, 'admin', {
+    new WebdavConstruct(chart, 'webdav', {
       config: {
         ...config,
         images: {
@@ -101,11 +101,11 @@ describe('AdminConstruct', () => {
     const manifests = Testing.synth(chart);
     const deployment = manifests.find(m => m.kind === 'Deployment');
 
-    expect(deployment?.spec.template.spec.containers[0].image).toBe('ghcr.io/mailu/admin:2024.06');
+    expect(deployment?.spec.template.spec.containers[0].image).toBe('ghcr.io/mailu/radicale:2024.06');
   });
 
-  test('configures health probes', () => {
-    new AdminConstruct(chart, 'admin', {
+  test('configures HTTP health probes on port 5232', () => {
+    new WebdavConstruct(chart, 'webdav', {
       config,
       namespace,
       sharedConfigMap,
@@ -117,25 +117,22 @@ describe('AdminConstruct', () => {
 
     // Liveness probe
     expect(container.livenessProbe).toBeDefined();
-    expect(container.livenessProbe.httpGet.path).toBe('/health');
-    expect(container.livenessProbe.httpGet.port).toBe(80);
+    expect(container.livenessProbe.httpGet.path).toBe('/');
+    expect(container.livenessProbe.httpGet.port).toBe(5232);
     expect(container.livenessProbe.initialDelaySeconds).toBe(30);
+    expect(container.livenessProbe.periodSeconds).toBe(30);
 
     // Readiness probe
     expect(container.readinessProbe).toBeDefined();
-    expect(container.readinessProbe.httpGet.path).toBe('/health');
+    expect(container.readinessProbe.httpGet.path).toBe('/');
+    expect(container.readinessProbe.httpGet.port).toBe(5232);
     expect(container.readinessProbe.initialDelaySeconds).toBe(10);
+    expect(container.readinessProbe.periodSeconds).toBe(10);
   });
 
-  test('configures environment variables from secrets', () => {
-    new AdminConstruct(chart, 'admin', {
-      config: {
-        ...config,
-        secrets: {
-          mailuSecretKey: 'test-secret-key',
-          initialAdminPassword: 'admin-password-secret',
-        },
-      },
+  test('configures environment variables from ConfigMap', () => {
+    new WebdavConstruct(chart, 'webdav', {
+      config,
       namespace,
       sharedConfigMap,
     });
@@ -144,21 +141,14 @@ describe('AdminConstruct', () => {
     const deployment = manifests.find(m => m.kind === 'Deployment');
     const container = deployment?.spec.template.spec.containers[0];
 
-    // Check for secret environment variables
-    const envVars = container.env;
-    const dbUser = envVars.find((e: any) => e.name === 'DB_USER');
-    const dbPw = envVars.find((e: any) => e.name === 'DB_PW');
-    const secretKey = envVars.find((e: any) => e.name === 'SECRET_KEY');
-    const adminPassword = envVars.find((e: any) => e.name === 'INITIAL_ADMIN_PASSWORD');
-
-    expect(dbUser?.valueFrom?.secretKeyRef?.name).toBe('postgres-secret');
-    expect(dbPw?.valueFrom?.secretKeyRef?.name).toBe('postgres-secret');
-    expect(secretKey?.valueFrom?.secretKeyRef?.name).toBe('test-secret-key');
-    expect(adminPassword?.valueFrom?.secretKeyRef?.name).toBe('admin-password-secret');
+    // Check for ConfigMap environment variables
+    const envFrom = container.envFrom;
+    expect(envFrom).toHaveLength(1);
+    expect(envFrom[0].configMapRef).toBeDefined();
   });
 
-  test('mounts PVC for data', () => {
-    new AdminConstruct(chart, 'admin', {
+  test('mounts PVC for calendars and contacts data', () => {
+    new WebdavConstruct(chart, 'webdav', {
       config,
       namespace,
       sharedConfigMap,
@@ -179,13 +169,13 @@ describe('AdminConstruct', () => {
   });
 
   test('configures resource requests and limits', () => {
-    new AdminConstruct(chart, 'admin', {
+    new WebdavConstruct(chart, 'webdav', {
       config: {
         ...config,
         resources: {
-          admin: {
-            requests: { cpu: '200m', memory: '1Gi' },
-            limits: { cpu: '1000m', memory: '2Gi' },
+          webdav: {
+            requests: { cpu: '100m', memory: '256Mi' },
+            limits: { cpu: '500m', memory: '512Mi' },
           },
         },
       },
@@ -197,15 +187,74 @@ describe('AdminConstruct', () => {
     const deployment = manifests.find(m => m.kind === 'Deployment');
     const container = deployment?.spec.template.spec.containers[0];
 
-    expect(container.resources.requests.cpu).toBe('200m');
-    // Kubernetes converts Gi to Mi (1Gi = 1024Mi)
-    expect(container.resources.requests.memory).toBe('1024Mi');
-    expect(container.resources.limits.cpu).toBe('1000m');
-    expect(container.resources.limits.memory).toBe('2048Mi');
+    expect(container.resources.requests.cpu).toBe('100m');
+    expect(container.resources.requests.memory).toBe('256Mi');
+    expect(container.resources.limits.cpu).toBe('500m');
+    expect(container.resources.limits.memory).toBe('512Mi');
+  });
+
+  test('uses default storage size when not specified', () => {
+    new WebdavConstruct(chart, 'webdav', {
+      config: {
+        ...config,
+        storage: {
+          storageClass: 'standard',
+          // No webdav storage config - should use default 5Gi
+        },
+      },
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const pvc = manifests.find(m => m.kind === 'PersistentVolumeClaim');
+
+    expect(pvc?.spec.resources.requests.storage).toBe('5Gi');
+  });
+
+  test('allows custom storage configuration', () => {
+    new WebdavConstruct(chart, 'webdav', {
+      config: {
+        ...config,
+        storage: {
+          storageClass: 'longhorn',
+          webdav: {
+            size: '20Gi',
+            storageClass: 'fast-ssd', // Override global storage class
+          },
+        },
+      },
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const pvc = manifests.find(m => m.kind === 'PersistentVolumeClaim');
+
+    expect(pvc?.spec.resources.requests.storage).toBe('20Gi');
+    expect(pvc?.spec.storageClassName).toBe('fast-ssd');
+  });
+
+  test('exposes Radicale service on port 5232', () => {
+    new WebdavConstruct(chart, 'webdav', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const service = manifests.find(m => m.kind === 'Service');
+
+    expect(service?.spec.ports[0]).toEqual({
+      name: 'http',
+      port: 5232,
+      protocol: 'TCP',
+      targetPort: 5232,
+    });
   });
 
   test('uses auto-generated names for resources', () => {
-    new AdminConstruct(chart, 'admin', {
+    new WebdavConstruct(chart, 'webdav', {
       config,
       namespace,
       sharedConfigMap,
@@ -213,19 +262,38 @@ describe('AdminConstruct', () => {
 
     const manifests = Testing.synth(chart);
 
-    // Names should be auto-generated (not hardcoded to 'admin', 'admin-data', etc.)
+    // Names should be auto-generated (not hardcoded)
     const pvc = manifests.find(m => m.kind === 'PersistentVolumeClaim');
     const deployment = manifests.find(m => m.kind === 'Deployment');
     const service = manifests.find(m => m.kind === 'Service');
 
     // Names should contain the construct path and be unique
-    expect(pvc?.metadata.name).toMatch(/admin-pvc-/);
-    expect(deployment?.metadata.name).toMatch(/admin-deployment-/);
-    expect(service?.metadata.name).toMatch(/admin-service-/);
+    expect(pvc?.metadata.name).toMatch(/webdav-pvc-/);
+    expect(deployment?.metadata.name).toMatch(/webdav-deployment-/);
+    expect(service?.metadata.name).toMatch(/webdav-service-/);
 
-    // Names should not be the bare 'admin' or 'admin-data'
-    expect(pvc?.metadata.name).not.toBe('admin-data');
-    expect(deployment?.metadata.name).not.toBe('admin');
-    expect(service?.metadata.name).not.toBe('admin');
+    // Names should not be bare 'webdav'
+    expect(pvc?.metadata.name).not.toBe('webdav');
+    expect(deployment?.metadata.name).not.toBe('webdav');
+    expect(service?.metadata.name).not.toBe('webdav');
+  });
+
+  test('allows custom image registry and tag', () => {
+    new WebdavConstruct(chart, 'webdav', {
+      config: {
+        ...config,
+        images: {
+          registry: 'registry.example.com/mailu',
+          tag: 'latest',
+        },
+      },
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const deployment = manifests.find(m => m.kind === 'Deployment');
+
+    expect(deployment?.spec.template.spec.containers[0].image).toBe('registry.example.com/mailu/radicale:latest');
   });
 });

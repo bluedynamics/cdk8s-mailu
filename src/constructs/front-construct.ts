@@ -1,5 +1,5 @@
 import { Duration } from 'cdk8s';
-import * as kplus from 'cdk8s-plus-28';
+import * as kplus from 'cdk8s-plus-33';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from '../config';
 import { parseMemorySize, parseCpuMillis } from '../utils/resource-parser';
@@ -49,6 +49,10 @@ export class FrontConstruct extends Construct {
           'app.kubernetes.io/name': 'mailu-front',
           'app.kubernetes.io/component': 'front',
         },
+      },
+      securityContext: {
+        // Mailu containers run as root for privileged operations
+        ensureNonRoot: false,
       },
     });
 

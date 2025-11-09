@@ -1,5 +1,5 @@
 import { Duration } from 'cdk8s';
-import * as kplus from 'cdk8s-plus-28';
+import * as kplus from 'cdk8s-plus-33';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from '../config';
 import { parseMemorySize, parseCpuMillis, parseStorageSize } from '../utils/resource-parser';
@@ -41,7 +41,7 @@ export class DovecotConstruct extends Construct {
         namespace: namespace.name,
       },
       accessModes: [kplus.PersistentVolumeAccessMode.READ_WRITE_ONCE],
-      storage: parseStorageSize(config.storage?.dovecot?.size || '50Gi'),
+      storage: parseStorageSize(config.storage?.dovecot?.size || '100Gi'),
       storageClassName: config.storage?.storageClass,
     });
 
@@ -61,6 +61,10 @@ export class DovecotConstruct extends Construct {
           'app.kubernetes.io/name': 'mailu-dovecot',
           'app.kubernetes.io/component': 'dovecot',
         },
+      },
+      securityContext: {
+        // Mailu containers run as root for privileged operations
+        ensureNonRoot: false,
       },
     });
 

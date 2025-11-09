@@ -1,5 +1,5 @@
 import { Duration } from 'cdk8s';
-import * as kplus from 'cdk8s-plus-28';
+import * as kplus from 'cdk8s-plus-33';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from '../config';
 import { parseMemorySize, parseCpuMillis, parseStorageSize } from '../utils/resource-parser';
@@ -61,6 +61,10 @@ export class AdminConstruct extends Construct {
           'app.kubernetes.io/component': 'admin',
         },
       },
+      securityContext: {
+        // Mailu containers run as root for privileged operations
+        ensureNonRoot: false,
+      },
     });
 
     // Configure container
@@ -70,7 +74,10 @@ export class AdminConstruct extends Construct {
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
       portNumber: 80,
       securityContext: {
-        ensureNonRoot: false, // Mailu containers run as root
+        // Note: cdk8s-plus sets pod-level runAsNonRoot: true by default,
+        // but container-level settings take precedence. Mailu containers
+        // require root access for privileged operations (port binding, etc.)
+        ensureNonRoot: false,
         readOnlyRootFilesystem: false,
       },
       resources: config.resources?.admin

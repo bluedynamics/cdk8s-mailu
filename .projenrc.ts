@@ -6,11 +6,11 @@ const project = new cdk8s.Cdk8sTypeScriptApp({
   projenrcTs: true,
 
   // CDK8S configuration
-  cdk8sVersion: '2.68.0',
+  cdk8sVersion: '2.70.26',
 
   // Dependencies
   deps: [
-    'cdk8s-plus-28',
+    'cdk8s-plus-33@^2.4.0',
   ],
   devDeps: [
     '@types/node',
@@ -33,7 +33,11 @@ const project = new cdk8s.Cdk8sTypeScriptApp({
   ],
 });
 
-// Add custom tasks
+// Package.json configuration for library usage
+project.package.addField('main', 'lib/index.js');
+project.package.addField('types', 'lib/index.d.ts');
+
+// Custom tasks
 project.addTask('synth:example', {
   description: 'Synthesize example deployment',
   exec: 'ts-node examples/simple-deployment.ts',

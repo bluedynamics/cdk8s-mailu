@@ -1,13 +1,15 @@
 import { Chart, ChartProps } from 'cdk8s';
-import * as kplus from 'cdk8s-plus-28';
+import * as kplus from 'cdk8s-plus-33';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from './config';
 import { AdminConstruct } from './constructs/admin-construct';
 import { ClamavConstruct } from './constructs/clamav-construct';
 import { DovecotConstruct } from './constructs/dovecot-construct';
+import { FetchmailConstruct } from './constructs/fetchmail-construct';
 import { FrontConstruct } from './constructs/front-construct';
 import { PostfixConstruct } from './constructs/postfix-construct';
 import { RspamdConstruct } from './constructs/rspamd-construct';
+import { WebdavConstruct } from './constructs/webdav-construct';
 import { WebmailConstruct } from './constructs/webmail-construct';
 import { validateDomainFormat, validateCidrFormat } from './utils/validators';
 
@@ -77,6 +79,8 @@ export class MailuChart extends Chart {
   public rspamdConstruct?: RspamdConstruct;
   public webmailConstruct?: WebmailConstruct;
   public clamavConstruct?: ClamavConstruct;
+  public fetchmailConstruct?: FetchmailConstruct;
+  public webdavConstruct?: WebdavConstruct;
 
   constructor(scope: Construct, id: string, config: MailuChartConfig, props?: ChartProps) {
     super(scope, id, props);
@@ -268,19 +272,23 @@ export class MailuChart extends Chart {
 
   /**
    * Creates the Fetchmail component (external account fetching)
-   * TODO: Implement in fetchmail-construct.ts
    */
   private createFetchmailComponent(): void {
-    // Placeholder - will be implemented in separate construct file
-    console.warn('Fetchmail component not yet implemented');
+    this.fetchmailConstruct = new FetchmailConstruct(this, 'fetchmail', {
+      config: this.config,
+      namespace: this.mailuNamespace,
+      sharedConfigMap: this.sharedConfigMap,
+    });
   }
 
   /**
    * Creates the Webdav component (calendar/contacts)
-   * TODO: Implement in webdav-construct.ts
    */
   private createWebdavComponent(): void {
-    // Placeholder - will be implemented in separate construct file
-    console.warn('Webdav component not yet implemented');
+    this.webdavConstruct = new WebdavConstruct(this, 'webdav', {
+      config: this.config,
+      namespace: this.mailuNamespace,
+      sharedConfigMap: this.sharedConfigMap,
+    });
   }
 }

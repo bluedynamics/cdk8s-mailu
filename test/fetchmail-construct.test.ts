@@ -1,9 +1,9 @@
 import { Testing } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-33';
 import { MailuChartConfig } from '../src/config';
-import { FrontConstruct } from '../src/constructs/front-construct';
+import { FetchmailConstruct } from '../src/constructs/fetchmail-construct';
 
-describe('FrontConstruct', () => {
+describe('FetchmailConstruct', () => {
   let chart: any;
   let namespace: kplus.Namespace;
   let sharedConfigMap: kplus.ConfigMap;
@@ -44,8 +44,8 @@ describe('FrontConstruct', () => {
     };
   });
 
-  test('creates deployment and service', () => {
-    const construct = new FrontConstruct(chart, 'front', {
+  test('creates all required resources', () => {
+    const construct = new FetchmailConstruct(chart, 'fetchmail', {
       config,
       namespace,
       sharedConfigMap,
@@ -53,66 +53,28 @@ describe('FrontConstruct', () => {
 
     // Verify construct exposes expected properties
     expect(construct.deployment).toBeDefined();
-    expect(construct.service).toBeDefined();
 
     // Synthesize and verify manifests
     const manifests = Testing.synth(chart);
 
-    // Should create Deployment
+    // Should create Deployment only (no Service or PVC)
     const deployments = manifests.filter(m => m.kind === 'Deployment');
     expect(deployments).toHaveLength(1);
     expect(deployments[0].spec.replicas).toBe(1);
-    expect(deployments[0].metadata.labels['app.kubernetes.io/name']).toBe('mailu-front');
-    expect(deployments[0].metadata.labels['app.kubernetes.io/component']).toBe('front');
+    expect(deployments[0].metadata.labels['app.kubernetes.io/name']).toBe('mailu-fetchmail');
+    expect(deployments[0].metadata.labels['app.kubernetes.io/component']).toBe('fetchmail');
 
-    // Should create Service
+    // Should NOT create Service
     const services = manifests.filter(m => m.kind === 'Service');
-    expect(services).toHaveLength(1);
-    expect(services[0].spec.type).toBe('ClusterIP');
-  });
+    expect(services).toHaveLength(0);
 
-  test('exposes all mail and web protocol ports', () => {
-    new FrontConstruct(chart, 'front', {
-      config,
-      namespace,
-      sharedConfigMap,
-    });
-
-    const manifests = Testing.synth(chart);
-    const service = manifests.find(m => m.kind === 'Service');
-
-    // Check all expected ports are defined
-    const portNames = service?.spec.ports.map((p: any) => p.name).sort();
-    expect(portNames).toEqual([
-      'http',
-      'https',
-      'imap',
-      'imaps',
-      'pop3',
-      'pop3s',
-      'smtp',
-      'smtps',
-      'submission',
-    ]);
-
-    // Verify specific port configurations
-    const ports = service?.spec.ports;
-    const httpPort = ports.find((p: any) => p.name === 'http');
-    expect(httpPort?.port).toBe(80);
-    expect(httpPort?.targetPort).toBe(80);
-
-    const smtpPort = ports.find((p: any) => p.name === 'smtp');
-    expect(smtpPort?.port).toBe(25);
-
-    const imapsPort = ports.find((p: any) => p.name === 'imaps');
-    expect(imapsPort?.port).toBe(993);
-
-    const submissionPort = ports.find((p: any) => p.name === 'submission');
-    expect(submissionPort?.port).toBe(587);
+    // Should NOT create PVC (stateless component)
+    const pvcs = manifests.filter(m => m.kind === 'PersistentVolumeClaim');
+    expect(pvcs).toHaveLength(0);
   });
 
   test('configures container with correct image', () => {
-    new FrontConstruct(chart, 'front', {
+    new FetchmailConstruct(chart, 'fetchmail', {
       config: {
         ...config,
         images: {
@@ -127,11 +89,11 @@ describe('FrontConstruct', () => {
     const manifests = Testing.synth(chart);
     const deployment = manifests.find(m => m.kind === 'Deployment');
 
-    expect(deployment?.spec.template.spec.containers[0].image).toBe('ghcr.io/mailu/nginx:2024.06');
+    expect(deployment?.spec.template.spec.containers[0].image).toBe('ghcr.io/mailu/fetchmail:2024.06');
   });
 
-  test('configures health probes', () => {
-    new FrontConstruct(chart, 'front', {
+  test('configures process-based health probes', () => {
+    new FetchmailConstruct(chart, 'fetchmail', {
       config,
       namespace,
       sharedConfigMap,
@@ -141,20 +103,21 @@ describe('FrontConstruct', () => {
     const deployment = manifests.find(m => m.kind === 'Deployment');
     const container = deployment?.spec.template.spec.containers[0];
 
-    // Liveness probe
+    // Liveness probe - check if fetchmail process is running
     expect(container.livenessProbe).toBeDefined();
-    expect(container.livenessProbe.httpGet.path).toBe('/health');
-    expect(container.livenessProbe.httpGet.port).toBe(80);
+    expect(container.livenessProbe.exec.command).toEqual(['pgrep', '-f', 'fetchmail']);
     expect(container.livenessProbe.initialDelaySeconds).toBe(30);
+    expect(container.livenessProbe.periodSeconds).toBe(60);
 
-    // Readiness probe
+    // Readiness probe - same as liveness
     expect(container.readinessProbe).toBeDefined();
-    expect(container.readinessProbe.httpGet.path).toBe('/health');
+    expect(container.readinessProbe.exec.command).toEqual(['pgrep', '-f', 'fetchmail']);
     expect(container.readinessProbe.initialDelaySeconds).toBe(10);
+    expect(container.readinessProbe.periodSeconds).toBe(10);
   });
 
-  test('configures environment variables from secrets', () => {
-    new FrontConstruct(chart, 'front', {
+  test('configures FETCHMAIL_DELAY environment variable', () => {
+    new FetchmailConstruct(chart, 'fetchmail', {
       config,
       namespace,
       sharedConfigMap,
@@ -164,12 +127,12 @@ describe('FrontConstruct', () => {
     const deployment = manifests.find(m => m.kind === 'Deployment');
     const container = deployment?.spec.template.spec.containers[0];
 
-    // Check for secret environment variables
+    // Check for fetchmail-specific environment variable
     const envVars = container.env;
-    const secretKey = envVars.find((e: any) => e.name === 'SECRET_KEY');
+    const fetchmailDelay = envVars.find((e: any) => e.name === 'FETCHMAIL_DELAY');
 
-    expect(secretKey?.valueFrom?.secretKeyRef?.name).toBe('test-secret-key');
-    expect(secretKey?.valueFrom?.secretKeyRef?.key).toBe('secret-key');
+    expect(fetchmailDelay).toBeDefined();
+    expect(fetchmailDelay?.value).toBe('600'); // 10 minutes
 
     // Check for ConfigMap environment variables
     const envFrom = container.envFrom;
@@ -178,11 +141,11 @@ describe('FrontConstruct', () => {
   });
 
   test('configures resource requests and limits', () => {
-    new FrontConstruct(chart, 'front', {
+    new FetchmailConstruct(chart, 'fetchmail', {
       config: {
         ...config,
         resources: {
-          front: {
+          fetchmail: {
             requests: { cpu: '100m', memory: '256Mi' },
             limits: { cpu: '500m', memory: '512Mi' },
           },
@@ -203,7 +166,7 @@ describe('FrontConstruct', () => {
   });
 
   test('uses auto-generated names for resources', () => {
-    new FrontConstruct(chart, 'front', {
+    new FetchmailConstruct(chart, 'fetchmail', {
       config,
       namespace,
       sharedConfigMap,
@@ -211,16 +174,28 @@ describe('FrontConstruct', () => {
 
     const manifests = Testing.synth(chart);
 
-    // Names should be auto-generated (not hardcoded to 'front')
+    // Deployment name should be auto-generated
     const deployment = manifests.find(m => m.kind === 'Deployment');
-    const service = manifests.find(m => m.kind === 'Service');
+    expect(deployment?.metadata.name).toMatch(/fetchmail-deployment-/);
+    expect(deployment?.metadata.name).not.toBe('fetchmail');
+  });
 
-    // Names should contain the construct path and be unique
-    expect(deployment?.metadata.name).toMatch(/front-deployment-/);
-    expect(service?.metadata.name).toMatch(/front-service-/);
+  test('allows custom image registry and tag', () => {
+    new FetchmailConstruct(chart, 'fetchmail', {
+      config: {
+        ...config,
+        images: {
+          registry: 'registry.example.com/mailu',
+          tag: 'latest',
+        },
+      },
+      namespace,
+      sharedConfigMap,
+    });
 
-    // Names should not be bare 'front'
-    expect(deployment?.metadata.name).not.toBe('front');
-    expect(service?.metadata.name).not.toBe('front');
+    const manifests = Testing.synth(chart);
+    const deployment = manifests.find(m => m.kind === 'Deployment');
+
+    expect(deployment?.spec.template.spec.containers[0].image).toBe('registry.example.com/mailu/fetchmail:latest');
   });
 });
