@@ -7,34 +7,40 @@ import {
 } from '../src/utils/validators';
 
 describe('validateSizeFormat', () => {
-  it('accepts valid Gi format', () => {
+  it('accepts valid binary units (1024-based)', () => {
     expect(() => validateSizeFormat('5Gi', 'storage')).not.toThrow();
     expect(() => validateSizeFormat('100Gi', 'storage')).not.toThrow();
-    expect(() => validateSizeFormat('1Gi', 'storage')).not.toThrow();
+    expect(() => validateSizeFormat('512Mi', 'memory')).not.toThrow();
+    expect(() => validateSizeFormat('1024Ki', 'memory')).not.toThrow();
+    expect(() => validateSizeFormat('1Ti', 'storage')).not.toThrow();
+    expect(() => validateSizeFormat('1Pi', 'storage')).not.toThrow();
+    expect(() => validateSizeFormat('1Ei', 'storage')).not.toThrow();
   });
 
-  it('accepts valid Mi format', () => {
-    expect(() => validateSizeFormat('512Mi', 'memory')).not.toThrow();
-    expect(() => validateSizeFormat('1024Mi', 'memory')).not.toThrow();
-    expect(() => validateSizeFormat('256Mi', 'memory')).not.toThrow();
+  it('accepts decimal values with binary units', () => {
+    expect(() => validateSizeFormat('1.5Gi', 'storage')).not.toThrow();
+    expect(() => validateSizeFormat('0.5Mi', 'memory')).not.toThrow();
+    expect(() => validateSizeFormat('2.75Ti', 'storage')).not.toThrow();
   });
 
   it('rejects size without unit', () => {
     expect(() => validateSizeFormat('500', 'storage')).toThrow(
-      'Invalid size format for storage: "500". Expected format: number + unit (e.g., "5Gi", "512Mi")',
+      'Invalid size format for storage: "500"',
     );
   });
 
   it('rejects size with invalid unit', () => {
     expect(() => validateSizeFormat('5GB', 'storage')).toThrow(
-      'Invalid size format for storage: "5GB". Expected format: number + unit (e.g., "5Gi", "512Mi")',
+      'Invalid size format for storage: "5GB"',
     );
     expect(() => validateSizeFormat('512MB', 'memory')).toThrow();
+    expect(() => validateSizeFormat('5GiB', 'storage')).toThrow();
   });
 
-  it('rejects size with decimal values', () => {
-    expect(() => validateSizeFormat('5.5Gi', 'storage')).toThrow();
-    expect(() => validateSizeFormat('512.25Mi', 'memory')).toThrow();
+  it('rejects decimal units (not supported by cdk8s)', () => {
+    expect(() => validateSizeFormat('100M', 'memory')).toThrow();
+    expect(() => validateSizeFormat('5G', 'storage')).toThrow();
+    expect(() => validateSizeFormat('1k', 'memory')).toThrow();
   });
 
   it('rejects size with spaces', () => {
@@ -54,21 +60,26 @@ describe('validateSizeFormat', () => {
 });
 
 describe('validateCpuFormat', () => {
-  it('accepts valid CPU format', () => {
+  it('accepts valid millicores format', () => {
     expect(() => validateCpuFormat('100m', 'cpu')).not.toThrow();
     expect(() => validateCpuFormat('500m', 'cpu')).not.toThrow();
     expect(() => validateCpuFormat('1000m', 'cpu')).not.toThrow();
     expect(() => validateCpuFormat('2000m', 'cpu')).not.toThrow();
   });
 
-  it('rejects CPU without m suffix', () => {
-    expect(() => validateCpuFormat('100', 'cpu')).toThrow(
-      'Invalid CPU format for cpu: "100". Expected format: number + \'m\' (e.g., "100m", "500m")',
-    );
-    expect(() => validateCpuFormat('1000', 'cpu')).toThrow();
+  it('accepts valid cores format (integer)', () => {
+    expect(() => validateCpuFormat('1', 'cpu')).not.toThrow();
+    expect(() => validateCpuFormat('2', 'cpu')).not.toThrow();
+    expect(() => validateCpuFormat('4', 'cpu')).not.toThrow();
   });
 
-  it('rejects CPU with decimal values', () => {
+  it('accepts valid cores format (decimal)', () => {
+    expect(() => validateCpuFormat('0.5', 'cpu')).not.toThrow();
+    expect(() => validateCpuFormat('1.5', 'cpu')).not.toThrow();
+    expect(() => validateCpuFormat('2.75', 'cpu')).not.toThrow();
+  });
+
+  it('rejects CPU with decimal millicores', () => {
     expect(() => validateCpuFormat('100.5m', 'cpu')).toThrow();
     expect(() => validateCpuFormat('500.25m', 'cpu')).toThrow();
   });
@@ -76,16 +87,22 @@ describe('validateCpuFormat', () => {
   it('rejects CPU with spaces', () => {
     expect(() => validateCpuFormat('100 m', 'cpu')).toThrow();
     expect(() => validateCpuFormat('500m ', 'cpu')).toThrow();
+    expect(() => validateCpuFormat('1 ', 'cpu')).toThrow();
   });
 
   it('rejects CPU with invalid units', () => {
-    expect(() => validateCpuFormat('1', 'cpu')).toThrow();
     expect(() => validateCpuFormat('1000mc', 'cpu')).toThrow();
     expect(() => validateCpuFormat('1core', 'cpu')).toThrow();
+    expect(() => validateCpuFormat('1cores', 'cpu')).toThrow();
   });
 
   it('rejects empty string', () => {
     expect(() => validateCpuFormat('', 'cpu')).toThrow();
+  });
+
+  it('rejects invalid strings', () => {
+    expect(() => validateCpuFormat('abc', 'cpu')).toThrow();
+    expect(() => validateCpuFormat('m', 'cpu')).toThrow();
   });
 
   it('includes field name in error message', () => {

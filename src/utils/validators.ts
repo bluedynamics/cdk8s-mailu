@@ -5,6 +5,13 @@
 /**
  * Validate storage/memory size string format
  *
+ * Supports Kubernetes binary units (1024-based):
+ * - Ki (kibibytes), Mi (mebibytes), Gi (gibibytes), Ti (tebibytes), Pi (pebibytes), Ei (exbibytes)
+ * - Decimal values: "1.5Gi", "0.5Mi"
+ *
+ * Note: Decimal units (k, M, G, T, P, E) are not currently supported due to cdk8s limitations.
+ * Use binary equivalents instead: 1000M ≈ 954Mi, 1G ≈ 0.93Gi
+ *
  * @param sizeStr - Size string to validate
  * @param fieldName - Field name for error messages
  * @throws Error if format is invalid
@@ -13,16 +20,20 @@
  * ```typescript
  * validateSizeFormat('5Gi', 'storage.admin.size')      // OK
  * validateSizeFormat('512Mi', 'resources.memory')      // OK
+ * validateSizeFormat('1.5Gi', 'storage.size')          // OK
  * validateSizeFormat('invalid', 'storage.size')        // Throws error
  * validateSizeFormat('5', 'storage.size')              // Throws error (no unit)
  * ```
  */
 export function validateSizeFormat(sizeStr: string, fieldName: string): void {
-  const sizePattern = /^\d+(?:Mi|Gi)$/;
+  // Pattern supports:
+  // - Optional decimal: \d+(?:\.\d+)?
+  // - Binary units: Ki|Mi|Gi|Ti|Pi|Ei (1024-based)
+  const sizePattern = /^\d+(?:\.\d+)?(?:Ki|Mi|Gi|Ti|Pi|Ei)$/;
   if (!sizePattern.test(sizeStr)) {
     throw new Error(
       `Invalid size format for ${fieldName}: "${sizeStr}". ` +
-      'Expected format: number + unit (e.g., "5Gi", "512Mi")',
+      'Expected format: number + binary unit (e.g., "5Gi", "512Mi", "1.5Gi")',
     );
   }
 }
@@ -30,24 +41,34 @@ export function validateSizeFormat(sizeStr: string, fieldName: string): void {
 /**
  * Validate CPU string format
  *
+ * Supports all Kubernetes CPU formats:
+ * - Millicores: "100m", "500m", "1000m"
+ * - Cores: "1", "2", "0.5", "1.5"
+ * - Note: 1 core = 1000 millicores
+ *
  * @param cpuStr - CPU string to validate
  * @param fieldName - Field name for error messages
  * @throws Error if format is invalid
  *
  * @example
  * ```typescript
- * validateCpuFormat('100m', 'resources.cpu')    // OK
- * validateCpuFormat('1000m', 'resources.cpu')   // OK
- * validateCpuFormat('1000', 'resources.cpu')    // Throws error (no 'm' suffix)
+ * validateCpuFormat('100m', 'resources.cpu')    // OK (100 millicores)
+ * validateCpuFormat('1000m', 'resources.cpu')   // OK (1000 millicores = 1 core)
+ * validateCpuFormat('1', 'resources.cpu')       // OK (1 core)
+ * validateCpuFormat('0.5', 'resources.cpu')     // OK (0.5 cores = 500m)
+ * validateCpuFormat('1.5', 'resources.cpu')     // OK (1.5 cores = 1500m)
  * validateCpuFormat('abc', 'resources.cpu')     // Throws error
  * ```
  */
 export function validateCpuFormat(cpuStr: string, fieldName: string): void {
-  const cpuPattern = /^\d+m$/;
+  // Pattern supports:
+  // - Millicores: \d+m (e.g., "100m", "1000m")
+  // - Cores (integer or decimal): \d+(?:\.\d+)? (e.g., "1", "0.5", "1.5")
+  const cpuPattern = /^(?:\d+m|\d+(?:\.\d+)?)$/;
   if (!cpuPattern.test(cpuStr)) {
     throw new Error(
       `Invalid CPU format for ${fieldName}: "${cpuStr}". ` +
-      'Expected format: number + \'m\' (e.g., "100m", "500m")',
+      'Expected format: millicores (e.g., "100m", "500m") or cores (e.g., "1", "0.5", "1.5")',
     );
   }
 }
