@@ -39,11 +39,11 @@
 
 ## Prerequisites
 
-- Kubernetes cluster (1.24+)
+- Kubernetes cluster (1.28+)
 - PostgreSQL database (e.g., via CloudNativePG operator)
 - Redis instance
 - Storage class for persistent volumes
-- Node.js 18+ and npm/yarn
+- Node.js 18+ and npm/pnpm/yarn
 
 ## Installation
 
