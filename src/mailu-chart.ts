@@ -7,6 +7,7 @@ import { DovecotConstruct } from './constructs/dovecot-construct';
 import { FrontConstruct } from './constructs/front-construct';
 import { PostfixConstruct } from './constructs/postfix-construct';
 import { RspamdConstruct } from './constructs/rspamd-construct';
+import { WebmailConstruct } from './constructs/webmail-construct';
 
 /**
  * Mailu Mail Server Chart
@@ -72,6 +73,7 @@ export class MailuChart extends Chart {
   public postfixConstruct?: PostfixConstruct;
   public dovecotConstruct?: DovecotConstruct;
   public rspamdConstruct?: RspamdConstruct;
+  public webmailConstruct?: WebmailConstruct;
 
   constructor(scope: Construct, id: string, config: MailuChartConfig, props?: ChartProps) {
     super(scope, id, props);
@@ -227,11 +229,13 @@ export class MailuChart extends Chart {
 
   /**
    * Creates the Webmail component (Roundcube)
-   * TODO: Implement in webmail-construct.ts
    */
   private createWebmailComponent(): void {
-    // Placeholder - will be implemented in separate construct file
-    console.warn('Webmail component not yet implemented');
+    this.webmailConstruct = new WebmailConstruct(this, 'webmail', {
+      config: this.config,
+      namespace: this.mailuNamespace,
+      sharedConfigMap: this.sharedConfigMap,
+    });
   }
 
   /**
