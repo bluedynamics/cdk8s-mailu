@@ -337,6 +337,9 @@ export class MailuChart extends Chart {
       if (this.webmailConstruct?.service) {
         this.sharedConfigMap.addData('WEBMAIL_ADDRESS', `${this.webmailConstruct.service.name}.${namespace}.svc.cluster.local`);
       }
+      if (this.rspamdConstruct?.service) {
+        this.sharedConfigMap.addData('ANTISPAM_ADDRESS', `${this.rspamdConstruct.service.name}.${namespace}.svc.cluster.local`);
+      }
     }
   }
 }
