@@ -4,6 +4,7 @@ import { Construct } from 'constructs';
 import { MailuChartConfig } from './config';
 import { AdminConstruct } from './constructs/admin-construct';
 import { FrontConstruct } from './constructs/front-construct';
+import { PostfixConstruct } from './constructs/postfix-construct';
 
 /**
  * Mailu Mail Server Chart
@@ -66,6 +67,7 @@ export class MailuChart extends Chart {
    */
   public adminConstruct?: AdminConstruct;
   public frontConstruct?: FrontConstruct;
+  public postfixConstruct?: PostfixConstruct;
 
   constructor(scope: Construct, id: string, config: MailuChartConfig, props?: ChartProps) {
     super(scope, id, props);
@@ -188,11 +190,13 @@ export class MailuChart extends Chart {
 
   /**
    * Creates the Postfix component (SMTP server)
-   * TODO: Implement in postfix-construct.ts
    */
   private createPostfixComponent(): void {
-    // Placeholder - will be implemented in separate construct file
-    console.warn('Postfix component not yet implemented');
+    this.postfixConstruct = new PostfixConstruct(this, 'postfix', {
+      config: this.config,
+      namespace: this.mailuNamespace,
+      sharedConfigMap: this.sharedConfigMap,
+    });
   }
 
   /**
