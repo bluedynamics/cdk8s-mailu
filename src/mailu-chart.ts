@@ -3,8 +3,10 @@ import * as kplus from 'cdk8s-plus-28';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from './config';
 import { AdminConstruct } from './constructs/admin-construct';
+import { DovecotConstruct } from './constructs/dovecot-construct';
 import { FrontConstruct } from './constructs/front-construct';
 import { PostfixConstruct } from './constructs/postfix-construct';
+import { RspamdConstruct } from './constructs/rspamd-construct';
 
 /**
  * Mailu Mail Server Chart
@@ -68,6 +70,8 @@ export class MailuChart extends Chart {
   public adminConstruct?: AdminConstruct;
   public frontConstruct?: FrontConstruct;
   public postfixConstruct?: PostfixConstruct;
+  public dovecotConstruct?: DovecotConstruct;
+  public rspamdConstruct?: RspamdConstruct;
 
   constructor(scope: Construct, id: string, config: MailuChartConfig, props?: ChartProps) {
     super(scope, id, props);
@@ -201,20 +205,24 @@ export class MailuChart extends Chart {
 
   /**
    * Creates the Dovecot component (IMAP/POP3 server)
-   * TODO: Implement in dovecot-construct.ts
    */
   private createDovecotComponent(): void {
-    // Placeholder - will be implemented in separate construct file
-    console.warn('Dovecot component not yet implemented');
+    this.dovecotConstruct = new DovecotConstruct(this, 'dovecot', {
+      config: this.config,
+      namespace: this.mailuNamespace,
+      sharedConfigMap: this.sharedConfigMap,
+    });
   }
 
   /**
    * Creates the Rspamd component (spam filter)
-   * TODO: Implement in rspamd-construct.ts
    */
   private createRspamdComponent(): void {
-    // Placeholder - will be implemented in separate construct file
-    console.warn('Rspamd component not yet implemented');
+    this.rspamdConstruct = new RspamdConstruct(this, 'rspamd', {
+      config: this.config,
+      namespace: this.mailuNamespace,
+      sharedConfigMap: this.sharedConfigMap,
+    });
   }
 
   /**
