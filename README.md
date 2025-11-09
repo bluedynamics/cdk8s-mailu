@@ -20,8 +20,8 @@
 - **Optional Components**
   - ✅ **Webmail** - Roundcube webmail interface
   - ✅ **ClamAV** - Antivirus scanner for email attachments
-  - ⏸ **Fetchmail** - External account fetching (placeholder)
-  - ⏸ **Webdav** - Calendar/contacts server (placeholder)
+  - ✅ **Fetchmail** - External email account fetching (POP3/IMAP polling)
+  - ✅ **Webdav** - CalDAV/CardDAV server (Radicale)
 
 - **Database Support**
   - PostgreSQL (recommended for production)
@@ -260,6 +260,8 @@ components: {
   rspamd: true,     // Spam filter (default: true)
   webmail: true,    // Roundcube webmail (default: false)
   clamav: true,     // Antivirus scanner (default: false)
+  fetchmail: true,  // External account fetching (default: false)
+  webdav: true,     // CalDAV/CardDAV server (default: false)
 }
 ```
 
@@ -279,6 +281,7 @@ storage: {
   rspamd: { size: '5Gi' },
   webmail: { size: '5Gi' },
   clamav: { size: '15Gi' },    // Virus signature databases
+  webdav: { size: '5Gi' },     // Calendars and contacts
 }
 ```
 
@@ -319,13 +322,18 @@ Internet → Traefik Ingress → Front (Nginx) → Mail Components
 
 ### Components
 
+**Core Components:**
 - **Front (Nginx)**: Entry point for all mail protocols. Handles TLS termination and protocol routing.
 - **Admin**: Web UI for managing domains, users, and mail settings.
 - **Postfix**: SMTP server for sending and receiving mail.
 - **Dovecot**: IMAP/POP3 server for mail retrieval.
 - **Rspamd**: Spam filtering, DKIM signing, and antispam scoring.
+
+**Optional Components:**
 - **Webmail (Roundcube)**: Web-based email client.
 - **ClamAV**: Virus scanning for email attachments.
+- **Fetchmail**: Polls external POP3/IMAP accounts and fetches mail into local mailboxes.
+- **Webdav (Radicale)**: CalDAV and CardDAV server for calendar and contacts synchronization.
 
 ## Examples
 
@@ -414,26 +422,26 @@ npm run test:watch # Watch mode
 
 ### Test Coverage
 
-Current coverage: **93.72%**
+Current coverage: **96.94%** (169 tests passing)
 
 ```
-File                  | % Stmts | % Lines |
-----------------------|---------|---------|
-admin-construct.ts    | 90.09   | 90.09   |
-clamav-construct.ts   | 97.17   | 97.17   |
-dovecot-construct.ts  | 88.61   | 88.61   |
-front-construct.ts    | 97.96   | 97.96   |
-postfix-construct.ts  | 98.36   | 98.36   |
-rspamd-construct.ts   | 85.71   | 85.71   |
-webmail-construct.ts  | 97.95   | 97.95   |
+File                     | % Stmts | % Lines |
+-------------------------|---------|---------|
+admin-construct.ts       | 92.12   | 92.12   |
+clamav-construct.ts      | 100.00  | 100.00  |
+dovecot-construct.ts     | 93.22   | 93.22   |
+fetchmail-construct.ts   | 100.00  | 100.00  |
+front-construct.ts       | 100.00  | 100.00  |
+postfix-construct.ts     | 100.00  | 100.00  |
+rspamd-construct.ts      | 91.39   | 91.39   |
+webdav-construct.ts      | 100.00  | 100.00  |
+webmail-construct.ts     | 100.00  | 100.00  |
 ```
 
 ## Roadmap
 
 - [x] Core mail components (Admin, Front, Postfix, Dovecot, Rspamd)
-- [x] Optional components (Webmail, ClamAV)
-- [ ] Fetchmail construct
-- [ ] Webdav construct
+- [x] Optional components (Webmail, ClamAV, Fetchmail, Webdav)
 - [ ] High-availability configurations
 - [ ] Backup/restore utilities
 - [ ] Monitoring dashboards (Grafana)
