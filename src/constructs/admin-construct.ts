@@ -41,7 +41,7 @@ export class AdminConstruct extends Construct {
       },
       accessModes: [kplus.PersistentVolumeAccessMode.READ_WRITE_ONCE],
       storage: parseStorageSize(config.storage?.admin?.size || '5Gi'),
-      storageClassName: config.storage?.storageClass,
+      storageClassName: config.storage?.admin?.storageClass || config.storage?.storageClass,
     });
 
     // Create Deployment

@@ -42,7 +42,7 @@ export class PostfixConstruct extends Construct {
       },
       accessModes: [kplus.PersistentVolumeAccessMode.READ_WRITE_ONCE],
       storage: parseStorageSize(config.storage?.postfix?.size || '5Gi'),
-      storageClassName: config.storage?.storageClass,
+      storageClassName: config.storage?.postfix?.storageClass || config.storage?.storageClass,
     });
 
     // Create Deployment

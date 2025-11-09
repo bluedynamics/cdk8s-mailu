@@ -42,7 +42,7 @@ export class RspamdConstruct extends Construct {
       },
       accessModes: [kplus.PersistentVolumeAccessMode.READ_WRITE_ONCE],
       storage: parseStorageSize(config.storage?.rspamd?.size || '5Gi'),
-      storageClassName: config.storage?.storageClass,
+      storageClassName: config.storage?.rspamd?.storageClass || config.storage?.storageClass,
     });
 
     // Create Deployment

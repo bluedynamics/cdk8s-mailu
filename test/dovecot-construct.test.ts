@@ -199,4 +199,27 @@ describe('DovecotConstruct', () => {
     expect(deployment?.metadata.name).not.toBe('dovecot');
     expect(service?.metadata.name).not.toBe('dovecot');
   });
+
+  test('allows component-specific storage class override', () => {
+    new DovecotConstruct(chart, 'dovecot', {
+      config: {
+        ...config,
+        storage: {
+          storageClass: 'longhorn', // Global storage class
+          dovecot: {
+            size: '50Gi',
+            storageClass: 'hcloud-volumes', // Override for dovecot
+          },
+        },
+      },
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const pvc = manifests.find(m => m.kind === 'PersistentVolumeClaim');
+
+    expect(pvc?.spec.resources.requests.storage).toBe('50Gi');
+    expect(pvc?.spec.storageClassName).toBe('hcloud-volumes');
+  });
 });

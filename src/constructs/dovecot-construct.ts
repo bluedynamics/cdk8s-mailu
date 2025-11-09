@@ -42,7 +42,7 @@ export class DovecotConstruct extends Construct {
       },
       accessModes: [kplus.PersistentVolumeAccessMode.READ_WRITE_ONCE],
       storage: parseStorageSize(config.storage?.dovecot?.size || '100Gi'),
-      storageClassName: config.storage?.storageClass,
+      storageClassName: config.storage?.dovecot?.storageClass || config.storage?.storageClass,
     });
 
     // Create Deployment
