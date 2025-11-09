@@ -7,6 +7,7 @@ import { ClamavConstruct } from './constructs/clamav-construct';
 import { DovecotConstruct } from './constructs/dovecot-construct';
 import { FetchmailConstruct } from './constructs/fetchmail-construct';
 import { FrontConstruct } from './constructs/front-construct';
+import { NginxPatchConfigMap } from './constructs/nginx-patch-configmap';
 import { PostfixConstruct } from './constructs/postfix-construct';
 import { RspamdConstruct } from './constructs/rspamd-construct';
 import { WebdavConstruct } from './constructs/webdav-construct';
@@ -70,6 +71,11 @@ export class MailuChart extends Chart {
   private readonly sharedConfigMap: kplus.ConfigMap;
 
   /**
+   * Nginx patch ConfigMap for Traefik TLS termination (optional)
+   */
+  private nginxPatchConfigMap?: kplus.ConfigMap;
+
+  /**
    * Component constructs (public to allow access if needed)
    */
   public adminConstruct?: AdminConstruct;
@@ -111,6 +117,12 @@ export class MailuChart extends Chart {
     // Create shared ConfigMap with environment variables
     // Note: Front service discovery address will be added after front component creation
     this.sharedConfigMap = this.createSharedConfigMap();
+
+    // Create nginx patch ConfigMap for Traefik TLS termination
+    const patchConfigMapConstruct = new NginxPatchConfigMap(this, 'nginx-patch', {
+      namespace: this.mailuNamespace,
+    });
+    this.nginxPatchConfigMap = patchConfigMapConstruct.configMap;
 
     // Deploy core components (always enabled)
     if (config.components?.admin !== false) {
@@ -165,11 +177,12 @@ export class MailuChart extends Chart {
       SUBNET: this.config.subnet,
       TIMEZONE: this.config.timezone || 'UTC',
 
-      // TLS configuration - 'notls' for Kubernetes Ingress (temporarily)
-      // TODO: This disables TLS for mail protocols - need proper solution
-      // Web traffic: HTTP on port 80 (Ingress handles HTTPS)
-      // Mail protocols: Currently unencrypted (IngressRouteTCP should handle TLS)
-      TLS_FLAVOR: 'notls',
+      // TLS configuration - 'traefik' for Traefik TLS termination
+      // Custom TLS flavor that enables all mail protocol ports WITHOUT TLS
+      // Web traffic: HTTP on port 80 (Traefik Ingress handles HTTPS)
+      // Mail protocols: Plaintext on 465, 587, 993, 995 (Traefik IngressRouteTCP handles TLS)
+      // The 'traefik' flavor triggers nginx patch script to inject mail protocol listeners
+      TLS_FLAVOR: 'traefik',
 
       // Proxy configuration - trust X-Forwarded headers from pod network
       REAL_IP_HEADER: 'X-Forwarded-For',
@@ -236,6 +249,7 @@ export class MailuChart extends Chart {
       config: this.config,
       namespace: this.mailuNamespace,
       sharedConfigMap: this.sharedConfigMap,
+      nginxPatchConfigMap: this.nginxPatchConfigMap,
     });
   }
 

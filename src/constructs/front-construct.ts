@@ -8,6 +8,7 @@ export interface FrontConstructProps {
   readonly config: MailuChartConfig;
   readonly namespace: kplus.Namespace;
   readonly sharedConfigMap: kplus.ConfigMap;
+  readonly nginxPatchConfigMap?: kplus.ConfigMap;
 }
 
 /**
@@ -31,7 +32,7 @@ export class FrontConstruct extends Construct {
   constructor(scope: Construct, id: string, props: FrontConstructProps) {
     super(scope, id);
 
-    const { config, namespace, sharedConfigMap } = props;
+    const { config, namespace, sharedConfigMap, nginxPatchConfigMap } = props;
 
     // Create Deployment
     this.deployment = new kplus.Deployment(this, 'deployment', {
@@ -56,8 +57,8 @@ export class FrontConstruct extends Construct {
       },
     });
 
-    // Configure container
-    const container = this.deployment.addContainer({
+    // Prepare container configuration with optional command override
+    const containerConfig: any = {
       name: 'front',
       image: `${config.images?.registry || 'ghcr.io/mailu'}/nginx:${config.images?.tag || '2024.06'}`,
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
@@ -96,7 +97,15 @@ export class FrontConstruct extends Construct {
         timeoutSeconds: Duration.seconds(3),
         failureThreshold: 3,
       }),
-    });
+    };
+
+    // If nginx patch ConfigMap provided, override command to use wrapper script
+    if (nginxPatchConfigMap) {
+      containerConfig.command = ['/bin/sh', '/usr/local/bin/entrypoint-wrapper.sh'];
+    }
+
+    // Configure container
+    const container = this.deployment.addContainer(containerConfig);
 
     // Add environment variables from shared ConfigMap
     container.env.copyFrom(kplus.Env.fromConfigMap(sharedConfigMap));
@@ -110,6 +119,20 @@ export class FrontConstruct extends Construct {
         key: 'secret-key',
       }),
     );
+
+    // If nginx patch ConfigMap is provided, mount wrapper script
+    if (nginxPatchConfigMap) {
+      // Create volume from ConfigMap
+      const patchVolume = kplus.Volume.fromConfigMap(this, 'nginx-patch-volume', nginxPatchConfigMap, {
+        defaultMode: 0o755, // Make script executable
+      });
+
+      // Mount wrapper script (command override already set in containerConfig above)
+      container.mount('/usr/local/bin/entrypoint-wrapper.sh', patchVolume, {
+        subPath: 'entrypoint-wrapper.sh',
+        readOnly: true,
+      });
+    }
 
     // Create Service exposing all mail and web ports
     this.service = new kplus.Service(this, 'service', {
