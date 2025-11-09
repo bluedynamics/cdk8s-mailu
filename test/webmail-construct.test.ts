@@ -104,7 +104,7 @@ describe('WebmailConstruct', () => {
     expect(deployment?.spec.template.spec.containers[0].image).toBe('ghcr.io/mailu/webmail:2024.06');
   });
 
-  test('configures HTTP health probes', () => {
+  test('configures TCP health probes', () => {
     new WebmailConstruct(chart, 'webmail', {
       config,
       namespace,
@@ -115,15 +115,16 @@ describe('WebmailConstruct', () => {
     const deployment = manifests.find(m => m.kind === 'Deployment');
     const container = deployment?.spec.template.spec.containers[0];
 
-    // Liveness probe
+    // Liveness probe - TCP socket since webmail only accepts requests through front proxy
     expect(container.livenessProbe).toBeDefined();
-    expect(container.livenessProbe.httpGet.path).toBe('/sso.php');
-    expect(container.livenessProbe.httpGet.port).toBe(80);
+    expect(container.livenessProbe.tcpSocket).toBeDefined();
+    expect(container.livenessProbe.tcpSocket.port).toBe(80);
     expect(container.livenessProbe.initialDelaySeconds).toBe(30);
 
-    // Readiness probe
+    // Readiness probe - TCP socket
     expect(container.readinessProbe).toBeDefined();
-    expect(container.readinessProbe.httpGet.path).toBe('/sso.php');
+    expect(container.readinessProbe.tcpSocket).toBeDefined();
+    expect(container.readinessProbe.tcpSocket.port).toBe(80);
     expect(container.readinessProbe.initialDelaySeconds).toBe(10);
   });
 

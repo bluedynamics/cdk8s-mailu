@@ -82,7 +82,7 @@ describe('AdminConstruct', () => {
     const services = manifests.filter(m => m.kind === 'Service');
     expect(services).toHaveLength(1);
     expect(services[0].spec.type).toBe('ClusterIP');
-    expect(services[0].spec.ports[0].port).toBe(80);
+    expect(services[0].spec.ports[0].port).toBe(8080); // Admin service on 8080
   });
 
   test('configures container with correct image', () => {
@@ -117,13 +117,13 @@ describe('AdminConstruct', () => {
 
     // Liveness probe
     expect(container.livenessProbe).toBeDefined();
-    expect(container.livenessProbe.httpGet.path).toBe('/health');
-    expect(container.livenessProbe.httpGet.port).toBe(80);
+    expect(container.livenessProbe.httpGet.path).toBe('/ping'); // Admin uses /ping endpoint
+    expect(container.livenessProbe.httpGet.port).toBe(8080); // Admin uses port 8080
     expect(container.livenessProbe.initialDelaySeconds).toBe(30);
 
     // Readiness probe
     expect(container.readinessProbe).toBeDefined();
-    expect(container.readinessProbe.httpGet.path).toBe('/health');
+    expect(container.readinessProbe.httpGet.path).toBe('/ping'); // Admin uses /ping endpoint
     expect(container.readinessProbe.initialDelaySeconds).toBe(10);
   });
 

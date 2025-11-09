@@ -8,6 +8,7 @@ export interface WebmailConstructProps {
   readonly config: MailuChartConfig;
   readonly namespace: kplus.Namespace;
   readonly sharedConfigMap: kplus.ConfigMap;
+  readonly frontService?: kplus.Service; // Reference to front service for inter-component communication
 }
 
 /**
@@ -99,15 +100,15 @@ export class WebmailConstruct extends Construct {
           protocol: kplus.Protocol.TCP,
         },
       ],
-      // Health check on HTTP port
-      liveness: kplus.Probe.fromHttpGet('/sso.php', {
+      // Health check - use TCP probe since webmail only accepts requests through front proxy
+      liveness: kplus.Probe.fromTcpSocket({
         port: 80,
         initialDelaySeconds: Duration.seconds(30),
         periodSeconds: Duration.seconds(10),
         timeoutSeconds: Duration.seconds(5),
         failureThreshold: 3,
       }),
-      readiness: kplus.Probe.fromHttpGet('/sso.php', {
+      readiness: kplus.Probe.fromTcpSocket({
         port: 80,
         initialDelaySeconds: Duration.seconds(10),
         periodSeconds: Duration.seconds(5),
@@ -153,6 +154,14 @@ export class WebmailConstruct extends Construct {
         key: 'secret-key',
       }),
     );
+
+    // Add front service address for inter-component communication
+    if (props.frontService) {
+      container.env.addVariable(
+        'FRONT_ADDRESS',
+        kplus.EnvValue.fromValue(props.frontService.name),
+      );
+    }
 
     // Mount PVC for Roundcube data
     container.mount(

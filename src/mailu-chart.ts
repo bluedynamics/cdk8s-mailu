@@ -109,6 +109,7 @@ export class MailuChart extends Chart {
     });
 
     // Create shared ConfigMap with environment variables
+    // Note: Front service discovery address will be added after front component creation
     this.sharedConfigMap = this.createSharedConfigMap();
 
     // Deploy core components (always enabled)
@@ -148,6 +149,9 @@ export class MailuChart extends Chart {
     if (config.components?.webdav) {
       this.createWebdavComponent();
     }
+
+    // Update ConfigMap with service discovery addresses after all components are created
+    this.updateConfigMapWithServiceDiscovery();
   }
 
   /**
@@ -160,6 +164,23 @@ export class MailuChart extends Chart {
       HOSTNAMES: this.config.hostnames.join(','),
       SUBNET: this.config.subnet,
       TIMEZONE: this.config.timezone || 'UTC',
+
+      // TLS configuration - 'notls' for Kubernetes Ingress (temporarily)
+      // TODO: This disables TLS for mail protocols - need proper solution
+      // Web traffic: HTTP on port 80 (Ingress handles HTTPS)
+      // Mail protocols: Currently unencrypted (IngressRouteTCP should handle TLS)
+      TLS_FLAVOR: 'notls',
+
+      // Proxy configuration - trust X-Forwarded headers from pod network
+      REAL_IP_HEADER: 'X-Forwarded-For',
+      REAL_IP_FROM: this.config.subnet, // Trust the entire pod network
+
+      // Kubernetes/Helm deployment marker - required to bypass Docker-only checks
+      MAILU_HELM_CHART: 'true',
+
+      // Web paths - URL paths for admin interface and webmail
+      WEB_ADMIN: '/admin',
+      WEB_WEBMAIL: '/webmail',
 
       // Mail configuration
       POSTMASTER: this.config.mailu?.initialAccount?.username || 'postmaster',
@@ -179,6 +200,9 @@ export class MailuChart extends Chart {
 
     // Add Redis connection details
     envVars.REDIS_ADDRESS = `${this.config.redis.host}:${this.config.redis.port || 6379}`;
+
+    // Note: FRONT_ADDRESS is added after component creation via updateConfigMapWithServiceDiscovery()
+    // to use the dynamically generated service name
 
     // Add log level
     if (this.config.mailu?.logLevel) {
@@ -256,6 +280,7 @@ export class MailuChart extends Chart {
       config: this.config,
       namespace: this.mailuNamespace,
       sharedConfigMap: this.sharedConfigMap,
+      frontService: this.frontConstruct?.service, // Pass front service for inter-component communication
     });
   }
 
@@ -290,5 +315,28 @@ export class MailuChart extends Chart {
       namespace: this.mailuNamespace,
       sharedConfigMap: this.sharedConfigMap,
     });
+  }
+
+  /**
+   * Updates ConfigMap with service discovery addresses after components are created
+   * This is needed because we need the dynamically generated service names
+   */
+  private updateConfigMapWithServiceDiscovery(): void {
+    if (this.sharedConfigMap) {
+      // Add service addresses for inter-component communication
+      // Use full Kubernetes DNS names for reliable resolution (namespace.svc.cluster.local)
+      // Note: nginx template adds ports automatically (e.g., :8080 for admin, :11334 for antispam)
+      const namespace = this.config.namespace;
+
+      if (this.adminConstruct?.service) {
+        this.sharedConfigMap.addData('ADMIN_ADDRESS', `${this.adminConstruct.service.name}.${namespace}.svc.cluster.local`);
+      }
+      if (this.frontConstruct?.service) {
+        this.sharedConfigMap.addData('FRONT_ADDRESS', `${this.frontConstruct.service.name}.${namespace}.svc.cluster.local`);
+      }
+      if (this.webmailConstruct?.service) {
+        this.sharedConfigMap.addData('WEBMAIL_ADDRESS', `${this.webmailConstruct.service.name}.${namespace}.svc.cluster.local`);
+      }
+    }
   }
 }

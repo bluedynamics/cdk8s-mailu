@@ -72,7 +72,7 @@ export class AdminConstruct extends Construct {
       name: 'admin',
       image: `${config.images?.registry || 'ghcr.io/mailu'}/admin:${config.images?.tag || '2024.06'}`,
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
-      portNumber: 80,
+      portNumber: 8080, // Admin gunicorn listens on 8080
       securityContext: {
         // Note: cdk8s-plus sets pod-level runAsNonRoot: true by default,
         // but container-level settings take precedence. Mailu containers
@@ -97,15 +97,15 @@ export class AdminConstruct extends Construct {
         }
         : undefined,
       // Add health checks
-      liveness: kplus.Probe.fromHttpGet('/health', {
-        port: 80,
+      liveness: kplus.Probe.fromHttpGet('/ping', {
+        port: 8080, // Match gunicorn port
         initialDelaySeconds: Duration.seconds(30),
         periodSeconds: Duration.seconds(10),
         timeoutSeconds: Duration.seconds(5),
         failureThreshold: 3,
       }),
-      readiness: kplus.Probe.fromHttpGet('/health', {
-        port: 80,
+      readiness: kplus.Probe.fromHttpGet('/ping', {
+        port: 8080, // Match gunicorn port
         initialDelaySeconds: Duration.seconds(10),
         periodSeconds: Duration.seconds(5),
         timeoutSeconds: Duration.seconds(3),
@@ -160,7 +160,7 @@ export class AdminConstruct extends Construct {
         'INITIAL_ADMIN_PASSWORD',
         kplus.EnvValue.fromSecretValue({
           secret: adminPasswordSecret,
-          key: 'password',
+          key: 'initial-admin-password',
         }),
       );
 
@@ -205,8 +205,8 @@ export class AdminConstruct extends Construct {
       ports: [
         {
           name: 'http',
-          port: 80,
-          targetPort: 80,
+          port: 8080, // Expose on 8080 to match rspamd expectations (hardcoded in Mailu)
+          targetPort: 8080, // Admin listens on 8080
           protocol: kplus.Protocol.TCP,
         },
       ],
