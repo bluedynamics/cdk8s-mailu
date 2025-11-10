@@ -297,6 +297,14 @@ export interface MailuConfig {
    * @default false
    */
   readonly apiEnabled?: boolean;
+
+  /**
+   * Webmail client to use
+   * - roundcube: Traditional PHP webmail client (mature, full-featured)
+   * - snappymail: Modern lightweight webmail client
+   * @default "roundcube"
+   */
+  readonly webmailType?: 'roundcube' | 'snappymail';
 }
 
 /**

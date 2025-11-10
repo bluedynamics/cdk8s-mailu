@@ -155,6 +155,11 @@ export class WebmailConstruct extends Construct {
       }),
     );
 
+    // Add webmail client type (roundcube or snappymail)
+    // This determines which webmail client to use and sets the correct nginx document root
+    const webmailType = config.mailu?.webmailType || 'roundcube';
+    container.env.addVariable('WEBMAIL', kplus.EnvValue.fromValue(webmailType));
+
     // Add front service address for inter-component communication
     if (props.frontService) {
       container.env.addVariable(
