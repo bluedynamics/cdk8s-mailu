@@ -192,7 +192,10 @@ export class MailuChart extends Chart {
 
       // Web paths - URL paths for admin interface and webmail
       WEB_ADMIN: '/admin',
-      WEB_WEBMAIL: '/webmail',
+      // WEB_WEBMAIL must be '/' because front nginx strips '/webmail' prefix before forwarding
+      // Front receives: /webmail/xxx → strips prefix → webmail sees: /xxx
+      // So webmail must think it's at document root (WEB_WEBMAIL=/) to generate correct redirects
+      WEB_WEBMAIL: '/',
 
       // Mail configuration
       POSTMASTER: this.config.mailu?.initialAccount?.username || 'postmaster',
