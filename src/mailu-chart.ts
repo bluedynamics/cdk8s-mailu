@@ -177,12 +177,11 @@ export class MailuChart extends Chart {
       SUBNET: this.config.subnet,
       TIMEZONE: this.config.timezone || 'UTC',
 
-      // TLS configuration - 'traefik' for Traefik TLS termination
-      // Custom TLS flavor that enables all mail protocol ports WITHOUT TLS
+      // TLS configuration - 'notls' for Traefik TLS termination
       // Web traffic: HTTP on port 80 (Traefik Ingress handles HTTPS)
-      // Mail protocols: Plaintext on 465, 587, 993, 995 (Traefik IngressRouteTCP handles TLS)
-      // The 'traefik' flavor triggers nginx patch script to inject mail protocol listeners
-      TLS_FLAVOR: 'traefik',
+      // Mail protocols: Wrapper script patches nginx to add plaintext listeners on 465, 587, 993, 995
+      // (Traefik IngressRouteTCP handles TLS for mail protocols)
+      TLS_FLAVOR: 'notls',
 
       // Proxy configuration - trust X-Forwarded headers from pod network
       REAL_IP_HEADER: 'X-Forwarded-For',

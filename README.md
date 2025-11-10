@@ -450,15 +450,54 @@ When using Kubernetes Ingress/Traefik with `TLS_FLAVOR=cert`:
 2. Mailu's redirect server receives HTTP on port 80
 3. Redirects to HTTPS → Traefik receives → forwards HTTP → **infinite loop**
 
-**Solution: Traefik TLS Termination**
+**Critical Challenge with `TLS_FLAVOR=notls`:**
 
-Configure `TLS_FLAVOR=notls` and let Traefik/Ingress handle ALL TLS:
+While `TLS_FLAVOR=notls` avoids the redirect loop, it introduces a different problem: **Mailu's `config.py` doesn't generate nginx listeners for mail protocol ports (465, 587, 993, 995)** when TLS is disabled. This is because Mailu assumes:
+- If `TLS_FLAVOR=notls`, you don't want secure mail protocols
+- Only port 25 (SMTP) and port 80 (HTTP) are configured
+
+**Solution: nginx Wrapper Script**
+
+This library solves the problem with a **wrapper script** that:
+1. Runs Mailu's `config.py` to generate base nginx config
+2. Patches `/etc/nginx/nginx.conf` to inject mail protocol server blocks (465, 587, 993, 995)
+3. Starts nginx with complete configuration
+
+**How It Works:**
+
+The `NginxPatchConfigMap` construct creates a ConfigMap with the wrapper script:
+
+```typescript
+import { NginxPatchConfigMap } from 'cdk8s-mailu/constructs/nginx-patch-configmap';
+
+// Automatically created when tlsFlavor: 'traefik'
+const patchConfigMap = new NginxPatchConfigMap(this, 'nginx-patch', {
+  namespace: mailuNamespace,
+});
+```
+
+The `FrontConstruct` mounts the script and overrides the container entrypoint:
+
+```typescript
+// Container command override
+if (props.nginxPatchConfigMap) {
+  containerConfig.command = ['/bin/sh', '/usr/local/bin/entrypoint-wrapper.sh'];
+
+  // Mount script with executable permissions
+  container.mount('/usr/local/bin/entrypoint-wrapper.sh', patchVolume, {
+    subPath: 'entrypoint-wrapper.sh',
+    readOnly: true,
+  });
+}
+```
 
 **Benefits:**
 - Centralized TLS certificate management (one cert for all protocols)
 - No cert files needed in Mailu containers
 - Nginx listens on port 80 without redirect (no loop)
+- All mail protocol ports (465, 587, 993, 995) properly configured
 - Pod network traffic is secure (internal to cluster)
+- Wrapper script is immutable (read-only ConfigMap mount)
 
 **Implementation Example:**
 
