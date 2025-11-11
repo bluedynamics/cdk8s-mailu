@@ -27,7 +27,7 @@ jobs:
     - run: npm install -g @mermaid-js/mermaid-cli
 
     - name: Generate Docs
-      run: make docs
+      run: cd documentation && make docs
 
     - name: Deploy Docs
       uses: peaceiris/actions-gh-pages@v4
