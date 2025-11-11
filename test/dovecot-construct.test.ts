@@ -94,9 +94,9 @@ describe('DovecotConstruct', () => {
     const manifests = Testing.synth(chart);
     const service = manifests.find(m => m.kind === 'Service');
 
-    // Check all expected ports are defined
+    // Check all expected ports are defined (including LMTP for mail delivery)
     const portNames = service?.spec.ports.map((p: any) => p.name).sort();
-    expect(portNames).toEqual(['imap', 'imaps', 'pop3', 'pop3s']);
+    expect(portNames).toEqual(['imap', 'imaps', 'lmtp', 'pop3', 'pop3s']);
 
     // Verify specific port configurations
     const ports = service?.spec.ports;

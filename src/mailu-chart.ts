@@ -381,8 +381,10 @@ export class MailuChart extends Chart {
       if (this.adminConstruct?.service) {
         this.sharedConfigMap.addData('ADMIN_ADDRESS', `${this.adminConstruct.service.name}.${namespace}.svc.cluster.local`);
       }
-      if (this.frontConstruct?.service) {
-        this.sharedConfigMap.addData('FRONT_ADDRESS', `${this.frontConstruct.service.name}.${namespace}.svc.cluster.local`);
+      // FRONT_ADDRESS is used for LMTP delivery (postfix -> dovecot:2525)
+      // Despite the name, it should point to dovecot, not the nginx front service
+      if (this.dovecotConstruct?.service) {
+        this.sharedConfigMap.addData('FRONT_ADDRESS', `${this.dovecotConstruct.service.name}.${namespace}.svc.cluster.local`);
       }
       if (this.webmailConstruct?.service) {
         this.sharedConfigMap.addData('WEBMAIL_ADDRESS', `${this.webmailConstruct.service.name}.${namespace}.svc.cluster.local`);

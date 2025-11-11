@@ -163,6 +163,12 @@ export class DovecotConstruct extends Construct {
       selector: this.deployment,
       ports: [
         {
+          name: 'lmtp',
+          port: 2525,
+          targetPort: 2525,
+          protocol: kplus.Protocol.TCP,
+        },
+        {
           name: 'imap',
           port: 143,
           targetPort: 143,
