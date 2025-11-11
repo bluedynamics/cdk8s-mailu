@@ -139,9 +139,19 @@ kubectl get pods -n mailu
 
 ## What's next?
 
-- [Configure advanced options](../how-to/configure-construct.md)
-- [Understand the dovecot submission service](../explanation/dovecot-submission.md)
-- [Understand the architecture](../explanation/architecture.md)
+**Configuration & Customization:**
+- [Scale Resources](../how-to/scale-resources.md) - Adjust CPU and memory for your workload
+- [Customize Storage](../how-to/customize-storage.md) - Increase mailbox storage
+- [Enable Optional Components](../how-to/enable-optional-components.md) - Add webmail, antivirus, CalDAV
+- [Configure TLS](../how-to/configure-tls.md) - Set up Traefik ingress with Let's Encrypt
+
+**Operations:**
+- [Backup and Restore](../how-to/backup-restore.md) - Protect your mail data
+- [Upgrade Mailu](../how-to/upgrade-mailu.md) - Update to newer versions
+
+**Understanding:**
+- [Architecture Overview](../explanation/architecture.md) - How components work together
+- [Dovecot Submission Service](../explanation/dovecot-submission.md) - Webmail email sending
 
 ## Troubleshooting
 

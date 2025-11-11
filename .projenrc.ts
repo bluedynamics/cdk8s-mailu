@@ -1,4 +1,4 @@
-import { cdk8s } from 'projen';
+import { cdk8s, github } from 'projen';
 
 const project = new cdk8s.Cdk8sTypeScriptApp({
   name: 'cdk8s-mailu',
@@ -31,6 +31,16 @@ const project = new cdk8s.Cdk8sTypeScriptApp({
     'cdk.out/',
     '*.log',
   ],
+
+  // Configure upgrade workflow to use GITHUB_TOKEN instead of PAT
+  depsUpgrade: true,
+  depsUpgradeOptions: {
+    workflowOptions: {
+      projenCredentials: github.GithubCredentials.fromPersonalAccessToken({
+        secret: 'GITHUB_TOKEN',
+      }),
+    },
+  },
 });
 
 // Package.json configuration for library usage

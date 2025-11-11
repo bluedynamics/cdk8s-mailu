@@ -75,19 +75,25 @@ This documentation follows the [Diátaxis framework](https://diataxis.fr/), orga
 ## Quick Links
 
 ### Getting Started
+- [Setup Prerequisites](how-to/setup-prerequisites.md) - Prepare cluster infrastructure
+- [Setup PostgreSQL](how-to/setup-postgresql.md) - Deploy database (Bitnami or CNPG)
+- [Setup Redis](how-to/setup-redis.md) - Deploy cache
 - [Quick Start](tutorials/01-quick-start.md) - Deploy your first Mailu instance
-- [Configure a construct](how-to/configure-construct.md) - Customize component settings
-- [CDK8S Patterns](explanation/cdk8s-patterns.md) - Understand construct patterns
 
 ### Common Tasks
-- [Configure PostgreSQL database](how-to/configure-construct.md) - Set up database backend
-- [Customize resources](how-to/configure-construct.md) - Adjust CPU and memory limits
-- [Enable optional components](how-to/configure-construct.md) - Add ClamAV, Webdav, Fetchmail
+- [Manage Secrets](how-to/manage-secrets.md) - Create Kubernetes secrets for Mailu
+- [Scale Resources](how-to/scale-resources.md) - Adjust CPU and memory limits
+- [Customize Storage](how-to/customize-storage.md) - Configure PVC sizes and storage classes
+- [Enable Optional Components](how-to/enable-optional-components.md) - Add ClamAV, Webdav, Fetchmail
+- [Configure TLS](how-to/configure-tls.md) - Set up Traefik TLS termination
+- [Upgrade Mailu](how-to/upgrade-mailu.md) - Upgrade to newer versions
+- [Backup and Restore](how-to/backup-restore.md) - Protect your mail data
 
 ### Architecture
 - [Architecture Overview](explanation/architecture.md) - High-level design
+- [Dovecot Submission Service](explanation/dovecot-submission.md) - Webmail email sending
+- [Component Specifications](reference/component-specifications.md) - Technical specifications
 - [Configuration Options](reference/configuration-options.md) - Complete API reference
-- [Component Reference](reference/api/) - Detailed construct documentation
 
 ## Table of Contents
 

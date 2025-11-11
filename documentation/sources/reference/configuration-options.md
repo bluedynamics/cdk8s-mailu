@@ -170,7 +170,11 @@ Additional configuration sections to be documented:
 
 ## See Also
 
-- [Configure Constructs](../how-to/configure-construct.md) - How-to guide for configuration
+- [Configure Constructs](../how-to/configure-construct.md) - Basic configuration guide
+- [Scale Resources](../how-to/scale-resources.md) - Adjust CPU and memory
+- [Customize Storage](../how-to/customize-storage.md) - Configure PVC sizes
+- [Enable Optional Components](../how-to/enable-optional-components.md) - Component toggles
+- [Manage Secrets](../how-to/manage-secrets.md) - Create required secrets
 - [Architecture](../explanation/architecture.md) - Understanding configuration design
 
 ---

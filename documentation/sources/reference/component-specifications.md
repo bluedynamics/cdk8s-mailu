@@ -489,6 +489,8 @@ All components include liveness and readiness probes:
 
 ## See Also
 
-- [Configuration Options](configuration-options.md) - Customizing resources and storage
+- [Configuration Options](configuration-options.md) - Complete configuration reference
+- [Scale Resources](../how-to/scale-resources.md) - Adjust CPU and memory based on these specs
+- [Customize Storage](../how-to/customize-storage.md) - Configure PVC sizes for components
+- [Enable Optional Components](../how-to/enable-optional-components.md) - Add/remove components
 - [Architecture](../explanation/architecture.md) - Understanding component relationships
-- [How to Scale Resources](../how-to/scale-resources.md) - Adjusting for your workload

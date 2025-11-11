@@ -147,6 +147,15 @@ export class PostfixConstruct extends Construct {
       }),
     );
 
+    // Add Postfix rate limiting configuration (anvil)
+    // These env vars configure Postfix main.cf parameters for rate limiting
+    // See: http://www.postfix.org/postconf.5.html
+    container.env.addVariable('POSTFIX_smtpd_client_connection_rate_limit', kplus.EnvValue.fromValue('60')); // 60 connections per minute per IP
+    container.env.addVariable('POSTFIX_smtpd_client_connection_count_limit', kplus.EnvValue.fromValue('10')); // 10 simultaneous connections per IP
+    container.env.addVariable('POSTFIX_smtpd_client_message_rate_limit', kplus.EnvValue.fromValue('100')); // 100 messages per minute per IP
+    container.env.addVariable('POSTFIX_smtpd_client_recipient_rate_limit', kplus.EnvValue.fromValue('300')); // 300 recipients per minute per IP
+    container.env.addVariable('POSTFIX_anvil_rate_time_unit', kplus.EnvValue.fromValue('60s')); // Time unit for rate calculations
+
     // Mount PVC for mail queue
     container.mount('/queue', kplus.Volume.fromPersistentVolumeClaim(this, 'queue-volume', this.pvc));
 

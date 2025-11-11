@@ -9,6 +9,20 @@
 
 How-to guides are recipes that take you through the steps involved in addressing specific tasks and problems. They are more advanced than tutorials and assume you have some knowledge of how cdk8s-mailu works.
 
+## Prerequisites
+
+**Set up required infrastructure before deploying Mailu:**
+
+```{toctree}
+---
+maxdepth: 1
+titlesonly: true
+---
+setup-prerequisites
+setup-postgresql
+setup-redis
+```
+
 ## Configuration
 
 ```{toctree}
@@ -17,25 +31,27 @@ maxdepth: 1
 titlesonly: true
 ---
 configure-construct
+scale-resources
+customize-storage
+enable-optional-components
+configure-tls
+manage-secrets
 ```
 
-## Common Tasks
+## Operations & Maintenance
 
-*This section will be populated with common operational tasks like:*
-- Configuring database backends (PostgreSQL, SQLite)
-- Setting up Redis for caching
-- Customizing resource limits
-- Enabling optional components (ClamAV, Webdav, Fetchmail)
-- Integrating with Traefik for TLS termination
-- Configuring secrets management
+```{toctree}
+---
+maxdepth: 1
+titlesonly: true
+---
+upgrade-mailu
+backup-restore
+```
 
 ## Troubleshooting
 
-*This section will be populated with troubleshooting guides like:*
-- Debugging pod startup issues
-- Resolving database connection problems
-- Fixing service discovery issues
-- Troubleshooting SMTP/IMAP connectivity
+*This section will be populated with troubleshooting guides in future releases.*
 
 ---
 
