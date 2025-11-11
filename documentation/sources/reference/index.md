@@ -29,12 +29,13 @@ configuration-options
 
 ## Component Specifications
 
-*This section will document:*
-- Mailu component versions and compatibility
-- Resource requirements (CPU, memory, storage)
-- Network ports and protocols
-- Volume requirements
-- Environment variables
+```{toctree}
+---
+maxdepth: 1
+titlesonly: true
+---
+component-specifications
+```
 
 ## API Documentation
 
