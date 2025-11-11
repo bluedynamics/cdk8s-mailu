@@ -13,20 +13,19 @@ Mailu is a modular mail server composed of multiple services working together:
 ```mermaid
 graph TB
     Ingress[Ingress<br/>TLS Termination] -->|587, 465, 993, 995| FrontNginx[Front<br/>Nginx]
-    Ingress -->|80| Admin[Admin<br/>Web UI]
+    Ingress -->|80| Admin[Admin<br/>Web UI + SSO]
     Ingress -->|80| Webmail[Webmail<br/>Roundcube]
     Ingress -.Port 25 MX.-> Postfix[Postfix<br/>SMTP]
+    FrontNginx -->|Auth| Admin
     FrontNginx --> Postfix
     FrontNginx --> Dovecot[Dovecot<br/>IMAP/POP3]
 
-    Webmail -.Token Auth.-> DovecotSub[Dovecot<br/>Submission<br/>Port 10025]
+    Webmail -.Token Auth Port 10025.-> DovecotSub[Dovecot<br/>Submission]
     DovecotSub -.Relay.-> Postfix
 
     Postfix --> Rspamd[Rspamd<br/>Spam Filter]
     Postfix --> ClamAV[ClamAV<br/>Antivirus]
-    Dovecot --> Data[(Mail Storage)]
-    Admin --> Database[(PostgreSQL)]
-    Rspamd --> Redis[(Redis Cache)]
+    Postfix -->|LMTP| Dovecot
 
     style DovecotSub fill:#e1f5fe
     style Webmail fill:#fff3e0
@@ -44,7 +43,7 @@ graph TB
 
 **Front (Nginx)**
 - Protocol routing for authenticated mail protocols (SMTP submission 587/465, IMAP 993, POP3 995)
-- Authentication proxy for mail protocols (auth_http to Admin service)
+- Authentication proxy using Admin's auth_http endpoint
 - Receives plain TCP from Traefik after TLS termination
 - Load balancing to backend services (Postfix, Dovecot)
 - **Note**: Port 25 (MX mail reception) and HTTP/HTTPS bypass Front entirely
@@ -54,19 +53,24 @@ graph TB
 - Web-based administration interface (accessed via Ingress at port 80 internally)
 - User and domain management
 - Configuration interface
-- Authentication backend for mail protocols
+- **Authentication backend**: Provides auth_http endpoint for Front (Nginx)
+- **SSO service**: Single sign-on for webmail and admin interface
+- **Shared database**: PostgreSQL database shared with Webmail
 - Always enabled by default
 
 **Webmail (Roundcube)**
 - Browser-based email client (accessed via Ingress at port 80 internally)
 - Contact and calendar management
 - Uses Dovecot Submission service for sending mail
+- **Shared database**: Uses same PostgreSQL database as Admin
+- **SSO integration**: Authenticates via Admin's SSO service
 - Enabled by default, can be disabled
 
 **Postfix**
 - SMTP server for sending/receiving mail
 - Mail routing and relay
 - Spam/virus scanning integration
+- **Mail delivery**: Uses LMTP to deliver mail to Dovecot
 - **Port 25 (MX)**: Receives direct routing from Traefik (bypasses Front/nginx)
   - Traefik InFlightConn middleware: Limits simultaneous connections per IP (15 default)
   - Postfix anvil rate limiting: Limits connections/min (60), messages/min (100), recipients/min (300)
@@ -76,6 +80,7 @@ graph TB
 **Dovecot**
 - IMAP and POP3 server
 - Mail storage and retrieval
+- **Mail reception**: Receives mail from Postfix via LMTP
 - Authentication backend
 - Always required
 
