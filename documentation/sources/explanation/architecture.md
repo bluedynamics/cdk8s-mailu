@@ -12,20 +12,20 @@ Mailu is a modular mail server composed of multiple services working together:
 
 ```mermaid
 graph TB
-    Ingress[Ingress<br/>TLS Termination] -->|587, 465, 993, 995| FrontNginx[Front<br/>Nginx]
-    Ingress -->|80| Admin[Admin<br/>Web UI + SSO]
-    Ingress -->|80| Webmail[Webmail<br/>Roundcube]
-    Ingress -.Port 25 MX.-> Postfix[Postfix<br/>SMTP]
-    FrontNginx -->|Auth| Admin
-    FrontNginx --> Postfix
-    FrontNginx --> Dovecot[Dovecot<br/>IMAP/POP3]
+    Ingress[Traefik<br/>TLS Termination] -->|Plaintext: 587, 465, 993, 995| FrontNginx[Front Nginx<br/>Auth Proxy]
+    Ingress -->|HTTP:80| Admin[Admin:8080<br/>Web UI + SSO]
+    Ingress -->|HTTP:80| Webmail[Webmail:80<br/>Roundcube]
+    Ingress -.MX:25.-> Postfix[Postfix:25<br/>SMTP]
+    FrontNginx -->|auth_http:8080/internal/auth/email| Admin
+    FrontNginx -->|Relay SMTP:25| Postfix
+    FrontNginx -->|Relay IMAP:143<br/>POP3:110| Dovecot[Dovecot<br/>IMAP/POP3]
 
-    Webmail -.Token Auth Port 10025.-> DovecotSub[Dovecot<br/>Submission]
-    DovecotSub -.Relay.-> Postfix
+    Webmail -.SMTP:10025.-> DovecotSub[Dovecot<br/>Submission:10025]
+    DovecotSub -.Relay:25.-> Postfix
 
-    Postfix --> Rspamd[Rspamd<br/>Spam Filter]
-    Postfix --> ClamAV[ClamAV<br/>Antivirus]
-    Postfix -->|LMTP| Dovecot
+    Postfix -->|Milter:11332| Rspamd[Rspamd<br/>Spam Filter]
+    Postfix -.Scan:3310.-> ClamAV[ClamAV<br/>Antivirus]
+    Postfix -->|LMTP:2525| Dovecot
 
     style DovecotSub fill:#e1f5fe
     style Webmail fill:#fff3e0
@@ -115,6 +115,94 @@ graph TB
 - Fetch email from external POP3/IMAP servers
 - Consolidate multiple accounts
 - Disabled by default
+
+## Mail Delivery Flow Details
+
+Understanding how mail flows through the system is crucial for troubleshooting and configuration.
+
+### Inbound Mail (Internet → Mailbox)
+
+**Complete flow from external sender to user mailbox:**
+
+1. **External MTA → Traefik:25** - Internet mail server sends to your MX record
+2. **Traefik → Postfix:25** - Traefik routes directly to Postfix (bypasses Front/Nginx)
+3. **Postfix → Rspamd:11332** - Postfix calls Rspamd via milter protocol for spam scanning
+4. **Rspamd → Postfix** - Rspamd returns scan results (accept/reject/add headers)
+5. **Postfix → Dovecot:2525** - Postfix delivers mail to Dovecot via LMTP protocol
+6. **Dovecot stores** - Mail written to `/mail` PVC in Maildir format
+
+**Key Points**:
+- Rspamd scanning is **inline** (mail passes through), not parallel
+- Port 25 (MX) requires no authentication (standard SMTP behavior)
+- ClamAV scanning happens during Rspamd step if enabled
+- LMTP delivery ensures reliable handoff from Postfix to Dovecot
+
+**Rate Limiting**:
+- Traefik InFlightConn middleware: Limits simultaneous connections per IP
+- Postfix anvil: Connection rate (60/min), message rate (100/min), recipient rate (300/min)
+
+### Webmail Sending (User → Internet via Webmail)
+
+**Complete flow when user sends email via webmail:**
+
+1. **User → Browser → Webmail:80** - User composes email in Roundcube
+2. **Webmail authenticates** - User already authenticated via Admin SSO
+3. **Webmail → Dovecot-Submission:10025** - Webmail sends via dedicated submission service
+4. **Dovecot-Submission accepts** - Uses `nopassword=y` trust model (network isolation)
+5. **Dovecot-Submission → Postfix:25** - Relays to Postfix without authentication
+6. **Postfix → Internet** - Delivers to recipient's MX server
+
+**Key Points**:
+- "Token authentication" means webmail session trust, not actual token validation
+- Trust based on **network isolation** (only webmail pod can reach dovecot-submission:10025)
+- Dovecot-submission is a relay-only service (no mailbox access)
+- Bypasses Front/Nginx entirely for direct backend communication
+
+**Why separate submission service?**
+- Webmail needs to send mail without user entering password again
+- Session-based trust is more secure than storing passwords
+- Isolates webmail submission from regular SMTP submission
+
+### Authenticated SMTP/IMAP (Mail Client → Server)
+
+**Complete flow for authenticated mail client access:**
+
+1. **Mail client → Traefik:587/993/995** - Client connects (Thunderbird, Outlook, etc.)
+2. **Traefik TLS termination** - Traefik decrypts TLS, forwards plaintext
+3. **Traefik → Front:587/993/995** - Nginx receives plaintext connection
+4. **Front → Admin:8080/internal/auth/email** - Nginx auth_http check
+5. **Admin validates** - Queries PostgreSQL for user credentials
+6. **Admin → Front** - Returns HTTP 200 (success) or 403 (failure) with backend address
+7. **If authenticated**:
+   - SMTP (587/465): Front → Postfix:25
+   - IMAP (993/143): Front → Dovecot:143
+   - POP3 (995/110): Front → Dovecot:110
+
+**Key Points**:
+- All TLS ports receive **plaintext** traffic (TLS_FLAVOR=notls, Traefik handles TLS)
+- Nginx auth_http protocol validates every connection
+- Front acts as authentication proxy, not just protocol router
+- Port 25 (MX) bypasses authentication (accepts from any sender)
+
+### Service Discovery and FRONT_ADDRESS
+
+> **⚠️ IMPORTANT: FRONT_ADDRESS Naming Quirk**
+>
+> The environment variable `FRONT_ADDRESS` is **misleading** - despite its name, it points to the **Dovecot service**, NOT the Front (Nginx) service.
+>
+> **Why?** This is a Mailu upstream naming convention. Mailu historically used the "front" container for LMTP delivery, so the variable is named `FRONT_ADDRESS`. In cdk8s-mailu architecture with Traefik TLS termination, we point this variable to Dovecot directly for LMTP delivery from Postfix.
+>
+> **Code reference**: `src/mailu-chart.ts:384-388`
+> ```typescript
+> // FRONT_ADDRESS is used for LMTP delivery (postfix -> dovecot:2525)
+> // Despite the name, it should point to dovecot, not the nginx front service
+> if (this.dovecotConstruct?.service) {
+>   this.sharedConfigMap.addData('FRONT_ADDRESS',
+>     `${this.dovecotConstruct.service.name}.${namespace}.svc.cluster.local`);
+> }
+> ```
+>
+> **Impact**: When debugging, remember that `FRONT_ADDRESS` = Dovecot service DNS name, not Front service.
 
 ## CDK8S Design Patterns
 

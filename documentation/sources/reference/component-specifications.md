@@ -10,37 +10,38 @@ Complete reference of all network ports used by Mailu components:
 
 | Component | Port | Protocol | Purpose | Exposed | Internal Only |
 |-----------|------|----------|---------|---------|---------------|
-| **Front** | 80 | HTTP | Web traffic (admin, webmail) | ✓ | |
-| **Front** | 443 | HTTPS | Web traffic with TLS | ✓ | |
-| **Front** | 25 | SMTP | Mail reception (MX) | ✓ | |
-| **Front** | 465 | SMTPS | SMTP over TLS | ✓ | |
-| **Front** | 587 | Submission | SMTP submission with STARTTLS | ✓ | |
-| **Front** | 143 | IMAP | Mail retrieval | ✓ | |
-| **Front** | 993 | IMAPS | IMAP over TLS | ✓ | |
-| **Front** | 110 | POP3 | Mail retrieval | ✓ | |
-| **Front** | 995 | POP3S | POP3 over TLS | ✓ | |
 | **Admin** | 8080 | HTTP | Admin API and web interface | ✓ | |
 | **Admin** | 8080 | HTTP | auth_http endpoint (/internal/auth/email) | | ✓ |
+| **ClamAV** | 3310 | ClamAV | Antivirus scanning | | ✓ |
+| **Dovecot** | 110 | POP3 | Mail retrieval (via Front after auth) | ✓ | |
+| **Dovecot** | 143 | IMAP | Mail retrieval (via Front after auth) | ✓ | |
+| **Dovecot** | 993 | IMAPS | IMAP over TLS (via Front after auth) | ✓ | |
+| **Dovecot** | 995 | POP3S | POP3 over TLS (via Front after auth) | ✓ | |
+| **Dovecot** | 2525 | LMTP | Mail delivery from Postfix | | ✓ |
+| **Dovecot-Sub** | 10025 | Submission | SMTP relay from webmail | | ✓ |
+| **Front** | 465 | Submission | SMTP submission (plaintext from Traefik) | ✓ | |
+| **Front** | 587 | Submission | SMTP submission (plaintext from Traefik) | ✓ | |
+| **Front** | 993 | IMAP | IMAP access (plaintext from Traefik) | ✓ | |
+| **Front** | 995 | POP3 | POP3 access (plaintext from Traefik) | ✓ | |
 | **Postfix** | 25 | SMTP | SMTP relay and MX reception | ✓ | |
 | **Postfix** | 10025 | Submission | Internal relay from dovecot-submission | | ✓ |
-| **Dovecot** | 2525 | LMTP | Mail delivery from Postfix | | ✓ |
-| **Dovecot** | 143 | IMAP | Mail retrieval | ✓ | |
-| **Dovecot** | 993 | IMAPS | IMAP over TLS | ✓ | |
-| **Dovecot** | 110 | POP3 | Mail retrieval | ✓ | |
-| **Dovecot** | 995 | POP3S | POP3 over TLS | ✓ | |
-| **Dovecot** | 4190 | Sieve | ManageSieve mail filtering | ✓ | |
-| **Dovecot-Sub** | 10025 | Submission | SMTP relay from webmail | | ✓ |
 | **Rspamd** | 11332 | Milter | Spam scanning from Postfix | | ✓ |
+| **Rspamd** | 11333 | Fuzzy | Fuzzy hash storage | | ✓ |
 | **Rspamd** | 11334 | HTTP | Web UI and API | ✓ | |
-| **Webmail** | 80 | HTTP | Webmail interface | ✓ | |
-| **ClamAV** | 3310 | ClamAV | Antivirus scanning | | ✓ |
 | **WebDAV** | 5232 | HTTP | CalDAV/CardDAV | ✓ | |
+| **Webmail** | 80 | HTTP | Webmail interface | ✓ | |
 
 **Notes**:
 - **Exposed**: Accessible from outside the pod via Kubernetes Service
 - **Internal Only**: Used for inter-component communication only
-- All "TLS" ports receive **plaintext** traffic with `TLS_FLAVOR=notls` (Traefik handles TLS termination)
-- Front service port exposure is the same as backend services, but traffic routes through nginx proxy
+- **TLS_FLAVOR=notls Architecture** (used with Traefik ingress):
+  - Traefik handles ALL TLS termination (HTTPS, SMTPS, IMAPS, POP3S)
+  - Front is ONLY used for authenticated mail protocols (587/465/993/995)
+  - Front receives **plaintext** traffic after Traefik decrypts
+  - Front does NOT handle HTTP/HTTPS web traffic (Traefik routes directly to Admin/Webmail)
+  - MX mail (port 25) routes directly to Postfix, bypassing Front
+  - Front service exposes ports 25/80/143/110/443 but nginx doesn't listen on them with `TLS_FLAVOR=notls`
+- **Front's Role**: Authentication proxy for mail protocols using nginx auth_http to validate credentials with Admin before relaying to backends
 
 ## Core Components
 
@@ -59,15 +60,15 @@ Core components are always deployed and required for Mailu to function.
 - Memory Limit: `512Mi`
 
 **Network Ports**:
-- `80/TCP` - HTTP (redirects to HTTPS)
-- `443/TCP` - HTTPS (Web UI, admin, webmail)
-- `25/TCP` - SMTP (mail submission)
-- `465/TCP` - SMTPS (SMTP over TLS)
-- `587/TCP` - Submission (mail submission with STARTTLS)
-- `143/TCP` - IMAP (mail retrieval)
-- `993/TCP` - IMAPS (IMAP over TLS)
-- `110/TCP` - POP3 (mail retrieval)
-- `995/TCP` - POP3S (POP3 over TLS)
+- `80/TCP` - HTTP (redirects to HTTPS) - **UNUSED** with TLS_FLAVOR=notls (Traefik routes to Admin/Webmail directly)
+- `443/TCP` - HTTPS (Web UI, admin, webmail) - **UNUSED** with TLS_FLAVOR=notls
+- `25/TCP` - SMTP (mail submission) - **UNUSED** with TLS_FLAVOR=notls (Traefik routes MX mail to Postfix directly)
+- `465/TCP` - SMTPS (SMTP over TLS) - **USED** (mail client submission via auth_http, relays to Postfix; webmail uses separate dovecot-submission service)
+- `587/TCP` - Submission (mail submission with STARTTLS) - **USED** (mail client submission via auth_http, relays to Postfix; webmail uses separate dovecot-submission service)
+- `143/TCP` - IMAP (mail retrieval) - **UNUSED** with TLS_FLAVOR=notls
+- `993/TCP` - IMAPS (IMAP over TLS) - **USED** (mail client access via auth_http, relays to Dovecot)
+- `110/TCP` - POP3 (mail retrieval) - **UNUSED** with TLS_FLAVOR=notls
+- `995/TCP` - POP3S (POP3 over TLS) - **USED** (mail client access via auth_http, relays to Dovecot)
 
 **Storage**: None (stateless)
 
@@ -168,7 +169,7 @@ Core components are always deployed and required for Mailu to function.
 - `110/TCP` - POP3
 - `995/TCP` - POP3S
 - `2525/TCP` - LMTP (delivery to mailboxes)
-- `4190/TCP` - ManageSieve (mail filtering)
+- `4190/TCP` - ManageSieve (mail filtering) - **NOT EXPOSED** (Service does not include this port)
 
 **Storage**:
 - **PVC Size**: `50Gi` (default, adjust based on user count)
@@ -233,6 +234,7 @@ Core components are always deployed and required for Mailu to function.
 
 **Network Ports**:
 - `11332/TCP` - Milter protocol (spam scanning from Postfix)
+- `11333/TCP` - Fuzzy hash storage (spam detection)
 - `11334/TCP` - HTTP API and web interface
 
 **Storage**:
