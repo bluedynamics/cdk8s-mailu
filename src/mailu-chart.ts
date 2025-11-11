@@ -78,11 +78,6 @@ export class MailuChart extends Chart {
   private nginxPatchConfigMap?: kplus.ConfigMap;
 
   /**
-   * Dovecot override ConfigMap for submission relay port fix (optional)
-   */
-  private dovecotOverrideConfigMap?: kplus.ConfigMap;
-
-  /**
    * Webmail patch ConfigMap for direct backend connections (optional)
    */
   private webmailPatchConfigMap?: kplus.ConfigMap;
@@ -274,7 +269,6 @@ export class MailuChart extends Chart {
       namespace: this.mailuNamespace,
       sharedConfigMap: this.sharedConfigMap,
       nginxPatchConfigMap: this.nginxPatchConfigMap,
-      dovecotOverrideConfigMap: this.dovecotOverrideConfigMap,
     });
   }
 
@@ -315,10 +309,13 @@ export class MailuChart extends Chart {
    * Creates the Dovecot Submission service (for webmail token authentication)
    */
   private createDovecotSubmissionComponent(): void {
+    // Build full DNS name for postfix service (required for dovecot submission relay)
+    const postfixServiceName = `${this.postfixConstruct!.service.name}.${this.mailuNamespace.name}.svc.cluster.local`;
+
     this.dovecotSubmissionConstruct = new DovecotSubmissionConstruct(this, 'dovecot-submission', {
       config: this.config,
       namespace: this.mailuNamespace,
-      sharedConfigMap: this.sharedConfigMap,
+      postfixServiceName,
     });
   }
 
