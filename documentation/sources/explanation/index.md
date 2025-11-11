@@ -18,18 +18,22 @@ titlesonly: true
 ---
 architecture
 dovecot-submission
+egress-gateway-considerations
 cdk8s-patterns
 ```
 
 ## Key Topics
 
-*This section will explain:*
+*This section explains:*
 - Mailu architecture and component relationships
 - CDK8S construct patterns and best practices
-- Resource management philosophy
-- Security considerations
+- Egress gateway considerations for consistent sender IPs
 - Networking and service discovery
+- Resource management philosophy
 - Storage architecture for mail data
+
+*Future topics:*
+- Security considerations
 - Scaling and high availability considerations
 
 ## Design Decisions
