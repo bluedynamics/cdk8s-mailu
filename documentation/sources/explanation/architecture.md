@@ -45,7 +45,8 @@ graph TB
 - Protocol routing for authenticated mail protocols (SMTP submission 587/465, IMAP 993, POP3 995)
 - Authentication proxy using Admin's auth_http endpoint
 - Receives plain TCP from Traefik after TLS termination
-- Load balancing to backend services (Postfix, Dovecot)
+- Proxies to backend Kubernetes Services (Postfix, Dovecot)
+- **Note**: nginx proxies to Services, not directly to pods; if multiple backend replicas exist, the Service handles load balancing
 - **Note**: Port 25 (MX mail reception) and HTTP/HTTPS bypass Front entirely
 - Always required for authenticated mail protocols
 
