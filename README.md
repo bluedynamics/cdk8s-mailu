@@ -1,10 +1,17 @@
-<div align="right">
-  <img src="mailu-logo.png" alt="Mailu Logo" width="120"/>
-</div>
-
 # cdk8s-mailu
 
-> CDK8S construct library for deploying Mailu mail server to Kubernetes
+<table>
+<tr>
+<td>
+<blockquote>
+CDK8S construct library for deploying Mailu mail server to Kubernetes
+</blockquote>
+</td>
+<td align="right">
+<img src="mailu-logo.png" alt="Mailu Logo" width="100"/>
+</td>
+</tr>
+</table>
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
