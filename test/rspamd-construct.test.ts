@@ -78,11 +78,14 @@ describe('RspamdConstruct', () => {
     expect(deployments[0].metadata.labels['app.kubernetes.io/name']).toBe('mailu-rspamd');
     expect(deployments[0].metadata.labels['app.kubernetes.io/component']).toBe('rspamd');
 
-    // Should create Service
+    // Should create Service with all required ports
     const services = manifests.filter(m => m.kind === 'Service');
     expect(services).toHaveLength(1);
     expect(services[0].spec.type).toBe('ClusterIP');
-    expect(services[0].spec.ports[0].port).toBe(11334);
+    expect(services[0].spec.ports).toHaveLength(3);
+    expect(services[0].spec.ports[0].port).toBe(11332); // milter
+    expect(services[0].spec.ports[1].port).toBe(11333); // fuzzy
+    expect(services[0].spec.ports[2].port).toBe(11334); // rspamd
   });
 
   test('configures container with correct image', () => {

@@ -4,6 +4,8 @@
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
+📚 **[Full Documentation](https://bluedynamics.github.io/cdk8s-mailu/)** | [Quick Start](#quick-start) | [API Reference](https://bluedynamics.github.io/cdk8s-mailu/reference/configuration-options.html)
+
 ## Overview
 
 `cdk8s-mailu` is a [CDK8S](https://cdk8s.io/) construct library that provides a type-safe, composable way to deploy [Mailu](https://mailu.io/) mail server to Kubernetes. It generates Kubernetes manifests from TypeScript code, making it easy to customize and version control your mail server infrastructure.
