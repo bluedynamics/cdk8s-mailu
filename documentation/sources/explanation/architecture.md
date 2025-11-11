@@ -12,17 +12,17 @@ Mailu is a modular mail server composed of multiple services working together:
 
 ```mermaid
 graph TB
-    Internet[Internet] --> Front[Front - Nginx Reverse Proxy]
-    Front --> Postfix[Postfix - SMTP]
-    Front --> Dovecot[Dovecot - IMAP/POP3]
-    Front --> Admin[Admin - Web UI]
-    Front --> Webmail[Webmail - Roundcube]
+    Internet[Internet] --> Front[Front<br/>Nginx]
+    Front --> Postfix[Postfix<br/>SMTP]
+    Front --> Dovecot[Dovecot<br/>IMAP/POP3]
+    Front --> Admin[Admin<br/>Web UI]
+    Front --> Webmail[Webmail<br/>Roundcube]
 
-    Webmail -.Token Auth.-> DovecotSub[Dovecot Submission<br/>Port 10025]
+    Webmail -.Token Auth.-> DovecotSub[Dovecot<br/>Submission<br/>Port 10025]
     DovecotSub -.Relay.-> Postfix
 
-    Postfix --> Rspamd[Rspamd - Spam Filter]
-    Postfix --> ClamAV[ClamAV - Antivirus]
+    Postfix --> Rspamd[Rspamd<br/>Spam Filter]
+    Postfix --> ClamAV[ClamAV<br/>Antivirus]
     Dovecot --> Data[(Mail Storage)]
     Admin --> Database[(PostgreSQL)]
     Rspamd --> Redis[(Redis Cache)]
