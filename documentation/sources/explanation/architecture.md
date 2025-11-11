@@ -309,7 +309,7 @@ cdk8s-mailu is designed with **opinionated production-grade defaults** rather th
 - PVC retention policies appropriate for mail data
 
 **Real-World Validation**
-- Defaults tested on production kup6s.com cluster
+- Defaults tested on production clusters
 - Successfully deployed with AMD64/ARM64 mixed nodes
 - Handles real email traffic and webmail usage
 - Proven to work with Traefik TLS termination
@@ -317,7 +317,7 @@ cdk8s-mailu is designed with **opinionated production-grade defaults** rather th
 Philosophy:
 - "Works out of the box" for most use cases (minimal configuration required)
 - Override only what you need (but you can customize everything)
-- Based on real-world deployments (kup6s.com production cluster)
+- Based on real-world production deployments
 - Fail-safe rather than fail-fast (conservative resources, not minimal)
 
 ## See Also

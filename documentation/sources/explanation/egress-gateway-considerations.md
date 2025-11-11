@@ -118,14 +118,6 @@ This library generates Kubernetes manifests for Mailu but **does not configure e
 - PTR (reverse DNS) records
 - LoadBalancer or Ingress for inbound traffic
 
-## Implementation Examples
-
-For complete implementation guides, see your deployment's documentation:
-
-- **kup6s deployment**: Uses Cilium egress gateway with server native IP
-  - [How-to: Configure Egress Gateway](https://docs.kup6s.com/deployments/mailu/how-to/configure-egress-gateway.html)
-  - [Explanation: Egress Gateway for SPF Compliance](https://docs.kup6s.com/deployments/mailu/explanation/egress-gateway-spf-compliance.html)
-
 ## See Also
 
 - [SPF Record Syntax (RFC 7208)](https://www.rfc-editor.org/rfc/rfc7208.html)
