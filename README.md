@@ -1,3 +1,7 @@
+<div align="right">
+  <img src="mailu-logo.png" alt="Mailu Logo" width="120"/>
+</div>
+
 # cdk8s-mailu
 
 > CDK8S construct library for deploying Mailu mail server to Kubernetes
