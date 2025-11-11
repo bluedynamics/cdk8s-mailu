@@ -4,6 +4,44 @@
 
 This document provides detailed technical specifications for each component, including resource requirements, network ports, storage, and image versions.
 
+## Port Reference Table
+
+Complete reference of all network ports used by Mailu components:
+
+| Component | Port | Protocol | Purpose | Exposed | Internal Only |
+|-----------|------|----------|---------|---------|---------------|
+| **Front** | 80 | HTTP | Web traffic (admin, webmail) | ✓ | |
+| **Front** | 443 | HTTPS | Web traffic with TLS | ✓ | |
+| **Front** | 25 | SMTP | Mail reception (MX) | ✓ | |
+| **Front** | 465 | SMTPS | SMTP over TLS | ✓ | |
+| **Front** | 587 | Submission | SMTP submission with STARTTLS | ✓ | |
+| **Front** | 143 | IMAP | Mail retrieval | ✓ | |
+| **Front** | 993 | IMAPS | IMAP over TLS | ✓ | |
+| **Front** | 110 | POP3 | Mail retrieval | ✓ | |
+| **Front** | 995 | POP3S | POP3 over TLS | ✓ | |
+| **Admin** | 8080 | HTTP | Admin API and web interface | ✓ | |
+| **Admin** | 8080 | HTTP | auth_http endpoint (/internal/auth/email) | | ✓ |
+| **Postfix** | 25 | SMTP | SMTP relay and MX reception | ✓ | |
+| **Postfix** | 10025 | Submission | Internal relay from dovecot-submission | | ✓ |
+| **Dovecot** | 2525 | LMTP | Mail delivery from Postfix | | ✓ |
+| **Dovecot** | 143 | IMAP | Mail retrieval | ✓ | |
+| **Dovecot** | 993 | IMAPS | IMAP over TLS | ✓ | |
+| **Dovecot** | 110 | POP3 | Mail retrieval | ✓ | |
+| **Dovecot** | 995 | POP3S | POP3 over TLS | ✓ | |
+| **Dovecot** | 4190 | Sieve | ManageSieve mail filtering | ✓ | |
+| **Dovecot-Sub** | 10025 | Submission | SMTP relay from webmail | | ✓ |
+| **Rspamd** | 11332 | Milter | Spam scanning from Postfix | | ✓ |
+| **Rspamd** | 11334 | HTTP | Web UI and API | ✓ | |
+| **Webmail** | 80 | HTTP | Webmail interface | ✓ | |
+| **ClamAV** | 3310 | ClamAV | Antivirus scanning | | ✓ |
+| **WebDAV** | 5232 | HTTP | CalDAV/CardDAV | ✓ | |
+
+**Notes**:
+- **Exposed**: Accessible from outside the pod via Kubernetes Service
+- **Internal Only**: Used for inter-component communication only
+- All "TLS" ports receive **plaintext** traffic with `TLS_FLAVOR=notls` (Traefik handles TLS termination)
+- Front service port exposure is the same as backend services, but traffic routes through nginx proxy
+
 ## Core Components
 
 Core components are always deployed and required for Mailu to function.
@@ -57,7 +95,7 @@ Core components are always deployed and required for Mailu to function.
 - Memory Limit: `512Mi`
 
 **Network Ports**:
-- `80/TCP` - HTTP API and web interface
+- `8080/TCP` - HTTP API and web interface (internal service port; exposed via Ingress)
 
 **Storage**:
 - **PVC Size**: `5Gi` (default)
@@ -92,8 +130,8 @@ Core components are always deployed and required for Mailu to function.
 - Memory Limit: `1Gi`
 
 **Network Ports**:
-- `25/TCP` - SMTP (internal relay)
-- `10025/TCP` - LMTP (delivery from rspamd)
+- `25/TCP` - SMTP (MX mail reception and internal relay)
+- `10025/TCP` - Internal submission relay (from dovecot-submission service)
 
 **Storage**:
 - **PVC Size**: `5Gi` (default)
@@ -194,8 +232,8 @@ Core components are always deployed and required for Mailu to function.
 - Memory Limit: `1Gi`
 
 **Network Ports**:
-- `11332/TCP` - HTTP API
-- `11334/TCP` - Controller interface
+- `11332/TCP` - Milter protocol (spam scanning from Postfix)
+- `11334/TCP` - HTTP API and web interface
 
 **Storage**:
 - **PVC Size**: `5Gi` (default)
