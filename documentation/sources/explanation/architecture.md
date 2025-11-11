@@ -12,7 +12,7 @@ Mailu is a modular mail server composed of multiple services working together:
 
 ```mermaid
 graph TB
-    Ingress[Ingress] --> FrontNginx["Front<br/>Nginx<br/>587, 465, 993, 995"]
+    Ingress[Ingress] -->|587, 465, 993, 995| FrontNginx[Front<br/>Nginx]
     Ingress -.Port 25 MX.-> Postfix[Postfix<br/>SMTP]
     FrontNginx --> Postfix
     FrontNginx --> Dovecot[Dovecot<br/>IMAP/POP3]
