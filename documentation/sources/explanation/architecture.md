@@ -12,8 +12,9 @@ Mailu is a modular mail server composed of multiple services working together:
 
 ```mermaid
 graph TB
-    Internet[Internet] --> Front[Front<br/>Nginx]
-    Front --> Postfix[Postfix<br/>SMTP]
+    Ingress[Ingress] --> Front[Front<br/>Nginx<br/>Ports: 587, 465, 993, 995]
+    Ingress -.Port 25 MX.-> Postfix[Postfix<br/>SMTP]
+    Front --> Postfix
     Front --> Dovecot[Dovecot<br/>IMAP/POP3]
     Front --> Admin[Admin<br/>Web UI]
     Front --> Webmail[Webmail<br/>Roundcube]
@@ -29,15 +30,18 @@ graph TB
 
     style DovecotSub fill:#e1f5fe
     style Webmail fill:#fff3e0
+    style Postfix fill:#c8e6c9
 ```
 
 ### Core Components
 
 **Front (Nginx)**
 - TLS termination (or Traefik passthrough)
-- Protocol routing (SMTP, IMAP, POP3, HTTP/S)
+- Protocol routing for authenticated mail protocols (SMTP submission 587/465, IMAP 993, POP3 995, HTTP/S)
+- Authentication proxy for mail protocols (auth_http to Admin service)
 - Load balancing to backend services
-- Always required
+- **Note**: Port 25 (MX mail reception) bypasses Front and routes directly to Postfix for improved performance and reliability
+- Always required for authenticated protocols
 
 **Admin**
 - Web-based administration interface
@@ -49,6 +53,10 @@ graph TB
 - SMTP server for sending/receiving mail
 - Mail routing and relay
 - Spam/virus scanning integration
+- **Port 25 (MX)**: Receives direct routing from Traefik (bypasses Front/nginx)
+  - Traefik InFlightConn middleware: Limits simultaneous connections per IP (15 default)
+  - Postfix anvil rate limiting: Limits connections/min (60), messages/min (100), recipients/min (300)
+- **Port 10025**: Internal submission relay from Dovecot submission service
 - Always required
 
 **Dovecot**
