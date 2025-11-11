@@ -18,11 +18,17 @@ graph TB
     Front --> Admin[Admin: Web UI]
     Front --> Webmail[Webmail: Roundcube]
 
+    Webmail -.Token Auth.-> DovecotSub[Dovecot Submission<br/>Port 10025]
+    DovecotSub -.Relay.-> Postfix
+
     Postfix --> Rspamd[Rspamd: Spam Filter]
     Postfix --> ClamAV[ClamAV: Antivirus]
     Dovecot --> Data[(Mail Storage)]
-    Admin --> Database[(Database)]
+    Admin --> Database[(PostgreSQL)]
     Rspamd --> Redis[(Redis Cache)]
+
+    style DovecotSub fill:#e1f5fe
+    style Webmail fill:#fff3e0
 ```
 
 ### Core Components
@@ -57,6 +63,14 @@ graph TB
 - Header manipulation
 - Always required
 
+**Dovecot Submission Service**
+- Dedicated service for webmail email sending
+- Uses official `dovecot/dovecot:2.3-latest` image
+- Listens on port 10025 for token authentication
+- Relays to Postfix:25 using `submission_relay_host`
+- Solves configuration issues with bundled dovecot in front container
+- Always deployed (required for webmail functionality)
+
 ### Optional Components
 
 **Webmail (Roundcube)**
@@ -88,18 +102,37 @@ graph TB
 ```
 MailuChart (extends Chart)
   ├── Namespace
-  ├── SharedConfigMap
+  ├── SharedConfigMap (service discovery)
+  ├── NginxPatchConfigMap (TLS_FLAVOR=notls wrapper)
+  ├── WebmailPatchConfigMap (backend connection patches)
   ├── FrontConstruct
-  │   ├── Deployment
-  │   ├── Service
-  │   └── ConfigMap
+  │   ├── Deployment (nginx with wrapper script)
+  │   └── Service (HTTP, SMTP, IMAP, POP3 ports)
   ├── AdminConstruct
   │   ├── Deployment
-  │   └── Service
+  │   ├── Service
+  │   └── PersistentVolumeClaim (5Gi)
   ├── PostfixConstruct
+  │   ├── Deployment
+  │   ├── Service (port 25, 10025)
+  │   └── PersistentVolumeClaim (5Gi)
   ├── DovecotConstruct
+  │   ├── Deployment
+  │   ├── Service
+  │   └── PersistentVolumeClaim (mailbox storage)
+  ├── DovecotSubmissionConstruct
+  │   ├── Deployment (AMD64 nodeSelector)
+  │   ├── Service (port 10025)
+  │   └── ConfigMap (dovecot.conf, entrypoint.sh)
   ├── RspamdConstruct
-  └── ... (optional components)
+  │   ├── Deployment
+  │   ├── Service
+  │   └── PersistentVolumeClaim (5Gi)
+  └── Optional:
+      ├── WebmailConstruct
+      ├── ClamavConstruct
+      ├── FetchmailConstruct
+      └── WebdavConstruct
 ```
 
 Each construct is **self-contained** and manages:
