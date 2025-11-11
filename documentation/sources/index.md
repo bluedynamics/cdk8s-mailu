@@ -90,7 +90,10 @@ This documentation follows the [Diátaxis framework](https://diataxis.fr/), orga
 - [Backup and Restore](how-to/backup-restore.md) - Protect your mail data
 
 ### Architecture
-- [Architecture Overview](explanation/architecture.md) - High-level design
+- [Architecture Overview](explanation/architecture.md) - High-level design with flows
+- [Authentication Flows](explanation/authentication-flows.md) - How authentication works
+- [Nginx Configuration Patches](explanation/nginx-configuration-patches.md) - TLS termination implementation
+- [Storage Architecture](explanation/storage-architecture.md) - Persistent storage sizing
 - [Dovecot Submission Service](explanation/dovecot-submission.md) - Webmail email sending
 - [Component Specifications](reference/component-specifications.md) - Technical specifications
 - [Configuration Options](reference/configuration-options.md) - Complete API reference

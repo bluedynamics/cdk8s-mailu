@@ -17,6 +17,9 @@ maxdepth: 1
 titlesonly: true
 ---
 architecture
+authentication-flows
+nginx-configuration-patches
+storage-architecture
 dovecot-submission
 egress-gateway-considerations
 cdk8s-patterns
@@ -26,11 +29,12 @@ cdk8s-patterns
 
 *This section explains:*
 - Mailu architecture and component relationships
+- Authentication mechanisms (nginx auth_http, SSO, network trust)
+- Nginx configuration patching for Traefik TLS termination
+- Storage architecture and sizing for mail data
 - CDK8S construct patterns and best practices
+- Dovecot submission service for webmail sending
 - Egress gateway considerations for consistent sender IPs
-- Networking and service discovery
-- Resource management philosophy
-- Storage architecture for mail data
 
 *Future topics:*
 - Security considerations
