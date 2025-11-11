@@ -1,13 +1,11 @@
 # cdk8s-mailu
 
-<table>
+<table style="width: 100%; border: none;">
 <tr>
-<td>
-<blockquote>
-CDK8S construct library for deploying Mailu mail server to Kubernetes
-</blockquote>
+<td style="border: none;">
+<em>CDK8S construct library for deploying Mailu mail server to Kubernetes</em>
 </td>
-<td align="right">
+<td align="right" style="border: none;">
 <img src="mailu-logo.png" alt="Mailu Logo" width="100"/>
 </td>
 </tr>
