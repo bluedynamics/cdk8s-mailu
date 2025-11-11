@@ -307,17 +307,24 @@ All components communicate via Kubernetes services:
 - Internal DNS resolution
 - No external dependencies for inter-component communication
 
-### Ingress/TLS Options
+### Ingress/TLS Configuration
 
-**Option 1: Traefik TLS Termination (Recommended)**
-- Traefik handles TLS for SMTP/IMAP protocols
-- Nginx wrapper patches Front component
-- Automatic certificate management
+**Traefik TLS Termination (Supported & Tested)**
+- Traefik handles TLS for all protocols (SMTP/IMAP/HTTP/HTTPS)
+- Nginx wrapper patches Front component for plaintext backend communication
+- Automatic certificate management via cert-manager
+- This is the **only tested and supported configuration** in cdk8s-mailu
 
-**Option 2: Front Direct TLS**
-- Front handles TLS directly
-- Manual certificate management required
-- LoadBalancer or NodePort service
+**Alternative Ingress Solutions**
+- Theoretically, other ingress controllers could be used (e.g., nginx-ingress, HAProxy)
+- Would require custom configuration and testing
+- **Not tested or documented** - use at your own risk
+
+**Front Direct TLS (Not Recommended)**
+- Mailu's Front component can handle TLS directly (TLS_FLAVOR=cert, letsencrypt, mail, etc.)
+- **This configuration is untested in cdk8s-mailu** and likely requires significant modifications
+- Manual certificate management, no nginx patching applied
+- Not recommended: use Traefik termination instead
 
 ## Design Decisions
 
