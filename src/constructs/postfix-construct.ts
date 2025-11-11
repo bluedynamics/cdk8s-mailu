@@ -168,6 +168,12 @@ export class PostfixConstruct extends Construct {
           targetPort: 25,
           protocol: kplus.Protocol.TCP,
         },
+        {
+          name: 'submission',
+          port: 10025,
+          targetPort: 10025,
+          protocol: kplus.Protocol.TCP,
+        },
       ],
     });
   }

@@ -9,6 +9,9 @@ export interface WebmailConstructProps {
   readonly namespace: kplus.Namespace;
   readonly sharedConfigMap: kplus.ConfigMap;
   readonly frontService?: kplus.Service; // Reference to front service for inter-component communication
+  readonly dovecotService?: kplus.Service; // Reference to dovecot (IMAP) service
+  readonly postfixService?: kplus.Service; // Reference to postfix (SMTP) service
+  readonly webmailPatchConfigMap?: kplus.ConfigMap; // Wrapper script for patching Roundcube config
 }
 
 /**
@@ -33,7 +36,7 @@ export class WebmailConstruct extends Construct {
   constructor(scope: Construct, id: string, props: WebmailConstructProps) {
     super(scope, id);
 
-    const { config, namespace, sharedConfigMap } = props;
+    const { config, namespace, sharedConfigMap, dovecotService, postfixService, webmailPatchConfigMap } = props;
 
     // Create PersistentVolumeClaim for Roundcube data
     this.pvc = new kplus.PersistentVolumeClaim(this, 'pvc', {
@@ -68,8 +71,8 @@ export class WebmailConstruct extends Construct {
       },
     });
 
-    // Configure container
-    const container = this.deployment.addContainer({
+    // Prepare container configuration with optional command override
+    const containerConfig: any = {
       name: 'webmail',
       image: `${config.images?.registry || 'ghcr.io/mailu'}/webmail:${config.images?.tag || '2024.06'}`,
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
@@ -115,7 +118,15 @@ export class WebmailConstruct extends Construct {
         timeoutSeconds: Duration.seconds(3),
         failureThreshold: 3,
       }),
-    });
+    };
+
+    // If webmail patch ConfigMap provided, override command to use wrapper script
+    if (webmailPatchConfigMap) {
+      containerConfig.command = ['/bin/sh', '/usr/local/bin/entrypoint-wrapper.sh'];
+    }
+
+    // Configure container
+    const container = this.deployment.addContainer(containerConfig);
 
     // Add environment variables from shared ConfigMap
     container.env.copyFrom(kplus.Env.fromConfigMap(sharedConfigMap));
@@ -160,6 +171,16 @@ export class WebmailConstruct extends Construct {
     const webmailType = config.mailu?.webmailType || 'roundcube';
     container.env.addVariable('WEBMAIL', kplus.EnvValue.fromValue(webmailType));
 
+    // Add mail backend addresses for Roundcube to connect directly (bypassing front)
+    // This is required when TLS_FLAVOR=notls because front doesn't expose internal ports
+    // Use actual CDK8S-generated service names for reliable DNS resolution
+    if (dovecotService) {
+      container.env.addVariable('IMAP_ADDRESS', kplus.EnvValue.fromValue(dovecotService.name));
+    }
+    if (postfixService) {
+      container.env.addVariable('SMTP_ADDRESS', kplus.EnvValue.fromValue(postfixService.name));
+    }
+
     // Add front service address for inter-component communication
     if (props.frontService) {
       container.env.addVariable(
@@ -173,6 +194,20 @@ export class WebmailConstruct extends Construct {
       '/data',
       kplus.Volume.fromPersistentVolumeClaim(this, 'data-volume', this.pvc),
     );
+
+    // If webmail patch ConfigMap is provided, mount wrapper script
+    if (webmailPatchConfigMap) {
+      // Create volume from ConfigMap
+      const patchVolume = kplus.Volume.fromConfigMap(this, 'webmail-patch-volume', webmailPatchConfigMap, {
+        defaultMode: 0o755, // Make script executable
+      });
+
+      // Mount wrapper script (command override already set above)
+      container.mount('/usr/local/bin/entrypoint-wrapper.sh', patchVolume, {
+        subPath: 'entrypoint-wrapper.sh',
+        readOnly: true,
+      });
+    }
 
     // Create Service
     this.service = new kplus.Service(this, 'service', {

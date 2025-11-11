@@ -5,6 +5,8 @@ import { MailuChartConfig } from './config';
 import { AdminConstruct } from './constructs/admin-construct';
 import { ClamavConstruct } from './constructs/clamav-construct';
 import { DovecotConstruct } from './constructs/dovecot-construct';
+import { DovecotOverrideConfigMap } from './constructs/dovecot-override-configmap';
+import { DovecotSubmissionConstruct } from './constructs/dovecot-submission-construct';
 import { FetchmailConstruct } from './constructs/fetchmail-construct';
 import { FrontConstruct } from './constructs/front-construct';
 import { NginxPatchConfigMap } from './constructs/nginx-patch-configmap';
@@ -12,6 +14,7 @@ import { PostfixConstruct } from './constructs/postfix-construct';
 import { RspamdConstruct } from './constructs/rspamd-construct';
 import { WebdavConstruct } from './constructs/webdav-construct';
 import { WebmailConstruct } from './constructs/webmail-construct';
+import { WebmailPatchConfigMap } from './constructs/webmail-patch-configmap';
 import { validateDomainFormat, validateCidrFormat } from './utils/validators';
 
 /**
@@ -76,12 +79,23 @@ export class MailuChart extends Chart {
   private nginxPatchConfigMap?: kplus.ConfigMap;
 
   /**
+   * Dovecot override ConfigMap for submission relay port fix (optional)
+   */
+  private dovecotOverrideConfigMap?: kplus.ConfigMap;
+
+  /**
+   * Webmail patch ConfigMap for direct backend connections (optional)
+   */
+  private webmailPatchConfigMap?: kplus.ConfigMap;
+
+  /**
    * Component constructs (public to allow access if needed)
    */
   public adminConstruct?: AdminConstruct;
   public frontConstruct?: FrontConstruct;
   public postfixConstruct?: PostfixConstruct;
   public dovecotConstruct?: DovecotConstruct;
+  public dovecotSubmissionConstruct?: DovecotSubmissionConstruct;
   public rspamdConstruct?: RspamdConstruct;
   public webmailConstruct?: WebmailConstruct;
   public clamavConstruct?: ClamavConstruct;
@@ -124,6 +138,19 @@ export class MailuChart extends Chart {
     });
     this.nginxPatchConfigMap = patchConfigMapConstruct.configMap;
 
+    // Create dovecot override ConfigMap to fix submission relay port
+    const dovecotOverrideConstruct = new DovecotOverrideConfigMap(this, 'dovecot-override', {
+      config: this.config,
+      namespace: this.mailuNamespace,
+    });
+    this.dovecotOverrideConfigMap = dovecotOverrideConstruct.configMap;
+
+    // Create webmail patch ConfigMap for direct backend connections (TLS_FLAVOR=notls)
+    const webmailPatchConstruct = new WebmailPatchConfigMap(this, 'webmail-patch', {
+      namespace: this.mailuNamespace,
+    });
+    this.webmailPatchConfigMap = webmailPatchConstruct.configMap;
+
     // Deploy core components (always enabled)
     if (config.components?.admin !== false) {
       this.createAdminComponent();
@@ -144,6 +171,9 @@ export class MailuChart extends Chart {
     if (config.components?.rspamd !== false) {
       this.createRspamdComponent();
     }
+
+    // Deploy dovecot submission service (for webmail token authentication)
+    this.createDovecotSubmissionComponent();
 
     // Deploy optional components (only if enabled)
     if (config.components?.webmail) {
@@ -192,10 +222,10 @@ export class MailuChart extends Chart {
 
       // Web paths - URL paths for admin interface and webmail
       WEB_ADMIN: '/admin',
-      // WEB_WEBMAIL must be '/' because front nginx strips '/webmail' prefix before forwarding
-      // Front receives: /webmail/xxx → strips prefix → webmail sees: /xxx
-      // So webmail must think it's at document root (WEB_WEBMAIL=/) to generate correct redirects
-      WEB_WEBMAIL: '/',
+      // WEB_WEBMAIL must be '/webmail' so Roundcube generates browser URLs with prefix
+      // Browser → /webmail/xxx → front strips prefix → /xxx → webmail backend
+      // This ensures AJAX requests go to /webmail/?_task=... (proxied) not /?_task=... (redirected)
+      WEB_WEBMAIL: '/webmail',
 
       // Mail configuration
       POSTMASTER: this.config.mailu?.initialAccount?.username || 'postmaster',
@@ -252,6 +282,7 @@ export class MailuChart extends Chart {
       namespace: this.mailuNamespace,
       sharedConfigMap: this.sharedConfigMap,
       nginxPatchConfigMap: this.nginxPatchConfigMap,
+      dovecotOverrideConfigMap: this.dovecotOverrideConfigMap,
     });
   }
 
@@ -289,6 +320,17 @@ export class MailuChart extends Chart {
   }
 
   /**
+   * Creates the Dovecot Submission service (for webmail token authentication)
+   */
+  private createDovecotSubmissionComponent(): void {
+    this.dovecotSubmissionConstruct = new DovecotSubmissionConstruct(this, 'dovecot-submission', {
+      config: this.config,
+      namespace: this.mailuNamespace,
+      sharedConfigMap: this.sharedConfigMap,
+    });
+  }
+
+  /**
    * Creates the Webmail component (Roundcube)
    */
   private createWebmailComponent(): void {
@@ -297,6 +339,9 @@ export class MailuChart extends Chart {
       namespace: this.mailuNamespace,
       sharedConfigMap: this.sharedConfigMap,
       frontService: this.frontConstruct?.service, // Pass front service for inter-component communication
+      dovecotService: this.dovecotConstruct?.service, // Pass dovecot service for IMAP connection
+      postfixService: this.postfixConstruct?.service, // Pass postfix service for SMTP connection
+      webmailPatchConfigMap: this.webmailPatchConfigMap, // Pass wrapper script for patching Roundcube config
     });
   }
 
@@ -355,6 +400,15 @@ export class MailuChart extends Chart {
       }
       if (this.rspamdConstruct?.service) {
         this.sharedConfigMap.addData('ANTISPAM_ADDRESS', `${this.rspamdConstruct.service.name}.${namespace}.svc.cluster.local`);
+      }
+      if (this.postfixConstruct?.service) {
+        this.sharedConfigMap.addData('SMTP_ADDRESS', `${this.postfixConstruct.service.name}.${namespace}.svc.cluster.local`);
+      }
+      if (this.dovecotConstruct?.service) {
+        this.sharedConfigMap.addData('IMAP_ADDRESS', `${this.dovecotConstruct.service.name}.${namespace}.svc.cluster.local`);
+      }
+      if (this.dovecotSubmissionConstruct?.service) {
+        this.sharedConfigMap.addData('SUBMISSION_ADDRESS', `${this.dovecotSubmissionConstruct.service.name}.${namespace}.svc.cluster.local`);
       }
     }
   }

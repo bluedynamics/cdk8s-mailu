@@ -140,6 +140,18 @@ export class RspamdConstruct extends Construct {
       selector: this.deployment,
       ports: [
         {
+          name: 'milter',
+          port: 11332,
+          targetPort: 11332,
+          protocol: kplus.Protocol.TCP,
+        },
+        {
+          name: 'fuzzy',
+          port: 11333,
+          targetPort: 11333,
+          protocol: kplus.Protocol.TCP,
+        },
+        {
           name: 'rspamd',
           port: 11334,
           targetPort: 11334,

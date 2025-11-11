@@ -14,3 +14,6 @@ export { WebmailConstruct, WebmailConstructProps } from './webmail-construct';
 export { ClamavConstruct, ClamavConstructProps } from './clamav-construct';
 export { FetchmailConstruct, FetchmailConstructProps } from './fetchmail-construct';
 export { WebdavConstruct, WebdavConstructProps } from './webdav-construct';
+
+// Supporting components
+export { DovecotSubmissionConstruct, DovecotSubmissionConstructProps } from './dovecot-submission-construct';

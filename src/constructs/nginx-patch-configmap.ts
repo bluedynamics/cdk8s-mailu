@@ -51,9 +51,15 @@ if [ ! -f "$NGINX_CONF" ]; then
   exit 1
 fi
 
-# Patch 2a: Inject mail protocol server blocks (in mail{} section)
+# Patch 2a: Fix auth_http to use admin service (not localhost)
+# Original config uses http://127.0.0.1:8000/auth/email but admin runs in separate pod
+# Also fixes endpoint path from /auth/email to /internal/auth/email (correct Mailu endpoint)
+echo "  - Configuring mail auth to use admin service..."
+sed -i "s|auth_http http://127.0.0.1:8000/auth/email;|auth_http http://\${ADMIN_ADDRESS}:8080/internal/auth/email;|g" "$NGINX_CONF"
+
+# Patch 2b: Inject mail protocol server blocks (in mail{} section)
 # Find the port 25 server block and insert new blocks after its closing brace
-echo "  - Adding mail protocol listeners (465, 587, 993, 995)..."
+echo "  - Adding mail protocol listeners (587, 465, 993, 995)..."
 sed -i '/auth_http_header Auth-Port 25;/,/^    }$/{
   /^    }$/a\\
 \\
@@ -166,11 +172,7 @@ else
   echo "WARNING: Some patches may not have been applied correctly, but continuing"
 fi
 
-# Step 3: Start Dovecot proxy (required by Mailu nginx config)
-echo "Starting Dovecot proxy..."
-dovecot -c /etc/dovecot/proxy.conf
-
-# Step 4: Start nginx
+# Step 3: Start nginx (dovecot submission moved to separate service)
 echo "Starting nginx..."
 exec /usr/sbin/nginx -g "daemon off;"
 `;
