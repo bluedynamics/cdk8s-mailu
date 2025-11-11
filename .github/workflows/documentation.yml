@@ -17,9 +17,6 @@ jobs:
         enable-cache: true
         cache-dependency-glob: "documentation/Makefile"
 
-    - name: Set up Python 3.12
-      run: uv python install 3.12
-
     - uses: actions/setup-node@v6
       with:
         node-version: 18
@@ -34,5 +31,5 @@ jobs:
       with:
         publish_branch: gh-pages
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: docs/html/
+        publish_dir: documentation/html/
         force_orphan: true
