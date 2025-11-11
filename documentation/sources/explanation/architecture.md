@@ -12,12 +12,12 @@ Mailu is a modular mail server composed of multiple services working together:
 
 ```mermaid
 graph TB
-    Ingress[Ingress] -->|587, 465, 993, 995| FrontNginx[Front<br/>Nginx]
+    Ingress[Ingress<br/>TLS Termination] -->|587, 465, 993, 995| FrontNginx[Front<br/>Nginx]
+    Ingress -->|80| Admin[Admin<br/>Web UI]
+    Ingress -->|80| Webmail[Webmail<br/>Roundcube]
     Ingress -.Port 25 MX.-> Postfix[Postfix<br/>SMTP]
     FrontNginx --> Postfix
     FrontNginx --> Dovecot[Dovecot<br/>IMAP/POP3]
-    FrontNginx --> Admin[Admin<br/>Web UI]
-    FrontNginx --> Webmail[Webmail<br/>Roundcube]
 
     Webmail -.Token Auth.-> DovecotSub[Dovecot<br/>Submission<br/>Port 10025]
     DovecotSub -.Relay.-> Postfix
@@ -35,19 +35,33 @@ graph TB
 
 ### Core Components
 
+**Ingress (Traefik)**
+- TLS termination for all protocols (HTTPS, SMTPS, IMAPS, POP3S)
+- Routes HTTP/HTTPS (80/443) directly to Admin and Webmail
+- Routes mail protocols (587, 465, 993, 995) to Front (Nginx)
+- Routes MX mail (port 25) directly to Postfix
+- LoadBalancer service with public IP
+
 **Front (Nginx)**
-- TLS termination (or Traefik passthrough)
-- Protocol routing for authenticated mail protocols (SMTP submission 587/465, IMAP 993, POP3 995, HTTP/S)
+- Protocol routing for authenticated mail protocols (SMTP submission 587/465, IMAP 993, POP3 995)
 - Authentication proxy for mail protocols (auth_http to Admin service)
-- Load balancing to backend services
-- **Note**: Port 25 (MX mail reception) bypasses Front and routes directly to Postfix for improved performance and reliability
-- Always required for authenticated protocols
+- Receives plain TCP from Traefik after TLS termination
+- Load balancing to backend services (Postfix, Dovecot)
+- **Note**: Port 25 (MX mail reception) and HTTP/HTTPS bypass Front entirely
+- Always required for authenticated mail protocols
 
 **Admin**
-- Web-based administration interface
+- Web-based administration interface (accessed via Ingress at port 80 internally)
 - User and domain management
 - Configuration interface
+- Authentication backend for mail protocols
 - Always enabled by default
+
+**Webmail (Roundcube)**
+- Browser-based email client (accessed via Ingress at port 80 internally)
+- Contact and calendar management
+- Uses Dovecot Submission service for sending mail
+- Enabled by default, can be disabled
 
 **Postfix**
 - SMTP server for sending/receiving mail
@@ -80,12 +94,6 @@ graph TB
 - Always deployed (required for webmail functionality)
 
 ### Optional Components
-
-**Webmail (Roundcube)**
-- Browser-based email client
-- Contact and calendar management
-- Plugin system
-- Enabled by default, can be disabled
 
 **ClamAV**
 - Antivirus scanning for attachments
