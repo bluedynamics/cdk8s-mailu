@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background -->
+  <rect width="200" height="200" fill="#0a0e27"/>
+
+  <!-- Outer border with cyberpunk glow -->
+  <rect x="10" y="10" width="180" height="180" fill="none" stroke="#00d4ff" stroke-width="2" opacity="0.6"/>
+  <rect x="15" y="15" width="170" height="170" fill="none" stroke="#00d4ff" stroke-width="1" opacity="0.3"/>
+
+  <!-- Stylized "M" for Mailu -->
+  <g fill="#00d4ff">
+    <!-- Left vertical bar -->
+    <rect x="40" y="60" width="15" height="80" rx="2"/>
+
+    <!-- Right vertical bar -->
+    <rect x="145" y="60" width="15" height="80" rx="2"/>
+
+    <!-- Left diagonal -->
+    <path d="M 55 60 L 90 100 L 80 105 L 45 65 Z" opacity="0.9"/>
+
+    <!-- Right diagonal -->
+    <path d="M 145 60 L 110 100 L 120 105 L 155 65 Z" opacity="0.9"/>
+
+    <!-- Center vertical (shorter) -->
+    <rect x="92.5" y="95" width="15" height="45" rx="2" opacity="0.8"/>
+  </g>
+
+  <!-- Accent glow effect -->
+  <g opacity="0.5">
+    <rect x="40" y="60" width="15" height="80" rx="2" fill="#ff00ff" opacity="0.3"/>
+    <rect x="145" y="60" width="15" height="80" rx="2" fill="#ff00ff" opacity="0.3"/>
+  </g>
+
+  <!-- Text: cdk8s-mailu -->
+  <text x="100" y="165" font-family="monospace" font-size="14" fill="#00d4ff" text-anchor="middle" font-weight="bold">cdk8s-mailu</text>
+</svg>

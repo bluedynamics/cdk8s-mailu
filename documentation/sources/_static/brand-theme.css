@@ -1,0 +1,685 @@
+/*
+ * kup6s Brand Theme for Sphinx Documentation
+ * Cyberpunk-inspired design with cyan/magenta color scheme
+ * Brand Guidelines v1.0 - November 2025
+ */
+
+/* ==========================================================================
+   FONT DECLARATIONS
+   ========================================================================== */
+
+/* Rajdhani - Headings (weights: 400, 500, 600, 700) */
+@font-face {
+  font-family: 'Rajdhani';
+  src: url('fonts/rajdhani/Rajdhani-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rajdhani';
+  src: url('fonts/rajdhani/Rajdhani-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rajdhani';
+  src: url('fonts/rajdhani/Rajdhani-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rajdhani';
+  src: url('fonts/rajdhani/Rajdhani-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Orbitron - Special emphasis (weights: 400, 700, 900) */
+@font-face {
+  font-family: 'Orbitron';
+  src: url('fonts/orbitron/Orbitron-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Orbitron';
+  src: url('fonts/orbitron/Orbitron-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Orbitron';
+  src: url('fonts/orbitron/Orbitron-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Hack - Monospace body and code (weight: 400) */
+@font-face {
+  font-family: 'Hack';
+  src: url('fonts/hack/Hack-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ==========================================================================
+   SHIBUYA THEME VARIABLES - DARK MODE
+   ========================================================================== */
+
+html.dark {
+  /* Brand Colors */
+  --sy-c-text: #e0e0e0 !important;                    /* Primary text - light gray */
+  --sy-c-light: #a0a0a0 !important;                   /* Secondary text - dimmed gray */
+  --sy-c-bold: #00d4ff !important;                    /* Emphasized text - cyan */
+  --sy-c-heading: #00d4ff !important;                 /* Heading color - cyan */
+  --sy-c-link: #00d4ff !important;                    /* Link color - cyan */
+  --sy-c-link-hover: #ff00ff !important;              /* Link hover - magenta */
+  --sy-c-background: #0a0e27 !important;              /* Dark background */
+  --sy-c-border: rgba(0, 212, 255, 0.3) !important;   /* Cyan border with transparency */
+  --sy-c-divider: rgba(0, 212, 255, 0.2) !important;  /* Divider lines */
+
+  /* Brand Fonts - CRITICAL: Override theme defaults */
+  --sy-f-heading: 'Rajdhani', sans-serif !important;  /* Headings */
+  --sy-f-text: 'Hack', monospace !important;          /* Body text */
+  --sy-f-mono: 'Hack', monospace !important;          /* Code blocks */
+
+  /* Accent Color Overrides (Cyan) */
+  --accent-9: #00d4ff;                     /* Primary accent */
+  --accent-a9: rgba(0, 212, 255, 0.9);     /* Accent with alpha */
+  --accent-a3: rgba(0, 212, 255, 0.3);     /* Subtle accent */
+  --accent-a2: rgba(0, 212, 255, 0.2);     /* Very subtle accent */
+
+  /* Brand-specific colors for custom elements */
+  --brand-cyan: #00d4ff;
+  --brand-magenta: #ff00ff;
+  --brand-dark-bg: #0a0e27;
+  --brand-dark-card: #151a35;
+  --brand-text: #e0e0e0;
+  --brand-text-dim: #a0a0a0;
+}
+
+/* ==========================================================================
+   TYPOGRAPHY ENHANCEMENTS
+   ========================================================================== */
+
+/* H1 - Page titles */
+h1, .sy-c h1 {
+  font-family: 'Rajdhani', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 3.5rem !important;
+  color: #00d4ff !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+/* H2 - Section headers */
+h2, .sy-c h2 {
+  font-family: 'Rajdhani', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 2.2rem !important;
+  color: #00d4ff !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  margin-top: 3rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid #00d4ff !important;
+  padding-bottom: 0.5rem;
+}
+
+/* H3 - Subsection headers */
+h3, .sy-c h3 {
+  font-family: 'Rajdhani', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1.6rem !important;
+  color: #ff00ff !important;
+  text-transform: uppercase !important;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+/* H4 - Minor headers */
+h4, .sy-c h4 {
+  font-family: 'Rajdhani', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1.2rem !important;
+  color: #00d4ff !important;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+/* H5, H6 */
+h5, h6, .sy-c h5, .sy-c h6 {
+  font-family: 'Rajdhani', sans-serif !important;
+  font-weight: 500 !important;
+  color: #e0e0e0 !important;
+}
+
+/* Body text */
+p, li, body, .sy-c {
+  font-family: 'Hack', monospace !important;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+/* Strong/Bold text - cyan accent */
+strong, b {
+  color: var(--brand-cyan);
+  font-weight: 600;
+}
+
+/* Emphasis */
+em, i {
+  color: var(--brand-text);
+  font-style: italic;
+}
+
+/* ==========================================================================
+   CODE BLOCKS & INLINE CODE
+   ========================================================================== */
+
+/* Inline code */
+code {
+  font-family: 'Hack', monospace;
+  background: var(--brand-dark-card);
+  color: var(--brand-cyan);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9rem;
+}
+
+/* Code blocks */
+pre {
+  font-family: 'Hack', monospace;
+  background: var(--brand-dark-card);
+  border-left: 4px solid var(--brand-magenta);
+  padding: 1.25rem;
+  overflow-x: auto;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  border-radius: 4px;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  color: var(--brand-text);
+}
+
+/* Literal blocks */
+.literal-block-wrapper {
+  margin: 1.5rem 0;
+}
+
+.literal-block-wrapper .code-block-caption {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  color: var(--brand-cyan);
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+/* ==========================================================================
+   TABLES
+   ========================================================================== */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+  background: var(--brand-dark-card);
+}
+
+thead {
+  background: var(--brand-dark-card);
+}
+
+th {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  color: var(--brand-cyan);
+  text-transform: uppercase;
+  padding: 0.75rem;
+  text-align: left;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  letter-spacing: 0.5px;
+}
+
+td {
+  padding: 0.75rem;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  color: var(--brand-text);
+}
+
+tbody tr:hover {
+  background: rgba(0, 212, 255, 0.05);
+}
+
+/* ==========================================================================
+   CARDS & PANELS (sphinx-design)
+   ========================================================================== */
+
+/* Cards with gradient top border */
+.sd-card {
+  background: var(--brand-dark-card);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  position: relative;
+  padding: 1.25rem;
+}
+
+.sd-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand-cyan), var(--brand-magenta));
+}
+
+.sd-card-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  color: var(--brand-cyan);
+  text-transform: uppercase;
+  font-size: 1.1rem;
+}
+
+.sd-card-text {
+  color: var(--brand-text);
+}
+
+/* ==========================================================================
+   ADMONITIONS
+   ========================================================================== */
+
+.admonition {
+  background: var(--brand-dark-card);
+  border-left: 4px solid var(--brand-cyan);
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  border-radius: 4px;
+}
+
+.admonition-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  color: var(--brand-cyan);
+  text-transform: uppercase;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.admonition.warning, .admonition.caution {
+  border-left-color: var(--brand-magenta);
+}
+
+.admonition.warning .admonition-title,
+.admonition.caution .admonition-title {
+  color: var(--brand-magenta);
+}
+
+/* ==========================================================================
+   BUTTONS & BADGES
+   ========================================================================== */
+
+.btn, button, .sd-btn {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 2px solid var(--brand-cyan);
+  color: var(--brand-cyan);
+  background: transparent;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.btn:hover, button:hover, .sd-btn:hover {
+  background: var(--brand-cyan);
+  color: var(--brand-dark-bg);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid var(--brand-cyan);
+  color: var(--brand-cyan);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 3px;
+  margin-right: 0.5rem;
+}
+
+/* ==========================================================================
+   CYBERPUNK DESIGN ELEMENTS
+   ========================================================================== */
+
+/* Glitch line decorators */
+.divider, hr {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--brand-cyan), var(--brand-magenta), transparent);
+  border: none;
+  margin: 3rem 0;
+  opacity: 0.5;
+}
+
+/* Section decorative elements */
+.section {
+  position: relative;
+}
+
+/* Corner brackets for major sections (optional - can be enabled per section) */
+.corner-brackets {
+  position: relative;
+  padding: 2rem;
+}
+
+.corner-brackets::before,
+.corner-brackets::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--brand-cyan);
+}
+
+.corner-brackets::before {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+}
+
+.corner-brackets::after {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+}
+
+/* ==========================================================================
+   CUSTOM ICON STYLING (merged from custom-icons.css)
+   ========================================================================== */
+
+/* Eyebrow headings - context labels with icons above page titles */
+.eyebrow {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-cyan);
+  margin-bottom: 0.75rem;
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.eyebrow img {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Page metadata grid - text left, icon right */
+.page-metadata {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  align-items: center;
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  background: rgba(0, 212, 255, 0.05);
+  border-left: 3px solid var(--brand-cyan);
+  border-radius: 4px;
+}
+
+.metadata-content p {
+  margin: 0.35rem 0;
+  font-size: 0.95rem;
+}
+
+.metadata-content p:first-child {
+  margin-top: 0;
+}
+
+.metadata-content p:last-child {
+  margin-bottom: 0;
+}
+
+.metadata-icon img {
+  width: 96px;
+  height: 96px;
+  opacity: 0.9;
+  display: block;
+}
+
+/* Link styling - make links visible in content area (not navigation) */
+.sy-c article a:not(.sd-card-link),
+.sy-c article li a,
+.sy-c article ul a,
+.sy-c article ol a {
+  color: var(--brand-cyan) !important;
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 212, 255, 0.3);
+  text-underline-offset: 0.2em;
+  transition: all 0.2s ease;
+}
+
+.sy-c article a:not(.sd-card-link):hover,
+.sy-c article li a:hover,
+.sy-c article ul a:hover,
+.sy-c article ol a:hover {
+  color: var(--brand-magenta) !important;
+  text-decoration-color: rgba(255, 0, 255, 0.6);
+  text-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+}
+
+/* Large centered section header icons */
+.section-icon-large {
+  width: 128px !important;
+  height: 128px !important;
+  max-width: 128px !important;
+  display: block;
+  margin: 1rem auto 1rem auto !important;
+}
+
+/* Medium centered section icons */
+.section-icon-medium {
+  width: 96px !important;
+  height: 96px !important;
+  max-width: 96px !important;
+  display: block;
+  margin: 1.5rem auto 1rem auto !important;
+}
+
+/* Small subsection icons (left-aligned) */
+.section-icon-small {
+  width: 48px !important;
+  height: 48px !important;
+  max-width: 48px !important;
+  display: inline-block;
+  margin-right: 0.75rem;
+  vertical-align: middle;
+}
+
+/* Icon container for better spacing */
+.icon-header-wrapper {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.icon-header-wrapper img {
+  width: 120px;
+  height: 120px;
+  display: block;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   NAVIGATION ENHANCEMENTS
+   ========================================================================== */
+
+/* Sidebar navigation */
+.sy-nav {
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.sy-nav a {
+  transition: color 0.2s ease;
+}
+
+.sy-nav a:hover {
+  color: var(--brand-magenta) !important;
+}
+
+/* Active nav item */
+.sy-nav .current > a {
+  color: var(--brand-cyan) !important;
+  font-weight: 600;
+}
+
+/* Ensure navigation items with children have space for the expand/collapse button */
+/* The button is absolutely positioned at right: 0, so we need padding on the link */
+.sy-nav li:has(button) > a,
+.sy-nav li:has(ul) > a,
+.globaltoc li:has(button) > a,
+.globaltoc li:has(ul) > a,
+.toctree-l1:has(button) > a,
+.toctree-l1:has(ul) > a,
+.toctree-l2:has(button) > a,
+.toctree-l2:has(ul) > a,
+.toctree-l3:has(button) > a,
+.toctree-l3:has(ul) > a {
+  padding-right: 45px !important;
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Style the expand/collapse buttons - remove cyan border frame */
+/* Use multiple selectors with high specificity to override theme defaults */
+button[aria-label*="Expand"],
+button[aria-label*="Collapse"],
+nav button[aria-label*="Expand"],
+nav button[aria-label*="Collapse"],
+aside button[aria-label*="Expand"],
+aside button[aria-label*="Collapse"],
+.sy-nav button[aria-label*="Expand"],
+.sy-nav button[aria-label*="Collapse"] {
+  border: none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  padding: 0 !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  color: var(--brand-cyan) !important;
+  transition: color 0.2s ease !important;
+}
+
+button[aria-label*="Expand"]:hover,
+button[aria-label*="Collapse"]:hover,
+nav button[aria-label*="Expand"]:hover,
+nav button[aria-label*="Collapse"]:hover,
+aside button[aria-label*="Expand"]:hover,
+aside button[aria-label*="Collapse"]:hover,
+.sy-nav button[aria-label*="Expand"]:hover,
+.sy-nav button[aria-label*="Collapse"]:hover {
+  color: var(--brand-magenta) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-width: 0 !important;
+}
+
+/* Make the chevron icon properly sized and colored */
+button .i-lucide.chevron-right,
+button .i-lucide.chevron-down,
+.sy-nav button .i-lucide {
+  color: inherit !important;
+  width: 16px !important;
+  height: 16px !important;
+  display: block !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  h1, .sy-c h1 {
+    font-size: 2.2rem;
+  }
+
+  h2, .sy-c h2 {
+    font-size: 1.8rem;
+  }
+
+  h3, .sy-c h3 {
+    font-size: 1.4rem;
+  }
+
+  .page-metadata {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .metadata-icon {
+    justify-self: center;
+  }
+
+  /* Collapse sphinx-design grid to single column on mobile */
+  /* sphinx-design uses flexbox, not CSS Grid, so override child widths */
+  .sd-row-cols-1 > *,
+  .sd-row-cols-2 > *,
+  .sd-row-cols-3 > *,
+  .sd-row-cols-4 > *,
+  .sd-row-cols-5 > *,
+  .sd-row-cols-6 > *,
+  .sd-row-cols-xs-1 > *,
+  .sd-row-cols-xs-2 > *,
+  .sd-row-cols-xs-3 > *,
+  .sd-row-cols-xs-4 > *,
+  .sd-row-cols-sm-1 > *,
+  .sd-row-cols-sm-2 > *,
+  .sd-row-cols-sm-3 > *,
+  .sd-row-cols-sm-4 > *,
+  .sd-row-cols-md-1 > *,
+  .sd-row-cols-md-2 > *,
+  .sd-row-cols-md-3 > *,
+  .sd-row-cols-md-4 > * {
+    width: 100% !important;
+  }
+}

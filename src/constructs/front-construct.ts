@@ -9,7 +9,6 @@ export interface FrontConstructProps {
   readonly namespace: kplus.Namespace;
   readonly sharedConfigMap: kplus.ConfigMap;
   readonly nginxPatchConfigMap?: kplus.ConfigMap;
-  readonly dovecotOverrideConfigMap?: kplus.ConfigMap;
 }
 
 /**
@@ -33,7 +32,7 @@ export class FrontConstruct extends Construct {
   constructor(scope: Construct, id: string, props: FrontConstructProps) {
     super(scope, id);
 
-    const { config, namespace, sharedConfigMap, nginxPatchConfigMap, dovecotOverrideConfigMap } = props;
+    const { config, namespace, sharedConfigMap, nginxPatchConfigMap } = props;
 
     // Create Deployment
     this.deployment = new kplus.Deployment(this, 'deployment', {
@@ -131,19 +130,6 @@ export class FrontConstruct extends Construct {
       // Mount wrapper script (command override already set in containerConfig above)
       container.mount('/usr/local/bin/entrypoint-wrapper.sh', patchVolume, {
         subPath: 'entrypoint-wrapper.sh',
-        readOnly: true,
-      });
-    }
-
-    // If dovecot override ConfigMap is provided, mount override configuration
-    if (dovecotOverrideConfigMap) {
-      // Create volume from ConfigMap
-      const dovecotOverrideVolume = kplus.Volume.fromConfigMap(this, 'dovecot-override-volume', dovecotOverrideConfigMap);
-
-      // Mount dovecot override at /overrides/dovecot/proxy.conf
-      // This overrides the submission_relay_port to use postfix:25 instead of the default :10025
-      container.mount('/overrides/dovecot/proxy.conf', dovecotOverrideVolume, {
-        subPath: 'proxy.conf',
         readOnly: true,
       });
     }

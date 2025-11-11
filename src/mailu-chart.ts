@@ -5,7 +5,6 @@ import { MailuChartConfig } from './config';
 import { AdminConstruct } from './constructs/admin-construct';
 import { ClamavConstruct } from './constructs/clamav-construct';
 import { DovecotConstruct } from './constructs/dovecot-construct';
-import { DovecotOverrideConfigMap } from './constructs/dovecot-override-configmap';
 import { DovecotSubmissionConstruct } from './constructs/dovecot-submission-construct';
 import { FetchmailConstruct } from './constructs/fetchmail-construct';
 import { FrontConstruct } from './constructs/front-construct';
@@ -137,13 +136,6 @@ export class MailuChart extends Chart {
       namespace: this.mailuNamespace,
     });
     this.nginxPatchConfigMap = patchConfigMapConstruct.configMap;
-
-    // Create dovecot override ConfigMap to fix submission relay port
-    const dovecotOverrideConstruct = new DovecotOverrideConfigMap(this, 'dovecot-override', {
-      config: this.config,
-      namespace: this.mailuNamespace,
-    });
-    this.dovecotOverrideConfigMap = dovecotOverrideConstruct.configMap;
 
     // Create webmail patch ConfigMap for direct backend connections (TLS_FLAVOR=notls)
     const webmailPatchConstruct = new WebmailPatchConfigMap(this, 'webmail-patch', {
