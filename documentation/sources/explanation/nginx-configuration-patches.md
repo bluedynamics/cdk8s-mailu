@@ -8,10 +8,10 @@ When using `TLS_FLAVOR=notls` with Traefik TLS termination, the Front nginx cont
 
 1. Add mail protocol listeners for ports 587, 465, 993, 995
 2. Configure auth_http to use Admin service instead of localhost
-3. Add location blocks for Admin UI and Webmail access
-4. Handle root URL redirects
 
 This document explains the patching mechanism and what changes are applied.
+
+**Note**: In cdk8s-mailu, Traefik routes HTTP traffic directly to Admin and Webmail services, bypassing Front nginx entirely. Therefore, HTTP location blocks and redirects are **not needed** and not applied.
 
 ## Patch Architecture
 
@@ -24,12 +24,14 @@ This document explains the patching mechanism and what changes are applied.
 - auth_http points to localhost:8000 (doesn't work in Kubernetes multi-pod architecture)
 
 **cdk8s-mailu Requirements**:
-- Traefik terminates TLS and forwards plaintext to nginx
+- Traefik terminates TLS and forwards plaintext to nginx (for mail protocols only)
 - nginx must listen on mail protocol ports to receive from Traefik
 - nginx must authenticate via Admin service (separate pod)
-- nginx must proxy to backend services after authentication
+- nginx must proxy to backend services after authentication (Postfix, Dovecot)
 
 **Solution**: Wrapper script patches generated nginx.conf before nginx starts.
+
+**HTTP Traffic**: Traefik routes HTTP directly to Admin and Webmail services, bypassing nginx completely.
 
 ### Patch Delivery Mechanism
 
@@ -80,9 +82,9 @@ python3 /config.py
 
 ### Phase 2: Apply Patches
 
-Four patches are applied to the generated nginx.conf:
+Two patches are applied to the generated nginx.conf:
 
-#### Patch 2a: Fix auth_http Endpoint
+#### Patch 1: Fix auth_http Endpoint
 
 **Problem**: Default config points to `http://127.0.0.1:8000/auth/email`
 - Doesn't work in Kubernetes (Admin is separate pod)
@@ -102,7 +104,7 @@ sed -i "s|auth_http http://127.0.0.1:8000/auth/email;|auth_http http://\${ADMIN_
 auth_http http://admin-service.mailu.svc.cluster.local:8080/internal/auth/email;
 ```
 
-#### Patch 2b: Inject Mail Protocol Listeners
+#### Patch 2: Inject Mail Protocol Listeners
 
 **Problem**: TLS_FLAVOR=notls doesn't create listeners for 587, 465, 993, 995
 
@@ -158,74 +160,26 @@ server {
 3. Admin validates and returns backend address
 4. nginx proxies connection to backend (Postfix or Dovecot)
 
-#### Patch 2c: Add Admin UI Location Block
-
-**Problem**: Default config doesn't route `/admin` requests
-
-**Patch**: Inserts location block into `http{}` server section:
-
-```nginx
-# Admin UI location block (TLS_FLAVOR=notls fix)
-location /admin {
-  include /etc/nginx/proxy.conf;
-  auth_request /internal/auth/admin;
-  auth_request_set $user $upstream_http_x_user;
-  auth_request_set $token $upstream_http_x_user_token;
-  proxy_set_header X-Real-IP $remote_addr;
-  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
-  proxy_set_header Host $http_host;
-  error_page 403 @sso_login;
-  proxy_pass http://$admin;
-}
-```
-
-**Key Configuration**:
-- `auth_request /internal/auth/admin`: SSO authentication subrequest
-- `auth_request_set $user`: Extract authenticated username
-- `error_page 403 @sso_login`: Redirect to login if not authenticated
-- `proxy_pass http://$admin`: Proxy to Admin service
-
-**Note**: In cdk8s-mailu with Traefik termination, this location block is **unused** because:
-- Traefik routes HTTP directly to Admin:8080
-- Bypasses Front/nginx entirely for web traffic
-- Kept for compatibility with standard Mailu configurations
-
-#### Patch 2d: Add Root Redirect
-
-**Problem**: Root URL (/) has no default handler
-
-**Patch**: Replaces default location block with redirect:
-
-```nginx
-location / {
-  # Redirect root to webmail for better UX
-  return 302 /webmail;
-}
-```
-
-**User Experience**: Visiting `https://mail.example.com/` redirects to `https://mail.example.com/webmail`
-
-**Note**: Also unused in cdk8s-mailu (Traefik routes directly to Webmail)
-
 ### Phase 3: Verify and Start
 
 ```bash
 # Verify patches were applied
-if grep -q "# Submission (port 587) for Traefik TLS termination" "$NGINX_CONF"; then
-  echo "Patch verification: OK"
+if ! grep -q "# Submission (port 587) for Traefik TLS termination" "$NGINX_CONF"; then
+  echo "ERROR: Mail protocol patches not found in $NGINX_CONF"
+  exit 1
 fi
+
+echo "Patch verification: OK - All patches applied successfully"
 
 # Start nginx in foreground
 exec /usr/sbin/nginx -g "daemon off;"
 ```
 
 **Verification checks**:
-- Mail protocol listeners added
-- Admin location block added
-- Root redirect added
+- Mail protocol listeners added (ports 587, 465, 993, 995)
+- Fails with error if patches not found
 
-**Failure handling**: Prints warnings but continues (fail-open approach)
+**Failure handling**: Exit immediately if patches not applied (fail-fast approach)
 
 ## Configuration File Structure
 
@@ -246,10 +200,7 @@ mail {
 http {
     server {
         listen 80;
-        # No /admin location block
-        location / {
-            try_files $uri $uri/ =404;
-        }
+        # HTTP server (not used - Traefik routes directly to services)
     }
 }
 ```
@@ -302,17 +253,7 @@ mail {
 http {
     server {
         listen 80;
-
-        # NEW: Admin location block
-        location /admin {
-            auth_request /internal/auth/admin;
-            proxy_pass http://$admin;
-        }
-
-        # MODIFIED: Root redirect
-        location / {
-            return 302 /webmail;
-        }
+        # HTTP server (not used - Traefik routes directly to services)
     }
 }
 ```
@@ -321,7 +262,7 @@ http {
 
 ### Service Port Exposure
 
-Front Service must expose all patched ports:
+Front Service exposes only TLS-terminated mail protocol ports (no HTTP or plaintext mail ports):
 
 ```yaml
 apiVersion: v1
@@ -330,33 +271,43 @@ metadata:
   name: front-service
 spec:
   ports:
-  - name: smtp-submission-tls
-    port: 587
-    targetPort: 587
-  - name: smtp-smtps
+  # TLS-terminated SMTP ports (Traefik terminates TLS, forwards plaintext to Front)
+  - name: smtps
     port: 465
     targetPort: 465
-  - name: imap-imaps
+  - name: submission
+    port: 587
+    targetPort: 587
+  # TLS-terminated IMAP port
+  - name: imaps
     port: 993
     targetPort: 993
-  - name: pop3-pop3s
+  # TLS-terminated POP3 port
+  - name: pop3s
     port: 995
     targetPort: 995
-  - name: http
-    port: 80
-    targetPort: 80
-  # ... (other ports)
 ```
 
-### Traefik IngressRouteTCP
+**Not exposed** (routed differently by Traefik):
+- Port 25 (SMTP): Traefik routes directly to Postfix:25
+- Port 80/443 (HTTP/HTTPS): Traefik routes directly to Admin:8080 and Webmail:80
+- Port 143/110 (IMAP/POP3): Plaintext protocols disabled (use IMAPS/POP3S instead)
 
-Traefik must route TLS traffic to Front:
+### Traefik Configuration
+
+**Required Traefik EntryPoints** (configured in cluster infrastructure):
+- `smtps` (465) - SMTPS with TLS termination
+- `smtp-submission` (587) - Submission with TLS termination (or passthrough)
+- `imaps` (993) - IMAPS with TLS termination
+- `pop3s` (995) - POP3S with TLS termination
+
+**Example IngressRouteTCP** (created by TraefikIngressConstruct):
 
 ```yaml
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRouteTCP
 metadata:
-  name: mail-submission
+  name: mailu-submission
 spec:
   entryPoints:
     - smtp-submission  # 587
@@ -365,17 +316,38 @@ spec:
     services:
     - name: front-service
       port: 587
-  tls:
-    passthrough: false  # Traefik terminates TLS
+  # Note: Submission (587) typically uses STARTTLS, not TLS wrapping
+  # So TLS section may be omitted (passthrough)
 ```
 
-**Traffic Flow**:
-1. Mail client connects to Traefik:587 with TLS
-2. Traefik terminates TLS
-3. Traefik forwards plaintext to Front:587
-4. nginx receives on patched listener
-5. nginx authenticates via Admin
-6. nginx proxies to Postfix:25
+**Example with TLS termination** (SMTPS/IMAPS/POP3S):
+
+```yaml
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: mailu-smtps
+spec:
+  entryPoints:
+    - smtps  # 465
+  routes:
+  - match: HostSNI(`*`)
+    services:
+    - name: front-service
+      port: 465
+  tls:
+    secretName: mailu-tls
+    options:
+      name: mailu-mail-tls
+```
+
+**Traffic Flow** (TLS-terminated mail protocols):
+1. Mail client connects to Traefik:465/587/993/995 with TLS
+2. Traefik terminates TLS (for 465/993/995; passthrough for 587)
+3. Traefik forwards plaintext to Front:465/587/993/995
+4. Front nginx receives on patched listener
+5. Front nginx authenticates via Admin service
+6. Front nginx proxies to backend (Postfix or Dovecot)
 
 ### Environment Variables Used
 
@@ -444,12 +416,13 @@ Wrapper script relies on these environment variables:
 - Escaping issues in patch script
 - Duplicate server blocks
 
-### HTTP Location Blocks Not Working
+### HTTP Traffic Not Going Through Front
 
-**Note**: In cdk8s-mailu, HTTP traffic bypasses Front entirely:
+**This is expected behavior** in cdk8s-mailu:
 - Traefik routes HTTP directly to Admin:8080 and Webmail:80
-- Front's `/admin` location block and `/` redirect are unused
+- Front nginx only handles mail protocols (SMTP, IMAP, POP3)
 - This is **by design** for simplified architecture
+- No HTTP location blocks or redirects are configured in Front nginx
 
 ## Code Reference
 

@@ -41,7 +41,7 @@ echo "Generating nginx configuration..."
 python3 /config.py
 
 # Step 2: Patch nginx.conf for Traefik TLS termination
-# This patches BOTH mail protocols AND HTTP location blocks
+# This patches mail protocol configuration only (Traefik routes HTTP directly to services)
 echo "Patching nginx.conf for Traefik TLS termination..."
 
 NGINX_CONF="/etc/nginx/nginx.conf"
@@ -51,13 +51,13 @@ if [ ! -f "$NGINX_CONF" ]; then
   exit 1
 fi
 
-# Patch 2a: Fix auth_http to use admin service (not localhost)
+# Patch 1: Fix auth_http to use admin service (not localhost)
 # Original config uses http://127.0.0.1:8000/auth/email but admin runs in separate pod
 # Also fixes endpoint path from /auth/email to /internal/auth/email (correct Mailu endpoint)
 echo "  - Configuring mail auth to use admin service..."
 sed -i "s|auth_http http://127.0.0.1:8000/auth/email;|auth_http http://\${ADMIN_ADDRESS}:8080/internal/auth/email;|g" "$NGINX_CONF"
 
-# Patch 2b: Inject mail protocol server blocks (in mail{} section)
+# Patch 2: Inject mail protocol server blocks (in mail{} section)
 # Find the port 25 server block and insert new blocks after its closing brace
 echo "  - Adding mail protocol listeners (587, 465, 993, 995)..."
 sed -i '/auth_http_header Auth-Port 25;/,/^    }$/{
@@ -105,72 +105,14 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Patch 2b: Add /admin location block (in http{} server section)
-# Insert after the "include /overrides/*.conf;" line
-echo "  - Adding /admin location block..."
-sed -i '/include \\/overrides\\/\\*\\.conf;/a\\
-\\
-      # Admin UI location block (TLS_FLAVOR=notls fix)\\
-      location /admin {\\
-        include /etc/nginx/proxy.conf;\\
-        auth_request /internal/auth/admin;\\
-        auth_request_set $user $upstream_http_x_user;\\
-        auth_request_set $token $upstream_http_x_user_token;\\
-        proxy_set_header X-Real-IP $remote_addr;\\
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\\
-        proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;\\
-        proxy_set_header Host $http_host;\\
-        error_page 403 @sso_login;\\
-        proxy_pass http://$admin;\\
-      }
-' "$NGINX_CONF"
-
-if [ $? -ne 0 ]; then
-  echo "ERROR: Failed to add /admin location block"
-  exit 1
-fi
-
-# Patch 2c: Replace root location block with redirect to webmail
-# Find and replace the "location / { ... try_files ... }" block
-echo "  - Adding root redirect to /webmail..."
-sed -i '/^      location \\/ {$/,/^      }$/{
-  /^      location \\/ {$/,/^      }$/ {
-    /^      location \\/ {$/!{/^      }$/!d;}
-  }
-  /^      location \\/ {$/a\\
-        # Redirect root to webmail for better UX\\
-        return 302 /webmail;
-}' "$NGINX_CONF"
-
-if [ $? -ne 0 ]; then
-  echo "ERROR: Failed to add root redirect"
-  exit 1
-fi
-
-# Verify all patches were applied
+# Verify patches were applied
 echo "Verifying patches..."
-PATCH_OK=true
-
 if ! grep -q "# Submission (port 587) for Traefik TLS termination" "$NGINX_CONF"; then
-  echo "WARNING: Mail protocol patches not found"
-  PATCH_OK=false
+  echo "ERROR: Mail protocol patches not found in $NGINX_CONF"
+  exit 1
 fi
 
-if ! grep -q "# Admin UI location block (TLS_FLAVOR=notls fix)" "$NGINX_CONF"; then
-  echo "WARNING: Admin location block not found"
-  PATCH_OK=false
-fi
-
-if ! grep -q "# Redirect root to webmail for better UX" "$NGINX_CONF"; then
-  echo "WARNING: Root redirect not found"
-  PATCH_OK=false
-fi
-
-if [ "$PATCH_OK" = true ]; then
-  echo "Patch verification: OK - All patches applied successfully"
-else
-  echo "WARNING: Some patches may not have been applied correctly, but continuing"
-fi
+echo "Patch verification: OK - All patches applied successfully"
 
 # Step 3: Start nginx (dovecot submission moved to separate service)
 echo "Starting nginx..."

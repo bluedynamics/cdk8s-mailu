@@ -12,18 +12,21 @@ export interface FrontConstructProps {
 }
 
 /**
- * Front Construct - Nginx reverse proxy and mail protocol frontend
+ * Front Construct - Nginx mail protocol authentication proxy
  *
  * The Front component provides:
- * - Nginx reverse proxy for HTTP/HTTPS traffic to admin and webmail
- * - Mail protocol exposure (SMTP, IMAP, POP3) with TLS support
- * - Single entry point for all external traffic
- * - Optional TLS termination
+ * - Authentication proxy for TLS-terminated mail protocols (SMTPS, Submission, IMAPS, POP3S)
+ * - Routes authenticated connections to backend services (Postfix, Dovecot)
+ * - Traefik terminates TLS and forwards plaintext to Front nginx
+ *
+ * Note: HTTP traffic (Admin, Webmail) and server-to-server SMTP(25) bypass Front:
+ * - Traefik routes HTTP directly to Admin:8080 and Webmail:80
+ * - Traefik routes SMTP(25) directly to Postfix:25
  *
  * Components:
- * - Deployment (or DaemonSet if configured)
- * - Service exposing all mail and web ports
- * - Optional TLS certificate volume mounts
+ * - Deployment with nginx container
+ * - Service exposing TLS-terminated mail protocol ports (465, 587, 993, 995)
+ * - Nginx patch ConfigMap for adding mail protocol listeners
  */
 export class FrontConstruct extends Construct {
   public readonly deployment: kplus.Deployment;
@@ -134,7 +137,8 @@ export class FrontConstruct extends Construct {
       });
     }
 
-    // Create Service exposing all mail and web ports
+    // Create Service exposing TLS-terminated mail protocol ports
+    // Note: Traefik routes HTTP to Admin/Webmail directly, and SMTP(25) to Postfix directly
     this.service = new kplus.Service(this, 'service', {
       metadata: {
         namespace: namespace.name,
@@ -146,26 +150,7 @@ export class FrontConstruct extends Construct {
       type: kplus.ServiceType.CLUSTER_IP, // Use ClusterIP by default; Traefik will handle external access
       selector: this.deployment,
       ports: [
-        // HTTP/HTTPS for web interfaces
-        {
-          name: 'http',
-          port: 80,
-          targetPort: 80,
-          protocol: kplus.Protocol.TCP,
-        },
-        {
-          name: 'https',
-          port: 443,
-          targetPort: 443,
-          protocol: kplus.Protocol.TCP,
-        },
-        // SMTP ports
-        {
-          name: 'smtp',
-          port: 25,
-          targetPort: 25,
-          protocol: kplus.Protocol.TCP,
-        },
+        // TLS-terminated SMTP ports (Traefik terminates TLS, forwards plaintext to Front)
         {
           name: 'smtps',
           port: 465,
@@ -178,26 +163,14 @@ export class FrontConstruct extends Construct {
           targetPort: 587,
           protocol: kplus.Protocol.TCP,
         },
-        // IMAP ports
-        {
-          name: 'imap',
-          port: 143,
-          targetPort: 143,
-          protocol: kplus.Protocol.TCP,
-        },
+        // TLS-terminated IMAP port
         {
           name: 'imaps',
           port: 993,
           targetPort: 993,
           protocol: kplus.Protocol.TCP,
         },
-        // POP3 ports
-        {
-          name: 'pop3',
-          port: 110,
-          targetPort: 110,
-          protocol: kplus.Protocol.TCP,
-        },
+        // TLS-terminated POP3 port
         {
           name: 'pop3s',
           port: 995,

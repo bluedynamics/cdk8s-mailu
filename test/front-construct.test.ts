@@ -71,7 +71,7 @@ describe('FrontConstruct', () => {
     expect(services[0].spec.type).toBe('ClusterIP');
   });
 
-  test('exposes all mail and web protocol ports', () => {
+  test('exposes only TLS-terminated mail protocol ports', () => {
     new FrontConstruct(chart, 'front', {
       config,
       namespace,
@@ -81,34 +81,33 @@ describe('FrontConstruct', () => {
     const manifests = Testing.synth(chart);
     const service = manifests.find(m => m.kind === 'Service');
 
-    // Check all expected ports are defined
+    // Check only TLS-terminated mail protocol ports are exposed
+    // (HTTP and plaintext mail ports are NOT exposed - routed differently by Traefik)
     const portNames = service?.spec.ports.map((p: any) => p.name).sort();
     expect(portNames).toEqual([
-      'http',
-      'https',
-      'imap',
       'imaps',
-      'pop3',
       'pop3s',
-      'smtp',
       'smtps',
       'submission',
     ]);
 
     // Verify specific port configurations
     const ports = service?.spec.ports;
-    const httpPort = ports.find((p: any) => p.name === 'http');
-    expect(httpPort?.port).toBe(80);
-    expect(httpPort?.targetPort).toBe(80);
-
-    const smtpPort = ports.find((p: any) => p.name === 'smtp');
-    expect(smtpPort?.port).toBe(25);
-
-    const imapsPort = ports.find((p: any) => p.name === 'imaps');
-    expect(imapsPort?.port).toBe(993);
+    const smtpsPort = ports.find((p: any) => p.name === 'smtps');
+    expect(smtpsPort?.port).toBe(465);
+    expect(smtpsPort?.targetPort).toBe(465);
 
     const submissionPort = ports.find((p: any) => p.name === 'submission');
     expect(submissionPort?.port).toBe(587);
+    expect(submissionPort?.targetPort).toBe(587);
+
+    const imapsPort = ports.find((p: any) => p.name === 'imaps');
+    expect(imapsPort?.port).toBe(993);
+    expect(imapsPort?.targetPort).toBe(993);
+
+    const pop3sPort = ports.find((p: any) => p.name === 'pop3s');
+    expect(pop3sPort?.port).toBe(995);
+    expect(pop3sPort?.targetPort).toBe(995);
   });
 
   test('configures container with correct image', () => {

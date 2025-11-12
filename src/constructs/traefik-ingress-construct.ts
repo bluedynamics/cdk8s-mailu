@@ -229,29 +229,6 @@ export class TraefikIngressConstruct extends Construct {
       });
       this.tcpRoutes.push(submissionRoute);
 
-      // IMAP (port 143)
-      const imapRoute = new traefik.IngressRouteTcp(this, 'imap', {
-        metadata: {
-          name: 'mailu-imap',
-          namespace: props.namespace,
-        },
-        spec: {
-          entryPoints: ['imap'],
-          routes: [
-            {
-              match: 'HostSNI(`*`)',
-              services: [
-                {
-                  name: props.frontService.name,
-                  port: k8s.IntOrString.fromNumber(143),
-                },
-              ],
-            },
-          ],
-        },
-      });
-      this.tcpRoutes.push(imapRoute);
-
       // IMAPS (port 993)
       // Traefik terminates TLS using mailu-tls certificate and mail TLS options
       const imapsRoute = new traefik.IngressRouteTcp(this, 'imaps', {
@@ -282,29 +259,6 @@ export class TraefikIngressConstruct extends Construct {
         },
       });
       this.tcpRoutes.push(imapsRoute);
-
-      // POP3 (port 110)
-      const pop3Route = new traefik.IngressRouteTcp(this, 'pop3', {
-        metadata: {
-          name: 'mailu-pop3',
-          namespace: props.namespace,
-        },
-        spec: {
-          entryPoints: ['pop3'],
-          routes: [
-            {
-              match: 'HostSNI(`*`)',
-              services: [
-                {
-                  name: props.frontService.name,
-                  port: k8s.IntOrString.fromNumber(110),
-                },
-              ],
-            },
-          ],
-        },
-      });
-      this.tcpRoutes.push(pop3Route);
 
       // POP3S (port 995)
       // Traefik terminates TLS using mailu-tls certificate and mail TLS options
