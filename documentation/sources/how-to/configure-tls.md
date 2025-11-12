@@ -10,6 +10,10 @@ You need to configure secure HTTPS access to Mailu webmail and admin interfaces,
 
 The `cdk8s-mailu` library is designed for **Traefik TLS termination**. Traefik handles TLS certificates (Let's Encrypt) and decrypts traffic, while Mailu components communicate in plaintext internally. This is the recommended production pattern for Kubernetes deployments.
 
+**Two approaches available**:
+1. **Automated** (recommended): Use cdk8s-mailu's built-in Traefik ingress support
+2. **Manual**: Create Traefik IngressRoute resources separately (for advanced customization)
+
 ## Architecture Overview
 
 **TLS Termination Flow**:
@@ -70,9 +74,86 @@ app.synth();
 
 **No additional TLS configuration needed** in the CDK8S code!
 
-## Create Traefik IngressRoute
+## Option 1: Automated Traefik Ingress (Recommended)
 
-After deploying Mailu with `cdk8s-mailu`, create Traefik IngressRoutes for HTTP/HTTPS and mail protocols.
+**New in cdk8s-mailu**: Built-in support for automatic ingress resource creation.
+
+Add the `ingress` configuration to your MailuChart:
+
+```typescript
+import { App } from 'cdk8s';
+import { MailuChart } from 'cdk8s-mailu';
+
+const app = new App();
+
+new MailuChart(app, 'mailu', {
+  namespace: 'mailu',
+  domain: 'example.com',
+  hostnames: ['mail.example.com'],
+  subnet: '10.42.0.0/16',
+
+  // Database, redis, secrets config...
+  database: { /* ... */ },
+  redis: { /* ... */ },
+  secrets: { /* ... */ },
+
+  // Automated Traefik ingress (NEW!)
+  ingress: {
+    enabled: true,
+    type: 'traefik',
+    traefik: {
+      hostname: 'mail.example.com',
+      certIssuer: 'letsencrypt-cluster-issuer',  // Your cert-manager ClusterIssuer
+      enableTcp: true,  // Enable TCP routes for SMTP/IMAP/POP3
+      smtpConnectionLimit: 15,  // Max concurrent SMTP connections per IP
+    },
+  },
+});
+
+app.synth();
+```
+
+**What this creates automatically**:
+- ✅ Kubernetes Ingress with cert-manager annotation for HTTPS (admin UI, webmail)
+- ✅ Traefik TLSOption with Mailu-compatible cipher suites
+- ✅ Traefik IngressRouteTCP for SMTP (port 25) with rate limiting
+- ✅ Traefik IngressRouteTCP for SMTPS (port 465) with TLS termination
+- ✅ Traefik IngressRouteTCP for Submission (port 587) with TLS termination
+- ✅ Traefik IngressRouteTCP for IMAPS (port 993) with TLS termination
+- ✅ Traefik IngressRouteTCP for POP3S (port 995) with TLS termination
+- ✅ Traefik IngressRouteTCP for IMAP (port 143, plaintext)
+- ✅ Traefik IngressRouteTCP for POP3 (port 110, plaintext)
+- ✅ Traefik MiddlewareTCP for SMTP connection rate limiting
+
+**Benefits**:
+- One-click ingress setup
+- Type-safe configuration
+- Automatic service name resolution
+- Production-ready defaults
+- Consistent with Mailu security requirements
+
+### Configuration Options
+
+All ingress options are optional with sensible defaults:
+
+```typescript
+ingress: {
+  enabled: true,              // Enable ingress creation
+  type: 'traefik',           // Ingress type (only 'traefik' supported currently)
+  traefik: {
+    hostname: 'mail.example.com',           // Required: FQDN for ingress
+    certIssuer: 'letsencrypt-cluster-issuer', // Default: 'letsencrypt-cluster-issuer'
+    enableTcp: true,                        // Default: true (enable TCP routes)
+    smtpConnectionLimit: 15,                // Default: 15 (concurrent SMTP connections per IP)
+  },
+}
+```
+
+After deploying, cert-manager will automatically provision a Let's Encrypt certificate for `mail.example.com`.
+
+## Option 2: Manual Traefik IngressRoute Creation
+
+If you need more control or want to customize the ingress resources, you can create them manually.
 
 ### Step 1: Create TLS Certificate
 
@@ -369,15 +450,16 @@ If you need to customize rate limits for your deployment size:
 
 **Small deployments (< 50 users)**:
 - Use default limits (60 conn/min, 100 msg/min)
+- Automated ingress: `smtpConnectionLimit: 15`
 
 **Medium deployments (50-500 users)**:
-- Increase Traefik InFlightConn: `amount: 25`
+- Automated ingress: `smtpConnectionLimit: 25`
 - Increase Postfix limits:
   - `connection_rate_limit: 120`
   - `message_rate_limit: 200`
 
 **Large deployments (500+ users)**:
-- Increase Traefik InFlightConn: `amount: 50`
+- Automated ingress: `smtpConnectionLimit: 50`
 - Increase Postfix limits:
   - `connection_rate_limit: 180`
   - `message_rate_limit: 300`
@@ -482,20 +564,23 @@ kubectl logs -n kube-system -l app.kubernetes.io/name=traefik
 
 ```bash
 # Check secret
-kubectl get secret -n mailu mailu-tls-cert
+kubectl get secret -n mailu mailu-tls
 
 # View certificate details
-kubectl get secret -n mailu mailu-tls-cert -o jsonpath='{.data.tls\.crt}' | base64 -d | openssl x509 -noout -text
+kubectl get secret -n mailu mailu-tls -o jsonpath='{.data.tls\.crt}' | base64 -d | openssl x509 -noout -text
 ```
 
 ### Webmail not accessible over HTTPS
 
 **Symptom**: HTTPS redirects failing or webmail shows "not found".
 
-**Solution**: Check IngressRoute and service:
+**Solution**: Check Ingress and service:
 
 ```bash
-# Verify IngressRoute exists
+# Verify Ingress exists
+kubectl get ingress -n mailu
+
+# Check IngressRoute if using manual setup
 kubectl get ingressroute -n mailu
 
 # Test internal service
@@ -524,5 +609,6 @@ kubectl get svc -n mailu mailu-front
 - [Dovecot Submission Service](../explanation/dovecot-submission.md) - Understanding webmail email sending
 - [Architecture](../explanation/architecture.md) - Component relationships
 - [Manage Secrets](manage-secrets.md) - Creating TLS certificate secrets manually
+- [Configuration Reference](../reference/configuration-options.md) - Complete ingress configuration options
 - [Traefik Documentation](https://doc.traefik.io/traefik/routing/routers/) - IngressRoute configuration
 - [cert-manager Documentation](https://cert-manager.io/docs/) - Certificate provisioning
