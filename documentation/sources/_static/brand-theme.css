@@ -542,6 +542,31 @@ tbody tr:hover {
 }
 
 /* ==========================================================================
+   LOGO & HEADER ENHANCEMENTS
+   ========================================================================== */
+
+/* Add package name next to logo */
+.sy-h-logo a::after {
+  content: 'cdk8s-mailu';
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--brand-cyan);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-left: 1rem;
+  vertical-align: middle;
+  display: inline-block;
+}
+
+/* Ensure logo link is flexbox for proper alignment */
+.sy-h-logo a {
+  display: flex !important;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ==========================================================================
    NAVIGATION ENHANCEMENTS
    ========================================================================== */
 
