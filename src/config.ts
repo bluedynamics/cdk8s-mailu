@@ -331,6 +331,58 @@ export interface ImageConfig {
 }
 
 /**
+ * Traefik-specific ingress configuration
+ */
+export interface TraefikIngressConfig {
+  /**
+   * Hostname for ingress (FQDN)
+   * @example "mail.example.com"
+   */
+  readonly hostname: string;
+
+  /**
+   * cert-manager ClusterIssuer name for TLS certificates
+   * @default "letsencrypt-cluster-issuer"
+   */
+  readonly certIssuer?: string;
+
+  /**
+   * Enable TCP routes for mail protocols (SMTP, IMAP, POP3, etc.)
+   * @default true
+   */
+  readonly enableTcp?: boolean;
+
+  /**
+   * SMTP rate limiting (maximum concurrent connections per IP)
+   * @default 15
+   */
+  readonly smtpConnectionLimit?: number;
+}
+
+/**
+ * Ingress configuration
+ */
+export interface IngressConfig {
+  /**
+   * Enable ingress resource creation
+   * @default false
+   */
+  readonly enabled?: boolean;
+
+  /**
+   * Ingress controller type
+   * @default "traefik"
+   */
+  readonly type?: 'traefik' | 'nginx' | 'none';
+
+  /**
+   * Traefik-specific configuration
+   * Required if type is "traefik" and enabled is true
+   */
+  readonly traefik?: TraefikIngressConfig;
+}
+
+/**
  * Main configuration interface for Mailu chart
  */
 export interface MailuChartConfig {
@@ -416,4 +468,11 @@ export interface MailuChartConfig {
    * Image configuration
    */
   readonly images?: ImageConfig;
+
+  /**
+   * Ingress configuration (optional)
+   * Enables automatic creation of ingress resources for external access
+   * @default undefined (no ingress created)
+   */
+  readonly ingress?: IngressConfig;
 }

@@ -149,6 +149,18 @@ new MailuChart(app, 'simple-deployment', {
     tag: '2024.06', // Mailu version
     pullPolicy: 'IfNotPresent',
   },
+
+  // Ingress configuration (optional - requires Traefik installed)
+  // ingress: {
+  //   enabled: true,
+  //   type: 'traefik',
+  //   traefik: {
+  //     hostname: 'mail.example.com',
+  //     certIssuer: 'letsencrypt-cluster-issuer',
+  //     enableTcp: true,  // Enable SMTP/IMAP/POP3 TCP routes
+  //     smtpConnectionLimit: 15,  // Max concurrent SMTP connections per IP
+  //   },
+  //},
 });
 
 app.synth();
@@ -162,4 +174,6 @@ console.log('   kubectl create secret generic mailu-admin-password --from-litera
 console.log('\n2. Deploy to Kubernetes:');
 console.log('   kubectl apply -f dist/simple-deployment.k8s.yaml');
 console.log('\n3. Configure DNS records (MX, SPF, DKIM, DMARC)');
-console.log('\n4. Configure ingress/load balancer for external access');
+console.log('\n4. Configure external access:');
+console.log('   - Uncomment ingress config above for automatic Traefik ingress, OR');
+console.log('   - Manually configure ingress/load balancer');

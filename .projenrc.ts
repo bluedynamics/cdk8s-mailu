@@ -8,6 +8,11 @@ const project = new cdk8s.Cdk8sTypeScriptApp({
   // CDK8S configuration
   cdk8sVersion: '2.70.26',
 
+  // Import Traefik CRDs for ingress support from local CRD file
+  cdk8sImports: [
+    'crds/traefik-crds.yaml',
+  ],
+
   // Dependencies
   deps: [
     'cdk8s-plus-33@^2.4.0',

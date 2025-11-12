@@ -92,6 +92,17 @@ new MailuChart(app, 'mailu', {
     storageClass: 'longhorn',
     dovecot: { size: '50Gi' },  // Mailbox storage
   },
+
+  // Optional: Traefik ingress (requires Traefik installed)
+  ingress: {
+    enabled: true,
+    type: 'traefik',
+    traefik: {
+      hostname: 'mail.example.com',
+      certIssuer: 'letsencrypt-cluster-issuer',
+      enableTcp: true,  // SMTP/IMAP/POP3 routes
+    },
+  },
 });
 
 app.synth();

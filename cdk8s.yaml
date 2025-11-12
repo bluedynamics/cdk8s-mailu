@@ -4,3 +4,4 @@ language: typescript
 app: node lib/main.js
 imports:
   - k8s
+  - crds/traefik-crds.yaml

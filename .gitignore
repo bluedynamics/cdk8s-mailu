@@ -51,4 +51,3 @@ junit.xml
 !/.eslintrc.json
 !/cdk8s.yaml
 !/.projenrc.ts
-.claude/settings.local.json

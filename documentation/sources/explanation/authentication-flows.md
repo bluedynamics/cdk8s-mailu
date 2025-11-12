@@ -55,7 +55,7 @@ server {
 
 **How it works**:
 
-1. **User Access**: User navigates to `https://webmail.example.com` in browser
+1. **User Access**: User navigates to `https://mail.example.com/webmail` in browser
 2. **SSO Check**: Webmail (Roundcube) checks for existing SSO session via Admin
 3. **Login Prompt**: If no session, Webmail redirects to Admin login page
 4. **Admin Authentication**: User enters credentials, Admin validates against database
@@ -72,8 +72,9 @@ server {
 
 **Configuration**:
 - Webmail environment variable: `ADMIN_ADDRESS` points to Admin service
-- Admin environment variable: `WEB_ADMIN` and `WEB_WEBMAIL` configure URLs
+- Admin environment variables: `WEB_ADMIN='/admin'` and `WEB_WEBMAIL='/webmail'` configure URL paths
 - Session storage: PostgreSQL (production) or SQLite (development)
+- Default URLs: `https://mail.example.com/admin` and `https://mail.example.com/webmail`
 
 **Database Tables**:
 - `user` - User accounts and credentials

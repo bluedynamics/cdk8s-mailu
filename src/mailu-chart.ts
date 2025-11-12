@@ -11,6 +11,7 @@ import { FrontConstruct } from './constructs/front-construct';
 import { NginxPatchConfigMap } from './constructs/nginx-patch-configmap';
 import { PostfixConstruct } from './constructs/postfix-construct';
 import { RspamdConstruct } from './constructs/rspamd-construct';
+import { TraefikIngressConstruct } from './constructs/traefik-ingress-construct';
 import { WebdavConstruct } from './constructs/webdav-construct';
 import { WebmailConstruct } from './constructs/webmail-construct';
 import { WebmailPatchConfigMap } from './constructs/webmail-patch-configmap';
@@ -95,6 +96,7 @@ export class MailuChart extends Chart {
   public clamavConstruct?: ClamavConstruct;
   public fetchmailConstruct?: FetchmailConstruct;
   public webdavConstruct?: WebdavConstruct;
+  public traefikIngressConstruct?: TraefikIngressConstruct;
 
   constructor(scope: Construct, id: string, config: MailuChartConfig, props?: ChartProps) {
     super(scope, id, props);
@@ -181,6 +183,11 @@ export class MailuChart extends Chart {
 
     // Update ConfigMap with service discovery addresses after all components are created
     this.updateConfigMapWithServiceDiscovery();
+
+    // Create ingress resources (optional)
+    if (config.ingress?.enabled && config.ingress?.type === 'traefik') {
+      this.createTraefikIngress();
+    }
   }
 
   /**
@@ -364,6 +371,38 @@ export class MailuChart extends Chart {
       config: this.config,
       namespace: this.mailuNamespace,
       sharedConfigMap: this.sharedConfigMap,
+    });
+  }
+
+  /**
+   * Creates Traefik ingress resources for external access
+   * Requires front and postfix components to be created first
+   */
+  private createTraefikIngress(): void {
+    // Validate required components
+    if (!this.frontConstruct?.service) {
+      throw new Error('Cannot create Traefik ingress: front component is not enabled or service not available');
+    }
+    if (!this.postfixConstruct?.service) {
+      throw new Error('Cannot create Traefik ingress: postfix component is not enabled or service not available');
+    }
+
+    // Validate required configuration
+    if (!this.config.ingress?.traefik?.hostname) {
+      throw new Error('Cannot create Traefik ingress: ingress.traefik.hostname is required');
+    }
+
+    const traefikConfig = this.config.ingress.traefik;
+
+    this.traefikIngressConstruct = new TraefikIngressConstruct(this, 'traefik-ingress', {
+      namespace: this.mailuNamespace.name,
+      domain: this.config.domain,
+      hostname: traefikConfig.hostname,
+      certIssuer: traefikConfig.certIssuer ?? 'letsencrypt-cluster-issuer',
+      frontService: this.frontConstruct.service,
+      postfixService: this.postfixConstruct.service,
+      enableTcp: traefikConfig.enableTcp ?? true,
+      smtpConnectionLimit: traefikConfig.smtpConnectionLimit ?? 15,
     });
   }
 

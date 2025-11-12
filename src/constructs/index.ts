@@ -17,3 +17,6 @@ export { WebdavConstruct, WebdavConstructProps } from './webdav-construct';
 
 // Supporting components
 export { DovecotSubmissionConstruct, DovecotSubmissionConstructProps } from './dovecot-submission-construct';
+
+// Ingress components (optional)
+export { TraefikIngressConstruct, TraefikIngressConstructProps } from './traefik-ingress-construct';
