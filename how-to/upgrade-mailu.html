@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Upgrade Mailu Version - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Backup and Restore" href="backup-restore.html" /><link rel="prev" title="Manage Secrets" href="manage-secrets.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/how-to/upgrade-mailu.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/how-to/upgrade-mailu.html"/>
+  <meta property="og:title" content="Upgrade Mailu Version"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">How-To Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/index.html">Explanation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#problem">Problem</a></li>
+<li><a class="reference internal" href="#solution">Solution</a></li>
+<li><a class="reference internal" href="#before-you-start">Before You Start</a></li>
+<li><a class="reference internal" href="#check-current-version">Check Current Version</a></li>
+<li><a class="reference internal" href="#review-release-notes">Review Release Notes</a></li>
+<li><a class="reference internal" href="#upgrade-procedure">Upgrade Procedure</a><ul>
+<li><a class="reference internal" href="#step-1-backup-everything">Step 1: Backup Everything</a></li>
+<li><a class="reference internal" href="#step-2-update-image-version">Step 2: Update Image Version</a></li>
+<li><a class="reference internal" href="#step-3-regenerate-manifests">Step 3: Regenerate Manifests</a></li>
+<li><a class="reference internal" href="#step-4-apply-upgrade-rolling-update">Step 4: Apply Upgrade (Rolling Update)</a></li>
+<li><a class="reference internal" href="#step-5-verify-upgrade">Step 5: Verify Upgrade</a></li>
+<li><a class="reference internal" href="#step-6-test-functionality">Step 6: Test Functionality</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#upgrade-patterns">Upgrade Patterns</a><ul>
+<li><a class="reference internal" href="#minor-version-upgrade-same-year">Minor Version Upgrade (Same Year)</a></li>
+<li><a class="reference internal" href="#major-version-upgrade-year-change">Major Version Upgrade (Year Change)</a></li>
+<li><a class="reference internal" href="#multi-version-jump">Multi-Version Jump</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#rollback-procedure">Rollback Procedure</a><ul>
+<li><a class="reference internal" href="#quick-rollback-image-version-only">Quick Rollback (Image Version Only)</a></li>
+<li><a class="reference internal" href="#full-rollback-database-restore">Full Rollback (Database Restore)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#automated-upgrade-testing">Automated Upgrade Testing</a></li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#pods-stuck-in-imagepullbackoff">Pods stuck in ImagePullBackOff</a></li>
+<li><a class="reference internal" href="#database-migration-failures">Database migration failures</a></li>
+<li><a class="reference internal" href="#version-mismatch-between-components">Version mismatch between components</a></li>
+<li><a class="reference internal" href="#performance-degradation-after-upgrade">Performance degradation after upgrade</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#upgrade-checklist">Upgrade Checklist</a></li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">How-To Guides</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Upgrade Mailu Version</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="upgrade-mailu-version">
+<h1>Upgrade Mailu Version<a class="headerlink" href="#upgrade-mailu-version" title="Link to this heading">¶</a></h1>
+<p><strong>How to upgrade Mailu to a newer version safely.</strong></p>
+<section id="problem">
+<h2>Problem<a class="headerlink" href="#problem" title="Link to this heading">¶</a></h2>
+<p>You need to upgrade your Mailu deployment to a newer version to get security fixes, new features, or bug fixes.</p>
+</section>
+<section id="solution">
+<h2>Solution<a class="headerlink" href="#solution" title="Link to this heading">¶</a></h2>
+<p>Update the image tag in your <code class="docutils literal notranslate"><span class="pre">MailuChart</span></code> configuration, regenerate manifests, and apply with proper backup and testing procedures.</p>
+</section>
+<section id="before-you-start">
+<h2>Before You Start<a class="headerlink" href="#before-you-start" title="Link to this heading">¶</a></h2>
+<p><strong>Critical prerequisites</strong>:</p>
+<ol class="arabic simple">
+<li><p>✅ <strong>Backup all data</strong> (see <a class="reference internal" href="backup-restore.html"><span class="std std-doc">Backup and Restore</span></a>)</p></li>
+<li><p>✅ <strong>Review Mailu release notes</strong> for breaking changes</p></li>
+<li><p>✅ <strong>Test in non-production environment</strong> first</p></li>
+<li><p>✅ <strong>Schedule maintenance window</strong> for production upgrades</p></li>
+<li><p>✅ <strong>Document current version</strong> for potential rollback</p></li>
+</ol>
+</section>
+<section id="check-current-version">
+<h2>Check Current Version<a class="headerlink" href="#check-current-version" title="Link to this heading">¶</a></h2>
+<p>Identify your current Mailu version:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check image version in running pods</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{range .items[*]}{.metadata.name}{&quot;\t&quot;}{.spec.containers[0].image}{&quot;\n&quot;}{end}&#39;</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Example output:</span>
+</span><span data-line="5"><span class="c1"># mailu-admin-xxx    ghcr.io/mailu/admin:2024.06</span>
+</span><span data-line="6"><span class="c1"># mailu-front-xxx    ghcr.io/mailu/nginx:2024.06</span>
+</span></pre></div>
+</div>
+</section>
+<section id="review-release-notes">
+<h2>Review Release Notes<a class="headerlink" href="#review-release-notes" title="Link to this heading">¶</a></h2>
+<p>Check <a class="reference external" href="https://github.com/Mailu/Mailu/releases">Mailu releases</a> for:</p>
+<ul class="simple">
+<li><p><strong>Breaking changes</strong> (configuration, database migrations)</p></li>
+<li><p><strong>New features</strong> (optional components, configuration options)</p></li>
+<li><p><strong>Bug fixes</strong> (relevant to your deployment)</p></li>
+<li><p><strong>Upgrade notes</strong> (special procedures)</p></li>
+</ul>
+<p><strong>Common breaking changes to watch for</strong>:</p>
+<ul class="simple">
+<li><p>Database schema migrations</p></li>
+<li><p>Configuration file format changes</p></li>
+<li><p>Removed/renamed environment variables</p></li>
+<li><p>Component version incompatibilities</p></li>
+</ul>
+</section>
+<section id="upgrade-procedure">
+<h2>Upgrade Procedure<a class="headerlink" href="#upgrade-procedure" title="Link to this heading">¶</a></h2>
+<section id="step-1-backup-everything">
+<h3>Step 1: Backup Everything<a class="headerlink" href="#step-1-backup-everything" title="Link to this heading">¶</a></h3>
+<p><strong>Before making any changes</strong>, create backups:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Backup database</span>
+</span><span data-line="2">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>postgres<span class="w"> </span>postgres-1<span class="w"> </span>--<span class="w"> </span>pg_dump<span class="w"> </span>-U<span class="w"> </span>postgres<span class="w"> </span>mailu<span class="w"> </span>&gt;<span class="w"> </span>mailu-db-backup-<span class="k">$(</span>date<span class="w"> </span>+%Y%m%d<span class="k">)</span>.sql
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Backup PVCs (using Longhorn or your backup solution)</span>
+</span><span data-line="5"><span class="c1"># See backup-restore.md for detailed procedures</span>
+</span></pre></div>
+</div>
+</section>
+<section id="step-2-update-image-version">
+<h3>Step 2: Update Image Version<a class="headerlink" href="#step-2-update-image-version" title="Link to this heading">¶</a></h3>
+<p>Edit your CDK8S configuration to specify the new version:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">App</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s&#39;</span><span class="p">;</span>
+</span><span data-line="2"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">MailuChart</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s-mailu&#39;</span><span class="p">;</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">App</span><span class="p">();</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="ow">new</span><span class="w"> </span><span class="nx">MailuChart</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">namespace</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span>
+</span><span data-line="8"><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;example.com&#39;</span><span class="p">,</span>
+</span><span data-line="9"><span class="w">  </span><span class="nx">hostnames</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;mail.example.com&#39;</span><span class="p">],</span>
+</span><span data-line="10"><span class="w">  </span><span class="nx">subnet</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10.42.0.0/16&#39;</span><span class="p">,</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="w">  </span><span class="c1">// ... other config ...</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="w">  </span><span class="nx">images</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="15"><span class="w">    </span><span class="nx">registry</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;ghcr.io/mailu&#39;</span><span class="p">,</span>
+</span><span data-line="16"><span class="w">    </span><span class="nx">tag</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;2025.01&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// Updated from 2024.06</span>
+</span><span data-line="17"><span class="w">    </span><span class="nx">pullPolicy</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;IfNotPresent&#39;</span><span class="p">,</span>
+</span><span data-line="18"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="19"><span class="p">});</span>
+</span><span data-line="20">
+</span><span data-line="21"><span class="nx">app</span><span class="p">.</span><span class="nx">synth</span><span class="p">();</span>
+</span></pre></div>
+</div>
+<p><strong>Version selection</strong>:</p>
+<ul class="simple">
+<li><p><strong>Stable releases</strong>: Use tagged versions (e.g., <code class="docutils literal notranslate"><span class="pre">2024.06</span></code>, <code class="docutils literal notranslate"><span class="pre">2025.01</span></code>)</p></li>
+<li><p><strong>Latest stable</strong>: Use <code class="docutils literal notranslate"><span class="pre">latest</span></code> tag (not recommended for production)</p></li>
+<li><p><strong>Testing</strong>: Use <code class="docutils literal notranslate"><span class="pre">master</span></code> tag (pre-release, unstable)</p></li>
+</ul>
+</section>
+<section id="step-3-regenerate-manifests">
+<h3>Step 3: Regenerate Manifests<a class="headerlink" href="#step-3-regenerate-manifests" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Compile and synthesize with new version</span>
+</span><span data-line="2">npm<span class="w"> </span>run<span class="w"> </span>build
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Review changes in generated manifests</span>
+</span><span data-line="5">git<span class="w"> </span>diff<span class="w"> </span>dist/mailu.k8s.yaml
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Look for image version changes</span>
+</span><span data-line="8">grep<span class="w"> </span><span class="s2">&quot;image:&quot;</span><span class="w"> </span>dist/mailu.k8s.yaml
+</span></pre></div>
+</div>
+</section>
+<section id="step-4-apply-upgrade-rolling-update">
+<h3>Step 4: Apply Upgrade (Rolling Update)<a class="headerlink" href="#step-4-apply-upgrade-rolling-update" title="Link to this heading">¶</a></h3>
+<p>Apply the updated manifests using kubectl:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Apply changes (triggers rolling update)</span>
+</span><span data-line="2">kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>dist/mailu.k8s.yaml
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Watch rollout status</span>
+</span><span data-line="5">kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-admin
+</span><span data-line="6">kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-front
+</span><span data-line="7">kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-postfix
+</span><span data-line="8">kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-dovecot
+</span><span data-line="9">kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-rspamd
+</span><span data-line="10">
+</span><span data-line="11"><span class="c1"># Watch pods restart with new images</span>
+</span><span data-line="12">kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-w
+</span></pre></div>
+</div>
+<p><strong>Rolling update behavior</strong>:</p>
+<ul class="simple">
+<li><p>Pods restart one at a time (high availability maintained)</p></li>
+<li><p>Old pods remain running until new pods are ready</p></li>
+<li><p>Database migrations run automatically on admin pod startup</p></li>
+</ul>
+</section>
+<section id="step-5-verify-upgrade">
+<h3>Step 5: Verify Upgrade<a class="headerlink" href="#step-5-verify-upgrade" title="Link to this heading">¶</a></h3>
+<p>Check that all pods are running the new version:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Verify image versions</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{range .items[*]}{.metadata.name}{&quot;\t&quot;}{.spec.containers[0].image}{&quot;\n&quot;}{end}&#39;</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Check pod status (all should be Running)</span>
+</span><span data-line="5">kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>mailu
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Check admin pod logs for migration messages</span>
+</span><span data-line="8">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/component<span class="o">=</span>admin<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>migration
+</span><span data-line="9">
+</span><span data-line="10"><span class="c1"># Test basic functionality</span>
+</span><span data-line="11">curl<span class="w"> </span>-I<span class="w"> </span>https://mail.example.com/admin<span class="w">  </span><span class="c1"># Should return 200 OK</span>
+</span></pre></div>
+</div>
+</section>
+<section id="step-6-test-functionality">
+<h3>Step 6: Test Functionality<a class="headerlink" href="#step-6-test-functionality" title="Link to this heading">¶</a></h3>
+<p>Perform smoke tests after upgrade:</p>
+<p><strong>Admin UI</strong>:</p>
+<ul class="simple">
+<li><p>[ ] Login to admin interface: <code class="docutils literal notranslate"><span class="pre">https://mail.example.com/admin</span></code></p></li>
+<li><p>[ ] Check user list loads</p></li>
+<li><p>[ ] Verify domain settings</p></li>
+</ul>
+<p><strong>Webmail</strong>:</p>
+<ul class="simple">
+<li><p>[ ] Login to webmail: <code class="docutils literal notranslate"><span class="pre">https://mail.example.com/webmail</span></code></p></li>
+<li><p>[ ] Send test email</p></li>
+<li><p>[ ] Receive test email</p></li>
+</ul>
+<p><strong>Mail Protocols</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Test SMTP (send mail)</span>
+</span><span data-line="2">telnet<span class="w"> </span>mail.example.com<span class="w"> </span><span class="m">587</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Test IMAP (check mailbox)</span>
+</span><span data-line="5">openssl<span class="w"> </span>s_client<span class="w"> </span>-connect<span class="w"> </span>mail.example.com:993
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="upgrade-patterns">
+<h2>Upgrade Patterns<a class="headerlink" href="#upgrade-patterns" title="Link to this heading">¶</a></h2>
+<section id="minor-version-upgrade-same-year">
+<h3>Minor Version Upgrade (Same Year)<a class="headerlink" href="#minor-version-upgrade-same-year" title="Link to this heading">¶</a></h3>
+<p>Example: <code class="docutils literal notranslate"><span class="pre">2024.06</span></code> → <code class="docutils literal notranslate"><span class="pre">2024.12</span></code></p>
+<p><strong>Risk</strong>: Low (usually bug fixes and minor features)</p>
+<p><strong>Procedure</strong>: Standard rolling update (steps above)</p>
+</section>
+<section id="major-version-upgrade-year-change">
+<h3>Major Version Upgrade (Year Change)<a class="headerlink" href="#major-version-upgrade-year-change" title="Link to this heading">¶</a></h3>
+<p>Example: <code class="docutils literal notranslate"><span class="pre">2024.06</span></code> → <code class="docutils literal notranslate"><span class="pre">2025.01</span></code></p>
+<p><strong>Risk</strong>: Medium (potential breaking changes)</p>
+<p><strong>Additional steps</strong>:</p>
+<ol class="arabic simple">
+<li><p>Review migration guide in release notes</p></li>
+<li><p>Test in staging environment first</p></li>
+<li><p>Plan for longer maintenance window</p></li>
+<li><p>Have rollback plan ready</p></li>
+</ol>
+</section>
+<section id="multi-version-jump">
+<h3>Multi-Version Jump<a class="headerlink" href="#multi-version-jump" title="Link to this heading">¶</a></h3>
+<p>Example: <code class="docutils literal notranslate"><span class="pre">2023.10</span></code> → <code class="docutils literal notranslate"><span class="pre">2025.01</span></code> (skipping versions)</p>
+<p><strong>Risk</strong>: High (multiple breaking changes possible)</p>
+<p><strong>Recommended approach</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Don’t skip major versions</strong> - upgrade incrementally</p></li>
+<li><p>Test each intermediate version in staging</p></li>
+<li><p>Read all release notes between versions</p></li>
+<li><p>Budget extra time for troubleshooting</p></li>
+</ol>
+<p><strong>Safer path</strong>: <code class="docutils literal notranslate"><span class="pre">2023.10</span></code> → <code class="docutils literal notranslate"><span class="pre">2024.06</span></code> → <code class="docutils literal notranslate"><span class="pre">2024.12</span></code> → <code class="docutils literal notranslate"><span class="pre">2025.01</span></code></p>
+</section>
+</section>
+<section id="rollback-procedure">
+<h2>Rollback Procedure<a class="headerlink" href="#rollback-procedure" title="Link to this heading">¶</a></h2>
+<p>If the upgrade fails or causes issues, rollback to the previous version:</p>
+<section id="quick-rollback-image-version-only">
+<h3>Quick Rollback (Image Version Only)<a class="headerlink" href="#quick-rollback-image-version-only" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Revert to previous image version in CDK8S config</span>
+</span><span data-line="2"><span class="c1"># images.tag: &#39;2024.06&#39;  # Back to previous version</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Regenerate and apply</span>
+</span><span data-line="5">npm<span class="w"> </span>run<span class="w"> </span>build
+</span><span data-line="6">kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>dist/mailu.k8s.yaml
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Force restart pods with old version</span>
+</span><span data-line="9">kubectl<span class="w"> </span>rollout<span class="w"> </span>restart<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-admin
+</span><span data-line="10">kubectl<span class="w"> </span>rollout<span class="w"> </span>restart<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-front
+</span><span data-line="11"><span class="c1"># ... restart other components</span>
+</span></pre></div>
+</div>
+</section>
+<section id="full-rollback-database-restore">
+<h3>Full Rollback (Database Restore)<a class="headerlink" href="#full-rollback-database-restore" title="Link to this heading">¶</a></h3>
+<p>If database migrations caused problems:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Stop Mailu pods</span>
+</span><span data-line="2">kubectl<span class="w"> </span>scale<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>--all<span class="w"> </span>--replicas<span class="o">=</span><span class="m">0</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Restore database from backup</span>
+</span><span data-line="5">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>postgres<span class="w"> </span>postgres-1<span class="w"> </span>--<span class="w"> </span>psql<span class="w"> </span>-U<span class="w"> </span>postgres<span class="w"> </span>mailu<span class="w"> </span>&lt;<span class="w"> </span>mailu-db-backup-YYYYMMDD.sql
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Restore PVCs if needed (see backup-restore.md)</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># Start pods with old version</span>
+</span><span data-line="10">kubectl<span class="w"> </span>scale<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>--all<span class="w"> </span>--replicas<span class="o">=</span><span class="m">1</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="automated-upgrade-testing">
+<h2>Automated Upgrade Testing<a class="headerlink" href="#automated-upgrade-testing" title="Link to this heading">¶</a></h2>
+<p>Create a test script to validate upgrades:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="ch">#!/bin/bash</span>
+</span><span data-line="2"><span class="nb">set</span><span class="w"> </span>-e
+</span><span data-line="3">
+</span><span data-line="4"><span class="nv">NAMESPACE</span><span class="o">=</span><span class="s2">&quot;mailu&quot;</span>
+</span><span data-line="5"><span class="nv">DOMAIN</span><span class="o">=</span><span class="s2">&quot;mail.example.com&quot;</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Testing Mailu deployment after upgrade...&quot;</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># Test 1: All pods running</span>
+</span><span data-line="10"><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Checking pod status...&quot;</span>
+</span><span data-line="11">kubectl<span class="w"> </span><span class="nb">wait</span><span class="w"> </span>--for<span class="o">=</span><span class="nv">condition</span><span class="o">=</span>ready<span class="w"> </span>pod<span class="w"> </span>-n<span class="w"> </span><span class="nv">$NAMESPACE</span><span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/part-of<span class="o">=</span>mailu<span class="w"> </span>--timeout<span class="o">=</span>300s
+</span><span data-line="12">
+</span><span data-line="13"><span class="c1"># Test 2: Admin UI accessible</span>
+</span><span data-line="14"><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Testing admin UI...&quot;</span>
+</span><span data-line="15">curl<span class="w"> </span>-f<span class="w"> </span>-s<span class="w"> </span>https://<span class="nv">$DOMAIN</span>/admin<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;Mailu&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Admin UI test failed&quot;</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span data-line="16">
+</span><span data-line="17"><span class="c1"># Test 3: Database connection</span>
+</span><span data-line="18"><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Testing database connection...&quot;</span>
+</span><span data-line="19">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span><span class="nv">$NAMESPACE</span><span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/component<span class="o">=</span>admin<span class="w"> </span>--<span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+</span><span data-line="20"><span class="s2">from mailu import db</span>
+</span><span data-line="21"><span class="s2">db.init_app()</span>
+</span><span data-line="22"><span class="s2">print(&#39;Database connection: OK&#39;)</span>
+</span><span data-line="23"><span class="s2">&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Database test failed&quot;</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span data-line="24">
+</span><span data-line="25"><span class="c1"># Test 4: SMTP connectivity</span>
+</span><span data-line="26"><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Testing SMTP...&quot;</span>
+</span><span data-line="27">timeout<span class="w"> </span><span class="m">5</span><span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;echo &#39;QUIT&#39; | openssl s_client -connect </span><span class="nv">$DOMAIN</span><span class="s2">:587 -starttls smtp 2&gt;&amp;1&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;250 HELP&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;SMTP test failed&quot;</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span data-line="28">
+</span><span data-line="29"><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;All tests passed!&quot;</span>
+</span></pre></div>
+</div>
+<p>Save as <code class="docutils literal notranslate"><span class="pre">test-upgrade.sh</span></code> and run after applying upgrade.</p>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">¶</a></h2>
+<section id="pods-stuck-in-imagepullbackoff">
+<h3>Pods stuck in ImagePullBackOff<a class="headerlink" href="#pods-stuck-in-imagepullbackoff" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: New pods cannot pull image.</p>
+<p><strong>Causes</strong>:</p>
+<ul class="simple">
+<li><p>Invalid image tag (version doesn’t exist)</p></li>
+<li><p>Registry authentication issues</p></li>
+<li><p>Network connectivity problems</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check image availability</span>
+</span><span data-line="2">docker<span class="w"> </span>pull<span class="w"> </span>ghcr.io/mailu/admin:2025.01
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Check pod events</span>
+</span><span data-line="5">kubectl<span class="w"> </span>describe<span class="w"> </span>pod<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>&lt;pod-name&gt;<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-A<span class="w"> </span><span class="m">10</span><span class="w"> </span>Events
+</span></pre></div>
+</div>
+<p><strong>Solution</strong>: Verify image tag exists at <a class="reference external" href="https://github.com/orgs/Mailu/packages">ghcr.io/mailu</a>.</p>
+</section>
+<section id="database-migration-failures">
+<h3>Database migration failures<a class="headerlink" href="#database-migration-failures" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: Admin pod CrashLoopBackOff with migration errors in logs.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check admin pod logs</span>
+</span><span data-line="2">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/component<span class="o">=</span>admin<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>error
+</span></pre></div>
+</div>
+<p><strong>Solution</strong>:</p>
+<ol class="arabic simple">
+<li><p>Check <a class="reference external" href="https://mailu.io/master/migrate.html">Mailu migration documentation</a></p></li>
+<li><p>May require manual migration steps</p></li>
+<li><p>Rollback and test in staging first</p></li>
+</ol>
+</section>
+<section id="version-mismatch-between-components">
+<h3>Version mismatch between components<a class="headerlink" href="#version-mismatch-between-components" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: Components unable to communicate, inconsistent behavior.</p>
+<p><strong>Cause</strong>: Not all pods updated to new version (partial rollout).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check versions across all pods</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{range .items[*]}{.metadata.name}{&quot;\t&quot;}{.spec.containers[0].image}{&quot;\n&quot;}{end}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-u
+</span></pre></div>
+</div>
+<p><strong>Solution</strong>: Force restart all deployments:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>rollout<span class="w"> </span>restart<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>--all
+</span></pre></div>
+</div>
+</section>
+<section id="performance-degradation-after-upgrade">
+<h3>Performance degradation after upgrade<a class="headerlink" href="#performance-degradation-after-upgrade" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: Slower response times, higher resource usage.</p>
+<p><strong>Investigation</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check resource usage</span>
+</span><span data-line="2">kubectl<span class="w"> </span>top<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>mailu
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Check logs for errors</span>
+</span><span data-line="5">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/part-of<span class="o">=</span>mailu<span class="w"> </span>--tail<span class="o">=</span><span class="m">100</span>
+</span></pre></div>
+</div>
+<p><strong>Solutions</strong>:</p>
+<ul class="simple">
+<li><p>Adjust resource limits (see <a class="reference internal" href="scale-resources.html"><span class="std std-doc">Scale Resources</span></a>)</p></li>
+<li><p>Review new configuration options in release notes</p></li>
+<li><p>Check for new default settings affecting performance</p></li>
+</ul>
+</section>
+</section>
+<section id="upgrade-checklist">
+<h2>Upgrade Checklist<a class="headerlink" href="#upgrade-checklist" title="Link to this heading">¶</a></h2>
+<p>Use this checklist for production upgrades:</p>
+<p><strong>Pre-Upgrade</strong>:</p>
+<ul class="simple">
+<li><p>[ ] Review Mailu release notes</p></li>
+<li><p>[ ] Backup database (pg_dump)</p></li>
+<li><p>[ ] Backup all PVCs</p></li>
+<li><p>[ ] Document current version</p></li>
+<li><p>[ ] Test upgrade in staging</p></li>
+<li><p>[ ] Schedule maintenance window</p></li>
+<li><p>[ ] Notify users of downtime</p></li>
+</ul>
+<p><strong>Upgrade</strong>:</p>
+<ul class="simple">
+<li><p>[ ] Update CDK8S configuration</p></li>
+<li><p>[ ] Regenerate manifests</p></li>
+<li><p>[ ] Review manifest diff</p></li>
+<li><p>[ ] Apply manifests</p></li>
+<li><p>[ ] Monitor pod rollout</p></li>
+<li><p>[ ] Check admin pod logs for migrations</p></li>
+</ul>
+<p><strong>Post-Upgrade</strong>:</p>
+<ul class="simple">
+<li><p>[ ] Verify all pods running</p></li>
+<li><p>[ ] Test admin UI</p></li>
+<li><p>[ ] Test webmail</p></li>
+<li><p>[ ] Test SMTP/IMAP</p></li>
+<li><p>[ ] Check logs for errors</p></li>
+<li><p>[ ] Monitor performance</p></li>
+<li><p>[ ] Document new version</p></li>
+<li><p>[ ] Notify users of completion</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="backup-restore.html"><span class="std std-doc">Backup and Restore</span></a> - Critical for safe upgrades</p></li>
+<li><p><a class="reference internal" href="../reference/component-specifications.html"><span class="std std-doc">Component Specifications</span></a> - Version compatibility</p></li>
+<li><p><a class="reference external" href="https://mailu.io/">Mailu Documentation</a> - Official upgrade guides</p></li>
+<li><p><a class="reference internal" href="scale-resources.html"><span class="std std-doc">Scale Resources</span></a> - Adjust resources after upgrade</p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="manage-secrets.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Manage Secrets</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="backup-restore.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Backup and Restore</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

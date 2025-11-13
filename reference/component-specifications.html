@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Component Specifications - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Explanation" href="../explanation/index.html" /><link rel="prev" title="Configuration Options" href="configuration-options.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/reference/component-specifications.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/reference/component-specifications.html"/>
+  <meta property="og:title" content="Component Specifications"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/index.html">How-To Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/index.html">Explanation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#port-reference-table">Port Reference Table</a></li>
+<li><a class="reference internal" href="#core-components">Core Components</a><ul>
+<li><a class="reference internal" href="#front-nginx">Front (Nginx)</a></li>
+<li><a class="reference internal" href="#admin">Admin</a></li>
+<li><a class="reference internal" href="#postfix">Postfix</a></li>
+<li><a class="reference internal" href="#dovecot">Dovecot</a></li>
+<li><a class="reference internal" href="#dovecot-submission">Dovecot Submission</a></li>
+<li><a class="reference internal" href="#rspamd">Rspamd</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#optional-components">Optional Components</a><ul>
+<li><a class="reference internal" href="#webmail-roundcube">Webmail (Roundcube)</a></li>
+<li><a class="reference internal" href="#clamav">ClamAV</a></li>
+<li><a class="reference internal" href="#fetchmail">Fetchmail</a></li>
+<li><a class="reference internal" href="#webdav-radicale">WebDAV (Radicale)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#external-dependencies">External Dependencies</a><ul>
+<li><a class="reference internal" href="#postgresql">PostgreSQL</a></li>
+<li><a class="reference internal" href="#redis">Redis</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#resource-scaling-guidelines">Resource Scaling Guidelines</a><ul>
+<li><a class="reference internal" href="#small-deployment-50-users">Small Deployment (&lt; 50 users)</a></li>
+<li><a class="reference internal" href="#medium-deployment-50-500-users">Medium Deployment (50-500 users)</a></li>
+<li><a class="reference internal" href="#large-deployment-500-users">Large Deployment (500+ users)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#storage-recommendations">Storage Recommendations</a><ul>
+<li><a class="reference internal" href="#storage-class-selection">Storage Class Selection</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#network-policies">Network Policies</a></li>
+<li><a class="reference internal" href="#image-version-management">Image Version Management</a></li>
+<li><a class="reference internal" href="#health-checks">Health Checks</a></li>
+<li><a class="reference internal" href="#security-context">Security Context</a></li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Component Specifications</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="component-specifications">
+<h1>Component Specifications<a class="headerlink" href="#component-specifications" title="Link to this heading">¶</a></h1>
+<p><strong>Technical specifications for all Mailu components deployed by cdk8s-mailu.</strong></p>
+<p>This document provides detailed technical specifications for each component, including resource requirements, network ports, storage, and image versions.</p>
+<section id="port-reference-table">
+<h2>Port Reference Table<a class="headerlink" href="#port-reference-table" title="Link to this heading">¶</a></h2>
+<p>Complete reference of all network ports used by Mailu components:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Component</p></th>
+<th class="head"><p>Port</p></th>
+<th class="head"><p>Protocol</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Exposed</p></th>
+<th class="head"><p>Internal Only</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Admin</strong></p></td>
+<td><p>8080</p></td>
+<td><p>HTTP</p></td>
+<td><p>Admin API and web interface</p></td>
+<td><p>✓</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Admin</strong></p></td>
+<td><p>8080</p></td>
+<td><p>HTTP</p></td>
+<td><p>auth_http endpoint (/internal/auth/email)</p></td>
+<td><p></p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>ClamAV</strong></p></td>
+<td><p>3310</p></td>
+<td><p>ClamAV</p></td>
+<td><p>Antivirus scanning</p></td>
+<td><p></p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Dovecot</strong></p></td>
+<td><p>110</p></td>
+<td><p>POP3</p></td>
+<td><p>Mail retrieval (via Front after auth)</p></td>
+<td><p>✓</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Dovecot</strong></p></td>
+<td><p>143</p></td>
+<td><p>IMAP</p></td>
+<td><p>Mail retrieval (via Front after auth)</p></td>
+<td><p>✓</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Dovecot</strong></p></td>
+<td><p>993</p></td>
+<td><p>IMAPS</p></td>
+<td><p>IMAP over TLS (via Front after auth)</p></td>
+<td><p>✓</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Dovecot</strong></p></td>
+<td><p>995</p></td>
+<td><p>POP3S</p></td>
+<td><p>POP3 over TLS (via Front after auth)</p></td>
+<td><p>✓</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Dovecot</strong></p></td>
+<td><p>2525</p></td>
+<td><p>LMTP</p></td>
+<td><p>Mail delivery from Postfix</p></td>
+<td><p></p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Dovecot-Sub</strong></p></td>
+<td><p>10025</p></td>
+<td><p>Submission</p></td>
+<td><p>SMTP relay from webmail</p></td>
+<td><p></p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Front</strong></p></td>
+<td><p>465</p></td>
+<td><p>Submission</p></td>
+<td><p>SMTP submission (plaintext from Traefik)</p></td>
+<td><p>✓</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Front</strong></p></td>
+<td><p>587</p></td>
+<td><p>Submission</p></td>
+<td><p>SMTP submission (plaintext from Traefik)</p></td>
+<td><p>✓</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Front</strong></p></td>
+<td><p>993</p></td>
+<td><p>IMAP</p></td>
+<td><p>IMAP access (plaintext from Traefik)</p></td>
+<td><p>✓</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Front</strong></p></td>
+<td><p>995</p></td>
+<td><p>POP3</p></td>
+<td><p>POP3 access (plaintext from Traefik)</p></td>
+<td><p>✓</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Postfix</strong></p></td>
+<td><p>25</p></td>
+<td><p>SMTP</p></td>
+<td><p>SMTP relay and MX reception</p></td>
+<td><p>✓</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Postfix</strong></p></td>
+<td><p>10025</p></td>
+<td><p>Submission</p></td>
+<td><p>Internal relay from dovecot-submission</p></td>
+<td><p></p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Rspamd</strong></p></td>
+<td><p>11332</p></td>
+<td><p>Milter</p></td>
+<td><p>Spam scanning from Postfix</p></td>
+<td><p></p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Rspamd</strong></p></td>
+<td><p>11333</p></td>
+<td><p>Fuzzy</p></td>
+<td><p>Fuzzy hash storage</p></td>
+<td><p></p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Rspamd</strong></p></td>
+<td><p>11334</p></td>
+<td><p>HTTP</p></td>
+<td><p>Web UI and API</p></td>
+<td><p>✓</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>WebDAV</strong></p></td>
+<td><p>5232</p></td>
+<td><p>HTTP</p></td>
+<td><p>CalDAV/CardDAV</p></td>
+<td><p>✓</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Webmail</strong></p></td>
+<td><p>80</p></td>
+<td><p>HTTP</p></td>
+<td><p>Webmail interface</p></td>
+<td><p>✓</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Notes</strong>:</p>
+<ul class="simple">
+<li><p><strong>Exposed</strong>: Accessible from outside the pod via Kubernetes Service</p></li>
+<li><p><strong>Internal Only</strong>: Used for inter-component communication only</p></li>
+<li><p><strong>TLS_FLAVOR=notls Architecture</strong> (used with Traefik ingress):</p>
+<ul>
+<li><p>Traefik handles ALL TLS termination (HTTPS, SMTPS, IMAPS, POP3S)</p></li>
+<li><p>Front is ONLY used for authenticated mail protocols (587/465/993/995)</p></li>
+<li><p>Front receives <strong>plaintext</strong> traffic after Traefik decrypts</p></li>
+<li><p>Front does NOT handle HTTP/HTTPS web traffic (Traefik routes directly to Admin/Webmail)</p></li>
+<li><p>MX mail (port 25) routes directly to Postfix, bypassing Front</p></li>
+<li><p>Front service exposes ports 25/80/143/110/443 but nginx doesn’t listen on them with <code class="docutils literal notranslate"><span class="pre">TLS_FLAVOR=notls</span></code></p></li>
+</ul>
+</li>
+<li><p><strong>Front’s Role</strong>: Authentication proxy for mail protocols using nginx auth_http to validate credentials with Admin before relaying to backends</p></li>
+</ul>
+</section>
+<section id="core-components">
+<h2>Core Components<a class="headerlink" href="#core-components" title="Link to this heading">¶</a></h2>
+<p>Core components are always deployed and required for Mailu to function.</p>
+<section id="front-nginx">
+<h3>Front (Nginx)<a class="headerlink" href="#front-nginx" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Reverse proxy and protocol router for HTTP/S, SMTP, IMAP, and POP3.</p>
+<p><strong>Image</strong>: <code class="docutils literal notranslate"><span class="pre">ghcr.io/mailu/nginx:2024.06</span></code></p>
+<p><strong>Resources</strong>:</p>
+<ul class="simple">
+<li><p>CPU Request: <code class="docutils literal notranslate"><span class="pre">100m</span></code></p></li>
+<li><p>Memory Request: <code class="docutils literal notranslate"><span class="pre">256Mi</span></code></p></li>
+<li><p>CPU Limit: <code class="docutils literal notranslate"><span class="pre">500m</span></code></p></li>
+<li><p>Memory Limit: <code class="docutils literal notranslate"><span class="pre">512Mi</span></code></p></li>
+</ul>
+<p><strong>Network Ports</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">80/TCP</span></code> - HTTP (redirects to HTTPS) - <strong>UNUSED</strong> with TLS_FLAVOR=notls (Traefik routes to Admin/Webmail directly)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">443/TCP</span></code> - HTTPS (Web UI, admin, webmail) - <strong>UNUSED</strong> with TLS_FLAVOR=notls</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">25/TCP</span></code> - SMTP (mail submission) - <strong>UNUSED</strong> with TLS_FLAVOR=notls (Traefik routes MX mail to Postfix directly)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">465/TCP</span></code> - SMTPS (SMTP over TLS) - <strong>USED</strong> (mail client submission via auth_http, relays to Postfix; webmail uses separate dovecot-submission service)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">587/TCP</span></code> - Submission (mail submission with STARTTLS) - <strong>USED</strong> (mail client submission via auth_http, relays to Postfix; webmail uses separate dovecot-submission service)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">143/TCP</span></code> - IMAP (mail retrieval) - <strong>UNUSED</strong> with TLS_FLAVOR=notls</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">993/TCP</span></code> - IMAPS (IMAP over TLS) - <strong>USED</strong> (mail client access via auth_http, relays to Dovecot)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">110/TCP</span></code> - POP3 (mail retrieval) - <strong>UNUSED</strong> with TLS_FLAVOR=notls</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">995/TCP</span></code> - POP3S (POP3 over TLS) - <strong>USED</strong> (mail client access via auth_http, relays to Dovecot)</p></li>
+</ul>
+<p><strong>Storage</strong>: None (stateless)</p>
+<p><strong>Architecture Support</strong>: AMD64, ARM64</p>
+<p><strong>Environment Variables</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TLS_FLAVOR=notls</span></code> - TLS handled by Traefik</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SUBNET</span></code> - Kubernetes pod network CIDR</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MESSAGE_SIZE_LIMIT</span></code> - Maximum email size (default: 50MB)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MESSAGE_RATELIMIT</span></code> - Rate limiting per user</p></li>
+<li><p>All service discovery variables from shared ConfigMap</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="admin">
+<h3>Admin<a class="headerlink" href="#admin" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Web-based administration interface and central configuration service.</p>
+<p><strong>Image</strong>: <code class="docutils literal notranslate"><span class="pre">ghcr.io/mailu/admin:2024.06</span></code></p>
+<p><strong>Resources</strong>:</p>
+<ul class="simple">
+<li><p>CPU Request: <code class="docutils literal notranslate"><span class="pre">100m</span></code></p></li>
+<li><p>Memory Request: <code class="docutils literal notranslate"><span class="pre">256Mi</span></code></p></li>
+<li><p>CPU Limit: <code class="docutils literal notranslate"><span class="pre">500m</span></code></p></li>
+<li><p>Memory Limit: <code class="docutils literal notranslate"><span class="pre">512Mi</span></code></p></li>
+</ul>
+<p><strong>Network Ports</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">8080/TCP</span></code> - HTTP API and web interface (internal service port; exposed via Ingress)</p></li>
+</ul>
+<p><strong>Storage</strong>:</p>
+<ul class="simple">
+<li><p><strong>PVC Size</strong>: <code class="docutils literal notranslate"><span class="pre">5Gi</span></code> (default)</p></li>
+<li><p><strong>Mount Path</strong>: <code class="docutils literal notranslate"><span class="pre">/data</span></code></p></li>
+<li><p><strong>Contents</strong>: User database, configuration, DKIM keys, TLS certificates (if not using Traefik)</p></li>
+<li><p><strong>Access Mode</strong>: ReadWriteOnce</p></li>
+<li><p><strong>Storage Class</strong>: Configurable (default: cluster default)</p></li>
+</ul>
+<p><strong>Architecture Support</strong>: AMD64, ARM64</p>
+<p><strong>Environment Variables</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SECRET_KEY</span></code> - Application secret for session encryption</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DOMAIN</span></code> - Primary mail domain</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HOSTNAMES</span></code> - Comma-separated list of all mail hostnames</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POSTMASTER</span></code> - Postmaster email address</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">INITIAL_ADMIN_*</span></code> - Initial admin account configuration</p></li>
+<li><p>Database connection variables (PostgreSQL or SQLite)</p></li>
+<li><p>Redis connection variables</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="postfix">
+<h3>Postfix<a class="headerlink" href="#postfix" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: SMTP server for sending and receiving email.</p>
+<p><strong>Image</strong>: <code class="docutils literal notranslate"><span class="pre">ghcr.io/mailu/postfix:2024.06</span></code></p>
+<p><strong>Resources</strong>:</p>
+<ul class="simple">
+<li><p>CPU Request: <code class="docutils literal notranslate"><span class="pre">100m</span></code></p></li>
+<li><p>Memory Request: <code class="docutils literal notranslate"><span class="pre">512Mi</span></code></p></li>
+<li><p>CPU Limit: <code class="docutils literal notranslate"><span class="pre">500m</span></code></p></li>
+<li><p>Memory Limit: <code class="docutils literal notranslate"><span class="pre">1Gi</span></code></p></li>
+</ul>
+<p><strong>Network Ports</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">25/TCP</span></code> - SMTP (MX mail reception and internal relay)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">10025/TCP</span></code> - Internal submission relay (from dovecot-submission service)</p></li>
+</ul>
+<p><strong>Storage</strong>:</p>
+<ul class="simple">
+<li><p><strong>PVC Size</strong>: <code class="docutils literal notranslate"><span class="pre">5Gi</span></code> (default)</p></li>
+<li><p><strong>Mount Path</strong>: <code class="docutils literal notranslate"><span class="pre">/queue</span></code></p></li>
+<li><p><strong>Contents</strong>: Mail queue</p></li>
+<li><p><strong>Access Mode</strong>: ReadWriteOnce</p></li>
+<li><p><strong>Storage Class</strong>: Configurable</p></li>
+</ul>
+<p><strong>Architecture Support</strong>: AMD64, ARM64</p>
+<p><strong>Environment Variables</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MESSAGE_SIZE_LIMIT</span></code> - Maximum message size</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RELAYNETS</span></code> - Networks allowed to relay</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RELAYHOST</span></code> - External SMTP relay (optional)</p></li>
+<li><p>Service discovery variables for dovecot, admin, rspamd</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="dovecot">
+<h3>Dovecot<a class="headerlink" href="#dovecot" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: IMAP/POP3 server for mailbox access and mail storage.</p>
+<p><strong>Image</strong>: <code class="docutils literal notranslate"><span class="pre">ghcr.io/mailu/dovecot:2024.06</span></code></p>
+<p><strong>Resources</strong>:</p>
+<ul class="simple">
+<li><p>CPU Request: <code class="docutils literal notranslate"><span class="pre">200m</span></code></p></li>
+<li><p>Memory Request: <code class="docutils literal notranslate"><span class="pre">1Gi</span></code> (IMAP is memory-intensive)</p></li>
+<li><p>CPU Limit: <code class="docutils literal notranslate"><span class="pre">1000m</span></code></p></li>
+<li><p>Memory Limit: <code class="docutils literal notranslate"><span class="pre">2Gi</span></code></p></li>
+</ul>
+<p><strong>Network Ports</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">143/TCP</span></code> - IMAP</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">993/TCP</span></code> - IMAPS</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">110/TCP</span></code> - POP3</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">995/TCP</span></code> - POP3S</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">2525/TCP</span></code> - LMTP (delivery to mailboxes)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">4190/TCP</span></code> - ManageSieve (mail filtering) - <strong>NOT EXPOSED</strong> (Service does not include this port)</p></li>
+</ul>
+<p><strong>Storage</strong>:</p>
+<ul class="simple">
+<li><p><strong>PVC Size</strong>: <code class="docutils literal notranslate"><span class="pre">50Gi</span></code> (default, adjust based on user count)</p></li>
+<li><p><strong>Mount Path</strong>: <code class="docutils literal notranslate"><span class="pre">/mail</span></code></p></li>
+<li><p><strong>Contents</strong>: User mailboxes (Maildir format)</p></li>
+<li><p><strong>Access Mode</strong>: ReadWriteOnce</p></li>
+<li><p><strong>Storage Class</strong>: Configurable</p></li>
+<li><p><strong>Sizing Guideline</strong>: ~1-5GB per active user</p></li>
+</ul>
+<p><strong>Architecture Support</strong>: AMD64, ARM64</p>
+<p><strong>Environment Variables</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">COMPRESSION</span></code> - Mail compression algorithm</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">COMPRESSION_LEVEL</span></code> - Compression level (1-9)</p></li>
+<li><p>Service discovery variables for admin, postfix</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="dovecot-submission">
+<h3>Dovecot Submission<a class="headerlink" href="#dovecot-submission" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Dedicated submission service for webmail email sending with token authentication.</p>
+<p><strong>Image</strong>: <code class="docutils literal notranslate"><span class="pre">dovecot/dovecot:2.3-latest</span></code></p>
+<p><strong>Resources</strong>:</p>
+<ul class="simple">
+<li><p>CPU Request: <code class="docutils literal notranslate"><span class="pre">100m</span></code></p></li>
+<li><p>Memory Request: <code class="docutils literal notranslate"><span class="pre">256Mi</span></code></p></li>
+<li><p>CPU Limit: <code class="docutils literal notranslate"><span class="pre">300m</span></code></p></li>
+<li><p>Memory Limit: <code class="docutils literal notranslate"><span class="pre">512Mi</span></code></p></li>
+</ul>
+<p><strong>Network Ports</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">10025/TCP</span></code> - Submission (webmail token auth)</p></li>
+</ul>
+<p><strong>Storage</strong>: None (relay-only service)</p>
+<p><strong>Architecture Support</strong>: AMD64 only</p>
+<p><strong>Configuration</strong>:</p>
+<ul class="simple">
+<li><p>Build-time substitution of <code class="docutils literal notranslate"><span class="pre">dovecot.conf</span></code></p></li>
+<li><p>Static passdb with <code class="docutils literal notranslate"><span class="pre">nopassword=y</span></code></p></li>
+<li><p>Relays to postfix:25 without authentication</p></li>
+<li><p>Trusts pod network (<code class="docutils literal notranslate"><span class="pre">submission_relay_trusted=yes</span></code>)</p></li>
+</ul>
+<p><strong>Node Requirements</strong>:</p>
+<ul class="simple">
+<li><p>Requires AMD64 node (official image limitation)</p></li>
+<li><p>Uses nodeSelector: <code class="docutils literal notranslate"><span class="pre">kubernetes.io/arch=amd64</span></code></p></li>
+<li><p>Tolerates AMD64 taint if present</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="rspamd">
+<h3>Rspamd<a class="headerlink" href="#rspamd" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Spam filtering, DKIM signing/verification, and header manipulation.</p>
+<p><strong>Image</strong>: <code class="docutils literal notranslate"><span class="pre">ghcr.io/mailu/rspamd:2024.06</span></code></p>
+<p><strong>Resources</strong>:</p>
+<ul class="simple">
+<li><p>CPU Request: <code class="docutils literal notranslate"><span class="pre">100m</span></code></p></li>
+<li><p>Memory Request: <code class="docutils literal notranslate"><span class="pre">512Mi</span></code></p></li>
+<li><p>CPU Limit: <code class="docutils literal notranslate"><span class="pre">500m</span></code></p></li>
+<li><p>Memory Limit: <code class="docutils literal notranslate"><span class="pre">1Gi</span></code></p></li>
+</ul>
+<p><strong>Network Ports</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">11332/TCP</span></code> - Milter protocol (spam scanning from Postfix)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">11333/TCP</span></code> - Fuzzy hash storage (spam detection)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">11334/TCP</span></code> - HTTP API and web interface</p></li>
+</ul>
+<p><strong>Storage</strong>:</p>
+<ul class="simple">
+<li><p><strong>PVC Size</strong>: <code class="docutils literal notranslate"><span class="pre">5Gi</span></code> (default)</p></li>
+<li><p><strong>Mount Path</strong>: <code class="docutils literal notranslate"><span class="pre">/var/lib/rspamd</span></code></p></li>
+<li><p><strong>Contents</strong>: Bayes database, fuzzy hashes, statistics</p></li>
+<li><p><strong>Access Mode</strong>: ReadWriteOnce</p></li>
+<li><p><strong>Storage Class</strong>: Configurable</p></li>
+</ul>
+<p><strong>Architecture Support</strong>: AMD64, ARM64</p>
+<p><strong>Environment Variables</strong>:</p>
+<ul class="simple">
+<li><p>Service discovery variables for redis, admin</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="optional-components">
+<h2>Optional Components<a class="headerlink" href="#optional-components" title="Link to this heading">¶</a></h2>
+<p>Optional components can be enabled/disabled via configuration.</p>
+<section id="webmail-roundcube">
+<h3>Webmail (Roundcube)<a class="headerlink" href="#webmail-roundcube" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Browser-based email client with contact and calendar management.</p>
+<p><strong>Image</strong>: <code class="docutils literal notranslate"><span class="pre">ghcr.io/mailu/webmail:2024.06</span></code></p>
+<p><strong>Resources</strong>:</p>
+<ul class="simple">
+<li><p>CPU Request: <code class="docutils literal notranslate"><span class="pre">100m</span></code></p></li>
+<li><p>Memory Request: <code class="docutils literal notranslate"><span class="pre">256Mi</span></code></p></li>
+<li><p>CPU Limit: <code class="docutils literal notranslate"><span class="pre">500m</span></code></p></li>
+<li><p>Memory Limit: <code class="docutils literal notranslate"><span class="pre">512Mi</span></code></p></li>
+</ul>
+<p><strong>Network Ports</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">80/TCP</span></code> - HTTP interface</p></li>
+</ul>
+<p><strong>Storage</strong>: None (uses database for preferences)</p>
+<p><strong>Architecture Support</strong>: AMD64, ARM64</p>
+<p><strong>Enabled by Default</strong>: Yes</p>
+<p><strong>Environment Variables</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">IMAP_ADDRESS</span></code> - Dovecot service name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SMTP_ADDRESS</span></code> - Postfix or dovecot-submission service name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SUBMISSION_ADDRESS</span></code> - Dovecot submission service name (for token auth)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WEBMAIL</span></code> - Service hostname</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="clamav">
+<h3>ClamAV<a class="headerlink" href="#clamav" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Antivirus scanning for email attachments.</p>
+<p><strong>Image</strong>: <code class="docutils literal notranslate"><span class="pre">ghcr.io/mailu/clamav:2024.06</span></code></p>
+<p><strong>Resources</strong>:</p>
+<ul class="simple">
+<li><p>CPU Request: <code class="docutils literal notranslate"><span class="pre">500m</span></code></p></li>
+<li><p>Memory Request: <code class="docutils literal notranslate"><span class="pre">1Gi</span></code> (virus database is large)</p></li>
+<li><p>CPU Limit: <code class="docutils literal notranslate"><span class="pre">2000m</span></code></p></li>
+<li><p>Memory Limit: <code class="docutils literal notranslate"><span class="pre">2Gi</span></code></p></li>
+</ul>
+<p><strong>Network Ports</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">3310/TCP</span></code> - ClamAV daemon</p></li>
+</ul>
+<p><strong>Storage</strong>:</p>
+<ul class="simple">
+<li><p><strong>PVC Size</strong>: <code class="docutils literal notranslate"><span class="pre">5Gi</span></code> (default)</p></li>
+<li><p><strong>Mount Path</strong>: <code class="docutils literal notranslate"><span class="pre">/data</span></code></p></li>
+<li><p><strong>Contents</strong>: Virus signature database</p></li>
+<li><p><strong>Access Mode</strong>: ReadWriteOnce</p></li>
+<li><p><strong>Storage Class</strong>: Configurable</p></li>
+</ul>
+<p><strong>Architecture Support</strong>: AMD64, ARM64</p>
+<p><strong>Enabled by Default</strong>: No (high resource requirements)</p>
+<p><strong>Startup Time</strong>: 5-10 minutes (downloads virus database on first start)</p>
+</section>
+<hr class="docutils" />
+<section id="fetchmail">
+<h3>Fetchmail<a class="headerlink" href="#fetchmail" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Fetch emails from external POP3/IMAP accounts.</p>
+<p><strong>Image</strong>: <code class="docutils literal notranslate"><span class="pre">ghcr.io/mailu/fetchmail:2024.06</span></code></p>
+<p><strong>Resources</strong>:</p>
+<ul class="simple">
+<li><p>CPU Request: <code class="docutils literal notranslate"><span class="pre">50m</span></code></p></li>
+<li><p>Memory Request: <code class="docutils literal notranslate"><span class="pre">128Mi</span></code></p></li>
+<li><p>CPU Limit: <code class="docutils literal notranslate"><span class="pre">200m</span></code></p></li>
+<li><p>Memory Limit: <code class="docutils literal notranslate"><span class="pre">256Mi</span></code></p></li>
+</ul>
+<p><strong>Network Ports</strong>: None (outbound only)</p>
+<p><strong>Storage</strong>: None</p>
+<p><strong>Architecture Support</strong>: AMD64, ARM64</p>
+<p><strong>Enabled by Default</strong>: No</p>
+</section>
+<hr class="docutils" />
+<section id="webdav-radicale">
+<h3>WebDAV (Radicale)<a class="headerlink" href="#webdav-radicale" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: CalDAV and CardDAV server for calendar and contact sync.</p>
+<p><strong>Image</strong>: <code class="docutils literal notranslate"><span class="pre">ghcr.io/mailu/radicale:2024.06</span></code></p>
+<p><strong>Resources</strong>:</p>
+<ul class="simple">
+<li><p>CPU Request: <code class="docutils literal notranslate"><span class="pre">50m</span></code></p></li>
+<li><p>Memory Request: <code class="docutils literal notranslate"><span class="pre">128Mi</span></code></p></li>
+<li><p>CPU Limit: <code class="docutils literal notranslate"><span class="pre">200m</span></code></p></li>
+<li><p>Memory Limit: <code class="docutils literal notranslate"><span class="pre">256Mi</span></code></p></li>
+</ul>
+<p><strong>Network Ports</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">5232/TCP</span></code> - WebDAV interface</p></li>
+</ul>
+<p><strong>Storage</strong>:</p>
+<ul class="simple">
+<li><p><strong>PVC Size</strong>: <code class="docutils literal notranslate"><span class="pre">5Gi</span></code> (default)</p></li>
+<li><p><strong>Mount Path</strong>: <code class="docutils literal notranslate"><span class="pre">/data</span></code></p></li>
+<li><p><strong>Contents</strong>: Calendar and contact data</p></li>
+<li><p><strong>Access Mode</strong>: ReadWriteOnce</p></li>
+<li><p><strong>Storage Class</strong>: Configurable</p></li>
+</ul>
+<p><strong>Architecture Support</strong>: AMD64, ARM64</p>
+<p><strong>Enabled by Default</strong>: No</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="external-dependencies">
+<h2>External Dependencies<a class="headerlink" href="#external-dependencies" title="Link to this heading">¶</a></h2>
+<p>Components that must be provided externally.</p>
+<section id="postgresql">
+<h3>PostgreSQL<a class="headerlink" href="#postgresql" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Primary database for user accounts, aliases, and configuration.</p>
+<p><strong>Recommended</strong>: CloudNativePG (CNPG) operator for managed PostgreSQL</p>
+<p><strong>Version</strong>: PostgreSQL 12+ (tested with 15, 16)</p>
+<p><strong>Connection</strong>:</p>
+<ul class="simple">
+<li><p>Host: Service name (e.g., <code class="docutils literal notranslate"><span class="pre">postgres-rw</span></code> for CNPG read-write service)</p></li>
+<li><p>Port: <code class="docutils literal notranslate"><span class="pre">5432</span></code></p></li>
+<li><p>Database: User-specified (e.g., <code class="docutils literal notranslate"><span class="pre">mailu</span></code>)</p></li>
+<li><p>Credentials: Via Kubernetes Secret</p></li>
+</ul>
+<p><strong>Schema</strong>: Automatically created by admin container on first start</p>
+<p><strong>Replication</strong>: Recommended (CNPG provides 3-replica HA by default)</p>
+</section>
+<hr class="docutils" />
+<section id="redis">
+<h3>Redis<a class="headerlink" href="#redis" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Session storage and caching.</p>
+<p><strong>Version</strong>: Redis 6+ (tested with 7)</p>
+<p><strong>Connection</strong>:</p>
+<ul class="simple">
+<li><p>Host: Service name (e.g., <code class="docutils literal notranslate"><span class="pre">redis-master</span></code>)</p></li>
+<li><p>Port: <code class="docutils literal notranslate"><span class="pre">6379</span></code></p></li>
+<li><p>No authentication required (cluster-internal)</p></li>
+</ul>
+<p><strong>Persistence</strong>: Optional (sessions can be regenerated)</p>
+<p><strong>Replication</strong>: Optional (single instance sufficient for most deployments)</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="resource-scaling-guidelines">
+<h2>Resource Scaling Guidelines<a class="headerlink" href="#resource-scaling-guidelines" title="Link to this heading">¶</a></h2>
+<section id="small-deployment-50-users">
+<h3>Small Deployment (&lt; 50 users)<a class="headerlink" href="#small-deployment-50-users" title="Link to this heading">¶</a></h3>
+<p>Use default resource requests. Suitable for:</p>
+<ul class="simple">
+<li><p>Personal use</p></li>
+<li><p>Small teams</p></li>
+<li><p>Development/testing</p></li>
+</ul>
+<p><strong>Minimum Cluster Resources</strong>: 4 CPU cores, 8GB RAM</p>
+</section>
+<hr class="docutils" />
+<section id="medium-deployment-50-500-users">
+<h3>Medium Deployment (50-500 users)<a class="headerlink" href="#medium-deployment-50-500-users" title="Link to this heading">¶</a></h3>
+<p>Scale up memory-intensive components:</p>
+<ul class="simple">
+<li><p>Dovecot: <code class="docutils literal notranslate"><span class="pre">2Gi</span></code> memory request</p></li>
+<li><p>Rspamd: <code class="docutils literal notranslate"><span class="pre">1Gi</span></code> memory request</p></li>
+<li><p>Dovecot storage: <code class="docutils literal notranslate"><span class="pre">200Gi</span></code> (~4GB per user average)</p></li>
+</ul>
+<p><strong>Recommended Cluster Resources</strong>: 8 CPU cores, 16GB RAM</p>
+</section>
+<hr class="docutils" />
+<section id="large-deployment-500-users">
+<h3>Large Deployment (500+ users)<a class="headerlink" href="#large-deployment-500-users" title="Link to this heading">¶</a></h3>
+<p>Consider:</p>
+<ul class="simple">
+<li><p>Multiple replicas (not yet supported by cdk8s-mailu)</p></li>
+<li><p>Dedicated PostgreSQL cluster with read replicas</p></li>
+<li><p>Redis cluster for HA</p></li>
+<li><p>Dovecot storage: Plan for 2-10GB per user</p></li>
+<li><p>Enable ClamAV only if virus scanning is required (high resource cost)</p></li>
+</ul>
+<p><strong>Recommended Cluster Resources</strong>: 16+ CPU cores, 32+ GB RAM</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="storage-recommendations">
+<h2>Storage Recommendations<a class="headerlink" href="#storage-recommendations" title="Link to this heading">¶</a></h2>
+<section id="storage-class-selection">
+<h3>Storage Class Selection<a class="headerlink" href="#storage-class-selection" title="Link to this heading">¶</a></h3>
+<p><strong>Performance Tier</strong> (Recommended for mailboxes):</p>
+<ul class="simple">
+<li><p>Dovecot PVC: Use fast storage (SSD-backed)</p></li>
+<li><p>High IOPS for mailbox operations</p></li>
+</ul>
+<p><strong>Standard Tier</strong> (Suitable for queues and caches):</p>
+<ul class="simple">
+<li><p>Postfix queue: Standard storage sufficient</p></li>
+<li><p>Rspamd data: Standard storage sufficient</p></li>
+<li><p>Admin data: Standard storage sufficient</p></li>
+</ul>
+<p><strong>Example with Longhorn</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">longhorn</span></code> (2 replicas) for dovecot mailboxes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">longhorn</span></code> (2 replicas) for other components</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">longhorn-redundant-app</span></code> (1 replica) if using database replication</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="network-policies">
+<h2>Network Policies<a class="headerlink" href="#network-policies" title="Link to this heading">¶</a></h2>
+<p>cdk8s-mailu does not currently create NetworkPolicy resources. Recommended policies:</p>
+<p><strong>Ingress</strong>:</p>
+<ul class="simple">
+<li><p>Front: Allow from ingress controller only</p></li>
+<li><p>Admin: Allow from front only</p></li>
+<li><p>Other services: Deny external ingress</p></li>
+</ul>
+<p><strong>Egress</strong>:</p>
+<ul class="simple">
+<li><p>All pods: Allow DNS</p></li>
+<li><p>Postfix: Allow to internet (port 25, 587) for mail delivery</p></li>
+<li><p>Fetchmail: Allow to internet (ports 110, 143, 993, 995)</p></li>
+<li><p>Other services: Cluster-internal only</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="image-version-management">
+<h2>Image Version Management<a class="headerlink" href="#image-version-management" title="Link to this heading">¶</a></h2>
+<p><strong>Version Strategy</strong>: cdk8s-mailu uses fixed Mailu image versions for predictability.</p>
+<p><strong>Current Version</strong>: <code class="docutils literal notranslate"><span class="pre">2024.06</span></code></p>
+<p><strong>Updating Images</strong>: Edit image references in construct files and rebuild manifests.</p>
+<p><strong>Compatibility</strong>:</p>
+<ul class="simple">
+<li><p>Mailu images are version-locked together (don’t mix versions)</p></li>
+<li><p>Database schema migrations handled automatically by admin container</p></li>
+<li><p>Always backup before upgrading</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="health-checks">
+<h2>Health Checks<a class="headerlink" href="#health-checks" title="Link to this heading">¶</a></h2>
+<p>All components include liveness and readiness probes:</p>
+<p><strong>Probe Types</strong>:</p>
+<ul class="simple">
+<li><p><strong>TCP Socket</strong>: Front, dovecot submission, dovecot, postfix</p></li>
+<li><p><strong>HTTP</strong>: Admin, webmail, rspamd</p></li>
+<li><p><strong>Exec</strong>: ClamAV (checks daemon status)</p></li>
+</ul>
+<p><strong>Typical Settings</strong>:</p>
+<ul class="simple">
+<li><p>Initial Delay: 10-30 seconds</p></li>
+<li><p>Period: 5-10 seconds</p></li>
+<li><p>Timeout: 3-5 seconds</p></li>
+<li><p>Failure Threshold: 3</p></li>
+</ul>
+<p><strong>Long Startup Components</strong>:</p>
+<ul class="simple">
+<li><p>ClamAV: 5-minute initial delay (virus database download)</p></li>
+<li><p>Dovecot submission: 30-second initial delay (AMD64 node scheduling)</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="security-context">
+<h2>Security Context<a class="headerlink" href="#security-context" title="Link to this heading">¶</a></h2>
+<p><strong>Non-Root Filesystem</strong>: Disabled for mail services (require write access to system directories)</p>
+<p><strong>User/Group IDs</strong>:</p>
+<ul class="simple">
+<li><p>Most containers: Run as root (required for port binding &lt;1024)</p></li>
+<li><p>Dovecot submission: UID 8 (mail user)</p></li>
+</ul>
+<p><strong>Capabilities</strong>: Default (no special capabilities required)</p>
+</section>
+<hr class="docutils" />
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="configuration-options.html"><span class="std std-doc">Configuration Options</span></a> - Complete configuration reference</p></li>
+<li><p><a class="reference internal" href="../how-to/scale-resources.html"><span class="std std-doc">Scale Resources</span></a> - Adjust CPU and memory based on these specs</p></li>
+<li><p><a class="reference internal" href="../how-to/customize-storage.html"><span class="std std-doc">Customize Storage</span></a> - Configure PVC sizes for components</p></li>
+<li><p><a class="reference internal" href="../how-to/enable-optional-components.html"><span class="std std-doc">Enable Optional Components</span></a> - Add/remove components</p></li>
+<li><p><a class="reference internal" href="../explanation/architecture.html"><span class="std std-doc">Architecture</span></a> - Understanding component relationships</p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="configuration-options.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Configuration Options</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="../explanation/index.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Explanation</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

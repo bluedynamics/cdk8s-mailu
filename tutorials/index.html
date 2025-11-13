@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Tutorials - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Quick Start: Deploy Your First Mailu Instance" href="01-quick-start.html" /><link rel="prev" title="cdk8s-mailu Documentation" href="../index.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/tutorials/" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/tutorials/"/>
+  <meta property="og:title" content="Tutorials"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/index.html">How-To Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/index.html">Explanation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#what-you-ll-learn">What you&#8217;ll learn</a></li>
+<li><a class="reference internal" href="#available-tutorials">Available Tutorials</a></li>
+<li><a class="reference internal" href="#before-you-start">Before you start</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Tutorials</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <img alt="../_images/kup6s-icon-tutorials.svg" class="section-icon-large align-center" src="../_images/kup6s-icon-tutorials.svg" />
+<section id="tutorials">
+<h1>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading">¶</a></h1>
+<p><strong>Learning-oriented guides that take you through a series of steps to complete a project.</strong></p>
+<p>Tutorials are lessons that help you gain practical skills and familiarity with cdk8s-mailu. They are designed to be followed step-by-step and will get you up and running.</p>
+<section id="what-you-ll-learn">
+<h2>What you’ll learn<a class="headerlink" href="#what-you-ll-learn" title="Link to this heading">¶</a></h2>
+<p>These tutorials will teach you how to:</p>
+<ul class="simple">
+<li><p>Deploy a basic Mailu instance using cdk8s-mailu</p></li>
+<li><p>Configure PostgreSQL and Redis backends</p></li>
+<li><p>Customize component resources and settings</p></li>
+<li><p>Deploy with Traefik TLS termination</p></li>
+<li><p>Test your deployment</p></li>
+</ul>
+</section>
+<section id="available-tutorials">
+<h2>Available Tutorials<a class="headerlink" href="#available-tutorials" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</div>
+</section>
+<section id="before-you-start">
+<h2>Before you start<a class="headerlink" href="#before-you-start" title="Link to this heading">¶</a></h2>
+<p>These tutorials assume you have:</p>
+<ul class="simple">
+<li><p>Basic familiarity with Kubernetes concepts</p></li>
+<li><p>Node.js 16+ and npm installed</p></li>
+<li><p>A Kubernetes cluster (local or remote)</p></li>
+<li><p>kubectl configured to access your cluster</p></li>
+<li><p>Basic TypeScript knowledge</p></li>
+</ul>
+<p>If you’re new to CDK8S, we recommend reading the <a class="reference internal" href="../explanation/cdk8s-patterns.html"><span class="std std-doc">CDK8S Patterns</span></a> explanation first to understand how constructs work.</p>
+<hr class="docutils" />
+<p><strong>Looking for practical guidance?</strong> Check out the <a class="reference internal" href="../how-to/index.html"><span class="std std-doc">How-To Guides</span></a> for specific solutions.</p>
+<p><strong>Need technical details?</strong> See the <a class="reference internal" href="../reference/index.html"><span class="std std-doc">Reference</span></a> section for API documentation.</p>
+<p><strong>Want to understand the architecture?</strong> Read the <a class="reference internal" href="../explanation/index.html"><span class="std std-doc">Explanation</span></a> section for concepts and design decisions.</p>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="../index.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Home</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="01-quick-start.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Quick Start: Deploy Your First Mailu Instance</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

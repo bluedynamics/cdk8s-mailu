@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Configuration Options - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Component Specifications" href="component-specifications.html" /><link rel="prev" title="Reference" href="index.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/reference/configuration-options.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/reference/configuration-options.html"/>
+  <meta property="og:title" content="Configuration Options"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/index.html">How-To Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/index.html">Explanation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#mailuconfig-interface">MailuConfig Interface</a><ul>
+<li><a class="reference internal" href="#core-configuration">Core Configuration</a><ul>
+<li><a class="reference internal" href="#domain-required">domain (required)</a></li>
+<li><a class="reference internal" href="#hostnames-required">hostnames (required)</a></li>
+<li><a class="reference internal" href="#secretkey-required">secretKey (required)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#database-configuration">Database Configuration</a><ul>
+<li><a class="reference internal" href="#database">database</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#redis-configuration">Redis Configuration</a><ul>
+<li><a class="reference internal" href="#redis">redis</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#component-toggles">Component Toggles</a><ul>
+<li><a class="reference internal" href="#components">components</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#resource-configuration">Resource Configuration</a><ul>
+<li><a class="reference internal" href="#resources">resources</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#storage-configuration">Storage Configuration</a><ul>
+<li><a class="reference internal" href="#storage">storage</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#image-configuration">Image Configuration</a><ul>
+<li><a class="reference internal" href="#images">images</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#additional-configuration">Additional Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Configuration Options</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="configuration-options">
+<h1>Configuration Options<a class="headerlink" href="#configuration-options" title="Link to this heading">¶</a></h1>
+<p><strong>Complete reference for all configuration options in the MailuConfig interface.</strong></p>
+<section id="mailuconfig-interface">
+<h2>MailuConfig Interface<a class="headerlink" href="#mailuconfig-interface" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">MailuConfig</span></code> interface defines all configuration options for deploying Mailu.</p>
+<section id="core-configuration">
+<h3>Core Configuration<a class="headerlink" href="#core-configuration" title="Link to this heading">¶</a></h3>
+<section id="domain-required">
+<h4>domain (required)<a class="headerlink" href="#domain-required" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Type:</strong> <code class="docutils literal notranslate"><span class="pre">string</span></code></p></li>
+<li><p><strong>Description:</strong> Primary mail domain for the Mailu instance</p></li>
+<li><p><strong>Example:</strong> <code class="docutils literal notranslate"><span class="pre">'mail.example.com'</span></code></p></li>
+</ul>
+</section>
+<section id="hostnames-required">
+<h4>hostnames (required)<a class="headerlink" href="#hostnames-required" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Type:</strong> <code class="docutils literal notranslate"><span class="pre">string[]</span></code></p></li>
+<li><p><strong>Description:</strong> List of hostnames for the mail server</p></li>
+<li><p><strong>Example:</strong> <code class="docutils literal notranslate"><span class="pre">['mail.example.com',</span> <span class="pre">'imap.example.com']</span></code></p></li>
+</ul>
+</section>
+<section id="secretkey-required">
+<h4>secretKey (required)<a class="headerlink" href="#secretkey-required" title="Link to this heading">¶</a></h4>
+<ul>
+<li><p><strong>Type:</strong> <code class="docutils literal notranslate"><span class="pre">SecretReference</span></code></p></li>
+<li><p><strong>Description:</strong> Reference to Kubernetes secret containing the Mailu secret key</p></li>
+<li><p><strong>Example:</strong></p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu-secrets&#39;</span><span class="p">,</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;SECRET_KEY&#39;</span>
+</span><span data-line="4"><span class="p">}</span>
+</span></pre></div>
+</div>
+</li>
+</ul>
+</section>
+</section>
+<section id="database-configuration">
+<h3>Database Configuration<a class="headerlink" href="#database-configuration" title="Link to this heading">¶</a></h3>
+<section id="database">
+<h4>database<a class="headerlink" href="#database" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Type:</strong> <code class="docutils literal notranslate"><span class="pre">DatabaseConfig</span></code></p></li>
+<li><p><strong>Description:</strong> Database backend configuration (PostgreSQL or SQLite)</p></li>
+</ul>
+<p><strong>PostgreSQL:</strong></p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;postgresql&#39;</span><span class="p">,</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">,</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span>
+</span><span data-line="6"><span class="w">  </span><span class="nx">user</span><span class="o">:</span><span class="w"> </span><span class="kt">SecretReference</span><span class="p">,</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">password</span><span class="o">:</span><span class="w"> </span><span class="kt">SecretReference</span>
+</span><span data-line="8"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p><strong>SQLite (default):</strong></p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;sqlite&#39;</span><span class="p">,</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w">  </span><span class="c1">// Default: &#39;/data/main.db&#39;</span>
+</span><span data-line="4"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="redis-configuration">
+<h3>Redis Configuration<a class="headerlink" href="#redis-configuration" title="Link to this heading">¶</a></h3>
+<section id="redis">
+<h4>redis<a class="headerlink" href="#redis" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Type:</strong> <code class="docutils literal notranslate"><span class="pre">RedisConfig</span></code></p></li>
+<li><p><strong>Description:</strong> Redis configuration for caching and session storage</p></li>
+</ul>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">enabled</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">,</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">,</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">password?</span><span class="o">:</span><span class="w"> </span><span class="kt">SecretReference</span>
+</span><span data-line="6"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="component-toggles">
+<h3>Component Toggles<a class="headerlink" href="#component-toggles" title="Link to this heading">¶</a></h3>
+<section id="components">
+<h4>components<a class="headerlink" href="#components" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Type:</strong> <code class="docutils literal notranslate"><span class="pre">ComponentToggles</span></code></p></li>
+<li><p><strong>Description:</strong> Enable/disable optional Mailu components</p></li>
+</ul>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">admin</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">,</span><span class="w">      </span><span class="c1">// Default: true</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">webmail</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">,</span><span class="w">    </span><span class="c1">// Default: true</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">clamav</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">,</span><span class="w">     </span><span class="c1">// Default: false</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">webdav</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">,</span><span class="w">     </span><span class="c1">// Default: false</span>
+</span><span data-line="6"><span class="w">  </span><span class="nx">fetchmail</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">,</span><span class="w">  </span><span class="c1">// Default: false</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">radicale</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="w">    </span><span class="c1">// Default: false</span>
+</span><span data-line="8"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="resource-configuration">
+<h3>Resource Configuration<a class="headerlink" href="#resource-configuration" title="Link to this heading">¶</a></h3>
+<section id="resources">
+<h4>resources<a class="headerlink" href="#resources" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Type:</strong> <code class="docutils literal notranslate"><span class="pre">Record&lt;string,</span> <span class="pre">ResourceRequirements&gt;</span></code></p></li>
+<li><p><strong>Description:</strong> CPU and memory resources for each component</p></li>
+</ul>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="p">[</span><span class="nx">componentName</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">    </span><span class="nx">requests</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="4"><span class="w">      </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w">    </span><span class="c1">// e.g., &#39;100m&#39;</span>
+</span><span data-line="5"><span class="w">      </span><span class="nx">memory</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w">  </span><span class="c1">// e.g., &#39;256Mi&#39;</span>
+</span><span data-line="6"><span class="w">    </span><span class="p">},</span>
+</span><span data-line="7"><span class="w">    </span><span class="nx">limits</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="8"><span class="w">      </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span>
+</span><span data-line="9"><span class="w">      </span><span class="nx">memory</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span>
+</span><span data-line="10"><span class="w">    </span><span class="p">}</span>
+</span><span data-line="11"><span class="w">  </span><span class="p">}</span>
+</span><span data-line="12"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p><strong>Components:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">front</span></code> - Nginx reverse proxy</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">admin</span></code> - Web admin interface</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">postfix</span></code> - SMTP server</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dovecot</span></code> - IMAP/POP3 server</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rspamd</span></code> - Spam filter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">webmail</span></code> - Roundcube webmail</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">clamav</span></code> - Antivirus scanner</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">webdav</span></code> - CalDAV/CardDAV server</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fetchmail</span></code> - External mail fetching</p></li>
+</ul>
+</section>
+</section>
+<section id="storage-configuration">
+<h3>Storage Configuration<a class="headerlink" href="#storage-configuration" title="Link to this heading">¶</a></h3>
+<section id="storage">
+<h4>storage<a class="headerlink" href="#storage" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Type:</strong> <code class="docutils literal notranslate"><span class="pre">StorageConfig</span></code></p></li>
+<li><p><strong>Description:</strong> Persistent storage configuration</p></li>
+</ul>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">    </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w">              </span><span class="c1">// e.g., &#39;10Gi&#39;</span>
+</span><span data-line="4"><span class="w">    </span><span class="nx">storageClassName?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w">  </span><span class="c1">// e.g., &#39;longhorn&#39;</span>
+</span><span data-line="5"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="6"><span class="w">  </span><span class="nx">mail</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="7"><span class="w">    </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span>
+</span><span data-line="8"><span class="w">    </span><span class="nx">storageClassName?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span>
+</span><span data-line="9"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="10"><span class="w">  </span><span class="c1">// Additional storage for components</span>
+</span><span data-line="11"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="image-configuration">
+<h3>Image Configuration<a class="headerlink" href="#image-configuration" title="Link to this heading">¶</a></h3>
+<section id="images">
+<h4>images<a class="headerlink" href="#images" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Type:</strong> <code class="docutils literal notranslate"><span class="pre">Record&lt;string,</span> <span class="pre">ImageConfig&gt;</span></code></p></li>
+<li><p><strong>Description:</strong> Container image configuration for each component</p></li>
+</ul>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="p">[</span><span class="nx">componentName</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">    </span><span class="nx">repository</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span>
+</span><span data-line="4"><span class="w">    </span><span class="nx">tag</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span>
+</span><span data-line="5"><span class="w">    </span><span class="nx">pullPolicy</span><span class="o">?:</span><span class="w"> </span><span class="s1">&#39;Always&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;IfNotPresent&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;Never&#39;</span>
+</span><span data-line="6"><span class="w">  </span><span class="p">}</span>
+</span><span data-line="7"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="additional-configuration">
+<h3>Additional Configuration<a class="headerlink" href="#additional-configuration" title="Link to this heading">¶</a></h3>
+<p><em>[Content placeholder for docwriter]</em></p>
+<p>Additional configuration sections to be documented:</p>
+<ul class="simple">
+<li><p>Network/service configuration</p></li>
+<li><p>Security settings</p></li>
+<li><p>TLS/certificate configuration</p></li>
+<li><p>SMTP relay settings</p></li>
+<li><p>Admin user configuration</p></li>
+<li><p>Feature flags</p></li>
+<li><p>Environment variable overrides</p></li>
+</ul>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../how-to/configure-construct.html"><span class="std std-doc">Configure Constructs</span></a> - Basic configuration guide</p></li>
+<li><p><a class="reference internal" href="../how-to/scale-resources.html"><span class="std std-doc">Scale Resources</span></a> - Adjust CPU and memory</p></li>
+<li><p><a class="reference internal" href="../how-to/customize-storage.html"><span class="std std-doc">Customize Storage</span></a> - Configure PVC sizes</p></li>
+<li><p><a class="reference internal" href="../how-to/enable-optional-components.html"><span class="std std-doc">Enable Optional Components</span></a> - Component toggles</p></li>
+<li><p><a class="reference internal" href="../how-to/manage-secrets.html"><span class="std std-doc">Manage Secrets</span></a> - Create required secrets</p></li>
+<li><p><a class="reference internal" href="../explanation/architecture.html"><span class="std std-doc">Architecture</span></a> - Understanding configuration design</p></li>
+</ul>
+<hr class="docutils" />
+<p><em>This is a placeholder reference. Content will be expanded by the docwriter with:</em></p>
+<ul class="simple">
+<li><p>Complete TypeScript interface definitions</p></li>
+<li><p>All available options with types and defaults</p></li>
+<li><p>Validation rules and constraints</p></li>
+<li><p>Migration guides for version changes</p></li>
+<li><p>Examples for each option</p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="index.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Reference</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="component-specifications.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Component Specifications</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

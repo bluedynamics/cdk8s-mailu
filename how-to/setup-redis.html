@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Setup Redis - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Configure Constructs" href="configure-construct.html" /><link rel="prev" title="Setup PostgreSQL Database" href="setup-postgresql.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/how-to/setup-redis.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/how-to/setup-redis.html"/>
+  <meta property="og:title" content="Setup Redis"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">How-To Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/index.html">Explanation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#problem">Problem</a></li>
+<li><a class="reference internal" href="#solution">Solution</a></li>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#step-1-add-bitnami-helm-repository">Step 1: Add Bitnami Helm Repository</a></li>
+<li><a class="reference internal" href="#step-2-choose-deployment-mode">Step 2: Choose Deployment Mode</a><ul>
+<li><a class="reference internal" href="#option-a-standalone-recommended-for-most-cases">Option A: Standalone (Recommended for Most Cases)</a></li>
+<li><a class="reference internal" href="#option-b-master-replica-high-availability">Option B: Master-Replica (High Availability)</a></li>
+<li><a class="reference internal" href="#option-c-sentinel-automatic-failover">Option C: Sentinel (Automatic Failover)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#deploy-standalone-redis-recommended">Deploy Standalone Redis (Recommended)</a><ul>
+<li><a class="reference internal" href="#create-values-file">Create Values File</a></li>
+<li><a class="reference internal" href="#install-redis">Install Redis</a></li>
+<li><a class="reference internal" href="#verify-installation">Verify Installation</a></li>
+<li><a class="reference internal" href="#get-connection-details">Get Connection Details</a></li>
+<li><a class="reference internal" href="#configure-mailu-no-authentication">Configure Mailu (No Authentication)</a></li>
+<li><a class="reference internal" href="#configure-mailu-with-authentication">Configure Mailu (With Authentication)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#deploy-master-replica-redis-high-availability">Deploy Master-Replica Redis (High Availability)</a><ul>
+<li><a class="reference internal" href="#id1">Create Values File</a></li>
+<li><a class="reference internal" href="#install-redis-ha">Install Redis HA</a></li>
+<li><a class="reference internal" href="#verify-replication">Verify Replication</a></li>
+<li><a class="reference internal" href="#configure-mailu-with-ha-redis">Configure Mailu with HA Redis</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#deploy-redis-sentinel-automatic-failover">Deploy Redis Sentinel (Automatic Failover)</a><ul>
+<li><a class="reference internal" href="#id2">Create Values File</a></li>
+<li><a class="reference internal" href="#install-redis-sentinel">Install Redis Sentinel</a></li>
+<li><a class="reference internal" href="#verify-sentinel">Verify Sentinel</a></li>
+<li><a class="reference internal" href="#configure-mailu-with-sentinel">Configure Mailu with Sentinel</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#persistence-considerations">Persistence Considerations</a><ul>
+<li><a class="reference internal" href="#with-persistence-default">With Persistence (Default)</a></li>
+<li><a class="reference internal" href="#without-persistence">Without Persistence</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#monitoring-redis">Monitoring Redis</a><ul>
+<li><a class="reference internal" href="#check-memory-usage">Check Memory Usage</a></li>
+<li><a class="reference internal" href="#check-connected-clients">Check Connected Clients</a></li>
+<li><a class="reference internal" href="#check-hit-rate">Check Hit Rate</a></li>
+<li><a class="reference internal" href="#monitor-keys">Monitor Keys</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#scaling-redis">Scaling Redis</a><ul>
+<li><a class="reference internal" href="#increase-memory">Increase Memory</a></li>
+<li><a class="reference internal" href="#add-more-replicas-ha-mode">Add More Replicas (HA Mode)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#pod-not-starting">Pod not starting</a></li>
+<li><a class="reference internal" href="#cannot-connect-to-redis">Cannot connect to Redis</a></li>
+<li><a class="reference internal" href="#authentication-errors">Authentication errors</a></li>
+<li><a class="reference internal" href="#high-memory-usage">High memory usage</a></li>
+<li><a class="reference internal" href="#replication-lag-ha-mode">Replication lag (HA mode)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#performance-tuning">Performance Tuning</a><ul>
+<li><a class="reference internal" href="#optimize-for-session-storage">Optimize for Session Storage</a></li>
+<li><a class="reference internal" href="#connection-pooling">Connection Pooling</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#redis-vs-alternatives">Redis vs Alternatives</a><ul>
+<li><a class="reference internal" href="#why-redis-for-mailu">Why Redis for Mailu?</a></li>
+<li><a class="reference internal" href="#could-you-use-memcached">Could You Use Memcached?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cleanup-and-removal">Cleanup and Removal</a><ul>
+<li><a class="reference internal" href="#uninstall-redis">Uninstall Redis</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">How-To Guides</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Setup Redis</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="setup-redis">
+<h1>Setup Redis<a class="headerlink" href="#setup-redis" title="Link to this heading">¶</a></h1>
+<p><strong>How to deploy Redis for Mailu session storage and caching.</strong></p>
+<section id="problem">
+<h2>Problem<a class="headerlink" href="#problem" title="Link to this heading">¶</a></h2>
+<p>Mailu requires Redis for session storage and caching. You need to deploy Redis before deploying Mailu.</p>
+</section>
+<section id="solution">
+<h2>Solution<a class="headerlink" href="#solution" title="Link to this heading">¶</a></h2>
+<p>Deploy Redis using the Bitnami Helm chart. For most Mailu deployments, a simple single-instance Redis is sufficient since sessions can be regenerated if Redis fails.</p>
+</section>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Helm 3 installed</p></li>
+<li><p>Kubernetes cluster</p></li>
+<li><p>Persistent storage (optional for session data)</p></li>
+</ul>
+</section>
+<section id="step-1-add-bitnami-helm-repository">
+<h2>Step 1: Add Bitnami Helm Repository<a class="headerlink" href="#step-1-add-bitnami-helm-repository" title="Link to this heading">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>bitnami<span class="w"> </span>https://charts.bitnami.com/bitnami
+</span><span data-line="2">helm<span class="w"> </span>repo<span class="w"> </span>update
+</span></pre></div>
+</div>
+</section>
+<section id="step-2-choose-deployment-mode">
+<h2>Step 2: Choose Deployment Mode<a class="headerlink" href="#step-2-choose-deployment-mode" title="Link to this heading">¶</a></h2>
+<section id="option-a-standalone-recommended-for-most-cases">
+<h3>Option A: Standalone (Recommended for Most Cases)<a class="headerlink" href="#option-a-standalone-recommended-for-most-cases" title="Link to this heading">¶</a></h3>
+<p>Simple single-instance Redis. Suitable for:</p>
+<ul class="simple">
+<li><p>Development and testing</p></li>
+<li><p>Small to medium deployments (&lt; 500 users)</p></li>
+<li><p>Environments where brief session loss is acceptable</p></li>
+</ul>
+</section>
+<section id="option-b-master-replica-high-availability">
+<h3>Option B: Master-Replica (High Availability)<a class="headerlink" href="#option-b-master-replica-high-availability" title="Link to this heading">¶</a></h3>
+<p>Master with read replicas. Use when:</p>
+<ul class="simple">
+<li><p>High availability is critical</p></li>
+<li><p>Large deployments (500+ users)</p></li>
+<li><p>Zero downtime required</p></li>
+</ul>
+</section>
+<section id="option-c-sentinel-automatic-failover">
+<h3>Option C: Sentinel (Automatic Failover)<a class="headerlink" href="#option-c-sentinel-automatic-failover" title="Link to this heading">¶</a></h3>
+<p>Redis with Sentinel for automatic failover. Use when:</p>
+<ul class="simple">
+<li><p>Production critical workload</p></li>
+<li><p>Automatic failover required</p></li>
+<li><p>Multiple replicas with coordinator</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="deploy-standalone-redis-recommended">
+<h2>Deploy Standalone Redis (Recommended)<a class="headerlink" href="#deploy-standalone-redis-recommended" title="Link to this heading">¶</a></h2>
+<section id="create-values-file">
+<h3>Create Values File<a class="headerlink" href="#create-values-file" title="Link to this heading">¶</a></h3>
+<p>Create <code class="docutils literal notranslate"><span class="pre">redis-values.yaml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Bitnami Redis configuration for Mailu</span>
+</span><span data-line="2"><span class="nt">architecture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">standalone</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="nt">auth</span><span class="p">:</span>
+</span><span data-line="5"><span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w">  </span><span class="c1"># Mailu supports Redis without authentication (cluster-internal)</span>
+</span><span data-line="6"><span class="w">  </span><span class="c1"># Or enable authentication:</span>
+</span><span data-line="7"><span class="w">  </span><span class="c1"># enabled: true</span>
+</span><span data-line="8"><span class="w">  </span><span class="c1"># password: &quot;CHANGE_ME_SECURE_PASSWORD&quot;</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="nt">master</span><span class="p">:</span>
+</span><span data-line="11"><span class="w">  </span><span class="nt">persistence</span><span class="p">:</span>
+</span><span data-line="12"><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">  </span><span class="c1"># Persist data (optional for sessions)</span>
+</span><span data-line="13"><span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5Gi</span>
+</span><span data-line="14"><span class="w">    </span><span class="nt">storageClass</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">longhorn</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+</span><span data-line="17"><span class="w">    </span><span class="nt">requests</span><span class="p">:</span>
+</span><span data-line="18"><span class="w">      </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100m</span>
+</span><span data-line="19"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">128Mi</span>
+</span><span data-line="20"><span class="w">    </span><span class="nt">limits</span><span class="p">:</span>
+</span><span data-line="21"><span class="w">      </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500m</span>
+</span><span data-line="22"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">256Mi</span>
+</span><span data-line="23">
+</span><span data-line="24"><span class="w">  </span><span class="c1"># Disable persistence if sessions-only (faster, but data lost on restart)</span>
+</span><span data-line="25"><span class="w">  </span><span class="c1"># persistence:</span>
+</span><span data-line="26"><span class="w">  </span><span class="c1">#   enabled: false</span>
+</span><span data-line="27">
+</span><span data-line="28"><span class="nt">metrics</span><span class="p">:</span>
+</span><span data-line="29"><span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="30"><span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+</span><span data-line="31"><span class="w">    </span><span class="nt">requests</span><span class="p">:</span>
+</span><span data-line="32"><span class="w">      </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50m</span>
+</span><span data-line="33"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">64Mi</span>
+</span></pre></div>
+</div>
+</section>
+<section id="install-redis">
+<h3>Install Redis<a class="headerlink" href="#install-redis" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Create namespace</span>
+</span><span data-line="2">kubectl<span class="w"> </span>create<span class="w"> </span>namespace<span class="w"> </span>redis
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Install Redis</span>
+</span><span data-line="5">helm<span class="w"> </span>install<span class="w"> </span>redis<span class="w"> </span>bitnami/redis<span class="w"> </span><span class="se">\</span>
+</span><span data-line="6"><span class="w">  </span>--namespace<span class="w"> </span>redis<span class="w"> </span><span class="se">\</span>
+</span><span data-line="7"><span class="w">  </span>--values<span class="w"> </span>redis-values.yaml
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># Wait for pod to be ready</span>
+</span><span data-line="10">kubectl<span class="w"> </span><span class="nb">wait</span><span class="w"> </span>--for<span class="o">=</span><span class="nv">condition</span><span class="o">=</span>ready<span class="w"> </span>pod<span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/name<span class="o">=</span>redis<span class="w"> </span>--timeout<span class="o">=</span>300s
+</span></pre></div>
+</div>
+</section>
+<section id="verify-installation">
+<h3>Verify Installation<a class="headerlink" href="#verify-installation" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check pod status</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>redis
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Test Redis connection</span>
+</span><span data-line="5">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0<span class="w"> </span>--<span class="w"> </span>redis-cli<span class="w"> </span>ping
+</span><span data-line="6"><span class="c1"># Should return: PONG</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Check Redis info</span>
+</span><span data-line="9">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0<span class="w"> </span>--<span class="w"> </span>redis-cli<span class="w"> </span>info<span class="w"> </span>server
+</span></pre></div>
+</div>
+</section>
+<section id="get-connection-details">
+<h3>Get Connection Details<a class="headerlink" href="#get-connection-details" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Get service name</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>svc<span class="w"> </span>-n<span class="w"> </span>redis
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Service name will be: redis-master</span>
+</span><span data-line="5"><span class="c1"># Connection string: redis-master.redis.svc.cluster.local:6379</span>
+</span></pre></div>
+</div>
+</section>
+<section id="configure-mailu-no-authentication">
+<h3>Configure Mailu (No Authentication)<a class="headerlink" href="#configure-mailu-no-authentication" title="Link to this heading">¶</a></h3>
+<p>If Redis has <code class="docutils literal notranslate"><span class="pre">auth.enabled:</span> <span class="pre">false</span></code>:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">redis</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;redis-master.redis.svc.cluster.local&#39;</span><span class="p">,</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="kt">6379</span><span class="p">,</span>
+</span><span data-line="4"><span class="w">  </span><span class="c1">// No secretName needed</span>
+</span><span data-line="5"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+<section id="configure-mailu-with-authentication">
+<h3>Configure Mailu (With Authentication)<a class="headerlink" href="#configure-mailu-with-authentication" title="Link to this heading">¶</a></h3>
+<p>If Redis has <code class="docutils literal notranslate"><span class="pre">auth.enabled:</span> <span class="pre">true</span></code>, create secret:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Get Redis password from Helm release</span>
+</span><span data-line="2"><span class="nv">REDIS_PASSWORD</span><span class="o">=</span><span class="k">$(</span>kubectl<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis<span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{.data.redis-password}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="w"> </span>-d<span class="k">)</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Create secret for Mailu</span>
+</span><span data-line="5">kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>redis-password<span class="w"> </span><span class="se">\</span>
+</span><span data-line="6"><span class="w">  </span>--namespace<span class="o">=</span>mailu<span class="w"> </span><span class="se">\</span>
+</span><span data-line="7"><span class="w">  </span>--from-literal<span class="o">=</span><span class="nv">password</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$REDIS_PASSWORD</span><span class="s2">&quot;</span>
+</span></pre></div>
+</div>
+<p>Configure in CDK8S:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">redis</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;redis-master.redis.svc.cluster.local&#39;</span><span class="p">,</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="kt">6379</span><span class="p">,</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">secretName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;redis-password&#39;</span><span class="p">,</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">secretKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;password&#39;</span><span class="p">,</span>
+</span><span data-line="6"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="deploy-master-replica-redis-high-availability">
+<h2>Deploy Master-Replica Redis (High Availability)<a class="headerlink" href="#deploy-master-replica-redis-high-availability" title="Link to this heading">¶</a></h2>
+<section id="id1">
+<h3>Create Values File<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<p>Create <code class="docutils literal notranslate"><span class="pre">redis-ha-values.yaml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Redis Master-Replica configuration</span>
+</span><span data-line="2"><span class="nt">architecture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">replication</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="nt">auth</span><span class="p">:</span>
+</span><span data-line="5"><span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w">  </span><span class="c1"># Or true for authentication</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="nt">replica</span><span class="p">:</span>
+</span><span data-line="8"><span class="w">  </span><span class="nt">replicaCount</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w">  </span><span class="c1"># Number of read replicas</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="nt">master</span><span class="p">:</span>
+</span><span data-line="11"><span class="w">  </span><span class="nt">persistence</span><span class="p">:</span>
+</span><span data-line="12"><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="13"><span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5Gi</span>
+</span><span data-line="14"><span class="w">    </span><span class="nt">storageClass</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">longhorn</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+</span><span data-line="17"><span class="w">    </span><span class="nt">requests</span><span class="p">:</span>
+</span><span data-line="18"><span class="w">      </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100m</span>
+</span><span data-line="19"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">256Mi</span>
+</span><span data-line="20"><span class="w">    </span><span class="nt">limits</span><span class="p">:</span>
+</span><span data-line="21"><span class="w">      </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500m</span>
+</span><span data-line="22"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512Mi</span>
+</span><span data-line="23">
+</span><span data-line="24"><span class="nt">replica</span><span class="p">:</span>
+</span><span data-line="25"><span class="w">  </span><span class="nt">persistence</span><span class="p">:</span>
+</span><span data-line="26"><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="27"><span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5Gi</span>
+</span><span data-line="28"><span class="w">    </span><span class="nt">storageClass</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">longhorn</span>
+</span><span data-line="29">
+</span><span data-line="30"><span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+</span><span data-line="31"><span class="w">    </span><span class="nt">requests</span><span class="p">:</span>
+</span><span data-line="32"><span class="w">      </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100m</span>
+</span><span data-line="33"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">256Mi</span>
+</span><span data-line="34"><span class="w">    </span><span class="nt">limits</span><span class="p">:</span>
+</span><span data-line="35"><span class="w">      </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500m</span>
+</span><span data-line="36"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512Mi</span>
+</span><span data-line="37">
+</span><span data-line="38"><span class="nt">metrics</span><span class="p">:</span>
+</span><span data-line="39"><span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span></pre></div>
+</div>
+</section>
+<section id="install-redis-ha">
+<h3>Install Redis HA<a class="headerlink" href="#install-redis-ha" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">helm<span class="w"> </span>install<span class="w"> </span>redis<span class="w"> </span>bitnami/redis<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">  </span>--namespace<span class="w"> </span>redis<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">  </span>--values<span class="w"> </span>redis-ha-values.yaml
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Wait for all pods</span>
+</span><span data-line="6">kubectl<span class="w"> </span><span class="nb">wait</span><span class="w"> </span>--for<span class="o">=</span><span class="nv">condition</span><span class="o">=</span>ready<span class="w"> </span>pod<span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/name<span class="o">=</span>redis<span class="w"> </span>--timeout<span class="o">=</span>300s
+</span></pre></div>
+</div>
+</section>
+<section id="verify-replication">
+<h3>Verify Replication<a class="headerlink" href="#verify-replication" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check master</span>
+</span><span data-line="2">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0<span class="w"> </span>--<span class="w"> </span>redis-cli<span class="w"> </span>info<span class="w"> </span>replication
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Should show:</span>
+</span><span data-line="5"><span class="c1"># role:master</span>
+</span><span data-line="6"><span class="c1"># connected_slaves:2</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Check replica</span>
+</span><span data-line="9">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-replicas-0<span class="w"> </span>--<span class="w"> </span>redis-cli<span class="w"> </span>info<span class="w"> </span>replication
+</span><span data-line="10">
+</span><span data-line="11"><span class="c1"># Should show:</span>
+</span><span data-line="12"><span class="c1"># role:slave</span>
+</span><span data-line="13"><span class="c1"># master_host:redis-master-0</span>
+</span></pre></div>
+</div>
+</section>
+<section id="configure-mailu-with-ha-redis">
+<h3>Configure Mailu with HA Redis<a class="headerlink" href="#configure-mailu-with-ha-redis" title="Link to this heading">¶</a></h3>
+<p>Use the master service for writes:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">redis</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;redis-master.redis.svc.cluster.local&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// Write to master</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="kt">6379</span><span class="p">,</span>
+</span><span data-line="4"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p><strong>Note</strong>: Mailu connects to master for both reads and writes. Read replicas are used automatically by the Redis client for load balancing.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="deploy-redis-sentinel-automatic-failover">
+<h2>Deploy Redis Sentinel (Automatic Failover)<a class="headerlink" href="#deploy-redis-sentinel-automatic-failover" title="Link to this heading">¶</a></h2>
+<section id="id2">
+<h3>Create Values File<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<p>Create <code class="docutils literal notranslate"><span class="pre">redis-sentinel-values.yaml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Redis Sentinel configuration</span>
+</span><span data-line="2"><span class="nt">sentinel</span><span class="p">:</span>
+</span><span data-line="3"><span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="4"><span class="w">  </span><span class="nt">replicas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w">  </span><span class="c1"># Sentinel instances (odd number recommended)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+</span><span data-line="7"><span class="w">    </span><span class="nt">requests</span><span class="p">:</span>
+</span><span data-line="8"><span class="w">      </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50m</span>
+</span><span data-line="9"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">64Mi</span>
+</span><span data-line="10"><span class="w">    </span><span class="nt">limits</span><span class="p">:</span>
+</span><span data-line="11"><span class="w">      </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200m</span>
+</span><span data-line="12"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">128Mi</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="nt">master</span><span class="p">:</span>
+</span><span data-line="15"><span class="w">  </span><span class="nt">persistence</span><span class="p">:</span>
+</span><span data-line="16"><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="17"><span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5Gi</span>
+</span><span data-line="18">
+</span><span data-line="19"><span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+</span><span data-line="20"><span class="w">    </span><span class="nt">requests</span><span class="p">:</span>
+</span><span data-line="21"><span class="w">      </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100m</span>
+</span><span data-line="22"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">256Mi</span>
+</span><span data-line="23"><span class="w">    </span><span class="nt">limits</span><span class="p">:</span>
+</span><span data-line="24"><span class="w">      </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500m</span>
+</span><span data-line="25"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512Mi</span>
+</span><span data-line="26">
+</span><span data-line="27"><span class="nt">replica</span><span class="p">:</span>
+</span><span data-line="28"><span class="w">  </span><span class="nt">replicaCount</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span data-line="29"><span class="w">  </span><span class="nt">persistence</span><span class="p">:</span>
+</span><span data-line="30"><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="31"><span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5Gi</span>
+</span><span data-line="32">
+</span><span data-line="33"><span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+</span><span data-line="34"><span class="w">    </span><span class="nt">requests</span><span class="p">:</span>
+</span><span data-line="35"><span class="w">      </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100m</span>
+</span><span data-line="36"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">256Mi</span>
+</span><span data-line="37"><span class="w">    </span><span class="nt">limits</span><span class="p">:</span>
+</span><span data-line="38"><span class="w">      </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500m</span>
+</span><span data-line="39"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512Mi</span>
+</span><span data-line="40">
+</span><span data-line="41"><span class="nt">auth</span><span class="p">:</span>
+</span><span data-line="42"><span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w">  </span><span class="c1"># Or true</span>
+</span><span data-line="43"><span class="w">  </span><span class="nt">sentinel</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w">  </span><span class="c1"># Sentinel auth (usually false for internal cluster)</span>
+</span><span data-line="44">
+</span><span data-line="45"><span class="nt">metrics</span><span class="p">:</span>
+</span><span data-line="46"><span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span></pre></div>
+</div>
+</section>
+<section id="install-redis-sentinel">
+<h3>Install Redis Sentinel<a class="headerlink" href="#install-redis-sentinel" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">helm<span class="w"> </span>install<span class="w"> </span>redis<span class="w"> </span>bitnami/redis<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">  </span>--namespace<span class="w"> </span>redis<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">  </span>--values<span class="w"> </span>redis-sentinel-values.yaml
+</span><span data-line="4">
+</span><span data-line="5">kubectl<span class="w"> </span><span class="nb">wait</span><span class="w"> </span>--for<span class="o">=</span><span class="nv">condition</span><span class="o">=</span>ready<span class="w"> </span>pod<span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/name<span class="o">=</span>redis<span class="w"> </span>--timeout<span class="o">=</span>600s
+</span></pre></div>
+</div>
+</section>
+<section id="verify-sentinel">
+<h3>Verify Sentinel<a class="headerlink" href="#verify-sentinel" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check Sentinel status</span>
+</span><span data-line="2">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-node-0<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">  </span>redis-cli<span class="w"> </span>-p<span class="w"> </span><span class="m">26379</span><span class="w"> </span>sentinel<span class="w"> </span>master<span class="w"> </span>mymaster
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Should show master details and number of slaves and sentinels</span>
+</span></pre></div>
+</div>
+</section>
+<section id="configure-mailu-with-sentinel">
+<h3>Configure Mailu with Sentinel<a class="headerlink" href="#configure-mailu-with-sentinel" title="Link to this heading">¶</a></h3>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">redis</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;redis.redis.svc.cluster.local&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// Sentinel service</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="kt">6379</span><span class="p">,</span><span class="w">  </span><span class="c1">// Redis port (Sentinel handles failover)</span>
+</span><span data-line="4"><span class="w">  </span><span class="c1">// Sentinel configuration in Mailu is automatic with standard Bitnami setup</span>
+</span><span data-line="5"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="persistence-considerations">
+<h2>Persistence Considerations<a class="headerlink" href="#persistence-considerations" title="Link to this heading">¶</a></h2>
+<section id="with-persistence-default">
+<h3>With Persistence (Default)<a class="headerlink" href="#with-persistence-default" title="Link to this heading">¶</a></h3>
+<p><strong>Pros</strong>:</p>
+<ul class="simple">
+<li><p>Session data survives pod restarts</p></li>
+<li><p>Cached data persists</p></li>
+<li><p>Better for production</p></li>
+</ul>
+<p><strong>Cons</strong>:</p>
+<ul class="simple">
+<li><p>Requires PVC storage</p></li>
+<li><p>Slower restarts (load data from disk)</p></li>
+</ul>
+</section>
+<section id="without-persistence">
+<h3>Without Persistence<a class="headerlink" href="#without-persistence" title="Link to this heading">¶</a></h3>
+<p><strong>Pros</strong>:</p>
+<ul class="simple">
+<li><p>Faster pod restarts</p></li>
+<li><p>No storage overhead</p></li>
+<li><p>Simpler setup</p></li>
+</ul>
+<p><strong>Cons</strong>:</p>
+<ul class="simple">
+<li><p>All sessions lost on restart (users must re-login)</p></li>
+<li><p>Cache data regenerated on restart</p></li>
+</ul>
+<p><strong>When to disable persistence</strong>: Development/testing where session loss is acceptable.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">master</span><span class="p">:</span>
+</span><span data-line="2"><span class="w">  </span><span class="nt">persistence</span><span class="p">:</span>
+</span><span data-line="3"><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="monitoring-redis">
+<h2>Monitoring Redis<a class="headerlink" href="#monitoring-redis" title="Link to this heading">¶</a></h2>
+<section id="check-memory-usage">
+<h3>Check Memory Usage<a class="headerlink" href="#check-memory-usage" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">  </span>redis-cli<span class="w"> </span>info<span class="w"> </span>memory<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>used_memory_human
+</span></pre></div>
+</div>
+</section>
+<section id="check-connected-clients">
+<h3>Check Connected Clients<a class="headerlink" href="#check-connected-clients" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">  </span>redis-cli<span class="w"> </span>info<span class="w"> </span>clients<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>connected_clients
+</span></pre></div>
+</div>
+</section>
+<section id="check-hit-rate">
+<h3>Check Hit Rate<a class="headerlink" href="#check-hit-rate" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">  </span>redis-cli<span class="w"> </span>info<span class="w"> </span>stats<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>keyspace
+</span></pre></div>
+</div>
+</section>
+<section id="monitor-keys">
+<h3>Monitor Keys<a class="headerlink" href="#monitor-keys" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Count keys</span>
+</span><span data-line="2">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">  </span>redis-cli<span class="w"> </span>dbsize
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># List all keys (be careful in production!)</span>
+</span><span data-line="6">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span data-line="7"><span class="w">  </span>redis-cli<span class="w"> </span>--scan
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># List Mailu session keys</span>
+</span><span data-line="10">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span data-line="11"><span class="w">  </span>redis-cli<span class="w"> </span>--scan<span class="w"> </span>--pattern<span class="w"> </span><span class="s2">&quot;session:*&quot;</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="scaling-redis">
+<h2>Scaling Redis<a class="headerlink" href="#scaling-redis" title="Link to this heading">¶</a></h2>
+<section id="increase-memory">
+<h3>Increase Memory<a class="headerlink" href="#increase-memory" title="Link to this heading">¶</a></h3>
+<p>Edit <code class="docutils literal notranslate"><span class="pre">redis-values.yaml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">master</span><span class="p">:</span>
+</span><span data-line="2"><span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+</span><span data-line="3"><span class="w">    </span><span class="nt">requests</span><span class="p">:</span>
+</span><span data-line="4"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512Mi</span><span class="w">  </span><span class="c1"># Increased</span>
+</span><span data-line="5"><span class="w">    </span><span class="nt">limits</span><span class="p">:</span>
+</span><span data-line="6"><span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1Gi</span><span class="w">    </span><span class="c1"># Increased</span>
+</span></pre></div>
+</div>
+<p>Apply changes:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">helm<span class="w"> </span>upgrade<span class="w"> </span>redis<span class="w"> </span>bitnami/redis<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">  </span>--namespace<span class="w"> </span>redis<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">  </span>--values<span class="w"> </span>redis-values.yaml
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Pod will restart with new resources</span>
+</span><span data-line="6">kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>statefulset<span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master
+</span></pre></div>
+</div>
+</section>
+<section id="add-more-replicas-ha-mode">
+<h3>Add More Replicas (HA Mode)<a class="headerlink" href="#add-more-replicas-ha-mode" title="Link to this heading">¶</a></h3>
+<p>Edit <code class="docutils literal notranslate"><span class="pre">redis-ha-values.yaml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">replica</span><span class="p">:</span>
+</span><span data-line="2"><span class="w">  </span><span class="nt">replicaCount</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w">  </span><span class="c1"># Increased from 2</span>
+</span></pre></div>
+</div>
+<p>Apply:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">helm<span class="w"> </span>upgrade<span class="w"> </span>redis<span class="w"> </span>bitnami/redis<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">  </span>--namespace<span class="w"> </span>redis<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">  </span>--values<span class="w"> </span>redis-ha-values.yaml
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">¶</a></h2>
+<section id="pod-not-starting">
+<h3>Pod not starting<a class="headerlink" href="#pod-not-starting" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check pod status</span>
+</span><span data-line="2">kubectl<span class="w"> </span>describe<span class="w"> </span>pod<span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Check logs</span>
+</span><span data-line="5">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Common causes:</span>
+</span><span data-line="8"><span class="c1"># - PVC not bound (check storage class)</span>
+</span><span data-line="9"><span class="c1"># - Resource limits too low</span>
+</span><span data-line="10"><span class="c1"># - Port already in use</span>
+</span></pre></div>
+</div>
+</section>
+<section id="cannot-connect-to-redis">
+<h3>Cannot connect to Redis<a class="headerlink" href="#cannot-connect-to-redis" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Test from another pod</span>
+</span><span data-line="2">kubectl<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>--rm<span class="w"> </span>redis-test<span class="w"> </span>--image<span class="o">=</span>redis:7<span class="w"> </span>--restart<span class="o">=</span>Never<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">  </span>redis-cli<span class="w"> </span>-h<span class="w"> </span>redis-master.redis.svc.cluster.local<span class="w"> </span>ping
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Should return: PONG</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Check service</span>
+</span><span data-line="8">kubectl<span class="w"> </span>get<span class="w"> </span>svc<span class="w"> </span>-n<span class="w"> </span>redis
+</span></pre></div>
+</div>
+</section>
+<section id="authentication-errors">
+<h3>Authentication errors<a class="headerlink" href="#authentication-errors" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Get Redis password</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis<span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{.data.redis-password}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="w"> </span>-d
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Test with password</span>
+</span><span data-line="5">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span data-line="6"><span class="w">  </span>redis-cli<span class="w"> </span>-a<span class="w"> </span><span class="s2">&quot;&lt;password&gt;&quot;</span><span class="w"> </span>ping
+</span></pre></div>
+</div>
+</section>
+<section id="high-memory-usage">
+<h3>High memory usage<a class="headerlink" href="#high-memory-usage" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check memory stats</span>
+</span><span data-line="2">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">  </span>redis-cli<span class="w"> </span>info<span class="w"> </span>memory
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Check key distribution</span>
+</span><span data-line="6">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-master-0<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span data-line="7"><span class="w">  </span>redis-cli<span class="w"> </span>--bigkeys
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># Flush keys if needed (CAREFUL - deletes all data!)</span>
+</span><span data-line="10"><span class="c1"># kubectl exec -n redis redis-master-0 -- redis-cli FLUSHALL</span>
+</span></pre></div>
+</div>
+</section>
+<section id="replication-lag-ha-mode">
+<h3>Replication lag (HA mode)<a class="headerlink" href="#replication-lag-ha-mode" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check replica status</span>
+</span><span data-line="2">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-replicas-0<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">  </span>redis-cli<span class="w"> </span>info<span class="w"> </span>replication<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>master_link_status
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Should show: master_link_status:up</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Check lag</span>
+</span><span data-line="8">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>redis-replicas-0<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span data-line="9"><span class="w">  </span>redis-cli<span class="w"> </span>info<span class="w"> </span>replication<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>master_repl_offset
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="performance-tuning">
+<h2>Performance Tuning<a class="headerlink" href="#performance-tuning" title="Link to this heading">¶</a></h2>
+<section id="optimize-for-session-storage">
+<h3>Optimize for Session Storage<a class="headerlink" href="#optimize-for-session-storage" title="Link to this heading">¶</a></h3>
+<p>Mailu primarily uses Redis for short-lived session data:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">master</span><span class="p">:</span>
+</span><span data-line="2"><span class="w">  </span><span class="nt">configuration</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|-</span>
+</span><span data-line="3"><span class="w">    </span><span class="no"># Optimize for session storage</span>
+</span><span data-line="4"><span class="w">    </span><span class="no">maxmemory 256mb</span>
+</span><span data-line="5"><span class="w">    </span><span class="no">maxmemory-policy allkeys-lru  # Evict least recently used keys</span>
+</span><span data-line="6"><span class="w">    </span><span class="no">save &quot;&quot;  # Disable snapshotting if persistence disabled</span>
+</span></pre></div>
+</div>
+</section>
+<section id="connection-pooling">
+<h3>Connection Pooling<a class="headerlink" href="#connection-pooling" title="Link to this heading">¶</a></h3>
+<p>Redis handles connections efficiently. Typical settings:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">master</span><span class="p">:</span>
+</span><span data-line="2"><span class="w">  </span><span class="nt">configuration</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|-</span>
+</span><span data-line="3"><span class="w">    </span><span class="no">maxclients 1000</span>
+</span><span data-line="4"><span class="w">    </span><span class="no">timeout 300</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="redis-vs-alternatives">
+<h2>Redis vs Alternatives<a class="headerlink" href="#redis-vs-alternatives" title="Link to this heading">¶</a></h2>
+<section id="why-redis-for-mailu">
+<h3>Why Redis for Mailu?<a class="headerlink" href="#why-redis-for-mailu" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>✅ Fast in-memory storage</p></li>
+<li><p>✅ Built-in expiration (TTL) for sessions</p></li>
+<li><p>✅ Simple key-value model</p></li>
+<li><p>✅ Low resource overhead</p></li>
+<li><p>✅ Widely supported</p></li>
+</ul>
+</section>
+<section id="could-you-use-memcached">
+<h3>Could You Use Memcached?<a class="headerlink" href="#could-you-use-memcached" title="Link to this heading">¶</a></h3>
+<p>No, Mailu requires Redis specifically. Mailu uses Redis-specific features like:</p>
+<ul class="simple">
+<li><p>Key expiration (TTL)</p></li>
+<li><p>Hash data structures</p></li>
+<li><p>Pub/sub (for certain operations)</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="cleanup-and-removal">
+<h2>Cleanup and Removal<a class="headerlink" href="#cleanup-and-removal" title="Link to this heading">¶</a></h2>
+<section id="uninstall-redis">
+<h3>Uninstall Redis<a class="headerlink" href="#uninstall-redis" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Uninstall Helm release</span>
+</span><span data-line="2">helm<span class="w"> </span>uninstall<span class="w"> </span>redis<span class="w"> </span>--namespace<span class="w"> </span>redis
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Delete PVCs (data will be lost!)</span>
+</span><span data-line="5">kubectl<span class="w"> </span>delete<span class="w"> </span>pvc<span class="w"> </span>-n<span class="w"> </span>redis<span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/name<span class="o">=</span>redis
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Delete namespace</span>
+</span><span data-line="8">kubectl<span class="w"> </span>delete<span class="w"> </span>namespace<span class="w"> </span>redis
+</span></pre></div>
+</div>
+<p><strong>Warning</strong>: This deletes all session data. Users will need to re-login to Mailu.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="setup-postgresql.html"><span class="std std-doc">Setup PostgreSQL</span></a> - Deploy database for Mailu</p></li>
+<li><p><a class="reference internal" href="manage-secrets.html"><span class="std std-doc">Manage Secrets</span></a> - Creating Redis password secrets</p></li>
+<li><p><a class="reference internal" href="../tutorials/01-quick-start.html"><span class="std std-doc">Quick Start</span></a> - Deploy Mailu with Redis</p></li>
+<li><p><a class="reference internal" href="../reference/component-specifications.html"><span class="std std-doc">Component Specifications</span></a> - Redis requirements</p></li>
+<li><p><a class="reference external" href="https://github.com/bitnami/charts/tree/main/bitnami/redis">Bitnami Redis Chart</a> - Official Helm chart docs</p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="setup-postgresql.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Setup PostgreSQL Database</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="configure-construct.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Configure Constructs</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

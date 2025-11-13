@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dovecot Submission Service - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Egress Gateway Considerations for Mail Delivery" href="egress-gateway-considerations.html" /><link rel="prev" title="Storage Architecture" href="storage-architecture.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/explanation/dovecot-submission.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/explanation/dovecot-submission.html"/>
+  <meta property="og:title" content="Dovecot Submission Service"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/index.html">How-To Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Explanation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#the-problem">The Problem</a></li>
+<li><a class="reference internal" href="#the-solution">The Solution</a><ul>
+<li><a class="reference internal" href="#architecture">Architecture</a></li>
+<li><a class="reference internal" href="#key-features">Key Features</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#implementation-details">Implementation Details</a><ul>
+<li><a class="reference internal" href="#dovecot-configuration">Dovecot Configuration</a></li>
+<li><a class="reference internal" href="#build-time-configuration-substitution">Build-Time Configuration Substitution</a></li>
+<li><a class="reference internal" href="#service-discovery">Service Discovery</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#architecture-requirements">Architecture Requirements</a><ul>
+<li><a class="reference internal" href="#amd64-only">AMD64 Only</a></li>
+<li><a class="reference internal" href="#configuration-mounting">Configuration Mounting</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#webmail-integration">Webmail Integration</a></li>
+<li><a class="reference internal" href="#authentication-flow">Authentication Flow</a></li>
+<li><a class="reference internal" href="#why-this-approach-works">Why This Approach Works</a></li>
+<li><a class="reference internal" href="#configuration-example">Configuration Example</a></li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#dovecot-pod-stuck-in-crashloopbackoff">Dovecot pod stuck in CrashLoopBackOff</a></li>
+<li><a class="reference internal" href="#webmail-can-t-send-email">Webmail can&#8217;t send email</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Explanation</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Dovecot Submission Service</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="dovecot-submission-service">
+<h1>Dovecot Submission Service<a class="headerlink" href="#dovecot-submission-service" title="Link to this heading">¶</a></h1>
+<p><strong>Understanding the dedicated dovecot submission service for webmail email sending.</strong></p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">DovecotSubmissionConstruct</span></code> provides a dedicated dovecot submission service that enables email sending from Roundcube webmail. This service was introduced to solve configuration challenges with the bundled dovecot in the front container when using <code class="docutils literal notranslate"><span class="pre">TLS_FLAVOR=notls</span></code> (required for Traefik TLS termination).</p>
+</section>
+<section id="the-problem">
+<h2>The Problem<a class="headerlink" href="#the-problem" title="Link to this heading">¶</a></h2>
+<p>When a user sends an email from webmail, the webmail backend needs to submit that email to the SMTP server. Mailu’s standard architecture uses the bundled dovecot service in the <code class="docutils literal notranslate"><span class="pre">front</span></code> container for this, but with <code class="docutils literal notranslate"><span class="pre">TLS_FLAVOR=notls</span></code>, configuring this bundled dovecot becomes extremely difficult because:</p>
+<ol class="arabic simple">
+<li><p>The front container’s dovecot configuration is deeply embedded in Mailu’s startup scripts</p></li>
+<li><p>Environment variable substitution doesn’t work properly with dovecot syntax</p></li>
+<li><p>Configuration files are generated at runtime in read-only locations</p></li>
+<li><p>Modifying the bundled dovecot requires extensive wrapper script modifications</p></li>
+</ol>
+</section>
+<section id="the-solution">
+<h2>The Solution<a class="headerlink" href="#the-solution" title="Link to this heading">¶</a></h2>
+<p>Instead of fighting with the bundled dovecot, cdk8s-mailu deploys a <strong>separate dovecot submission service</strong> using the official <code class="docutils literal notranslate"><span class="pre">dovecot/dovecot:2.3-latest</span></code> image with custom configuration.</p>
+<section id="architecture">
+<h3>Architecture<a class="headerlink" href="#architecture" title="Link to this heading">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">Webmail (Roundcube)
+</span><span data-line="2">    ↓ PLAIN auth with token (port 10025)
+</span><span data-line="3">Dovecot Submission Service
+</span><span data-line="4">    - Accepts: nopassword=y (static passdb)
+</span><span data-line="5">    - User: uid=mail (8), gid=mail
+</span><span data-line="6">    - Mail location: maildir:/tmp/mail
+</span><span data-line="7">    ↓ submission_relay_host (port 25, no auth)
+</span><span data-line="8">Postfix
+</span><span data-line="9">    - Trusts: mynetworks (10.42.0.0/16 pod network)
+</span><span data-line="10">    - Accepts: plaintext from pod network
+</span><span data-line="11">    ↓
+</span><span data-line="12">Email Delivery ✅
+</span></pre></div>
+</div>
+</section>
+<section id="key-features">
+<h3>Key Features<a class="headerlink" href="#key-features" title="Link to this heading">¶</a></h3>
+<p><strong>Clean Configuration</strong></p>
+<ul class="simple">
+<li><p>Uses standard dovecot.conf syntax</p></li>
+<li><p>No complex wrapper script modifications</p></li>
+<li><p>Easy to understand and troubleshoot</p></li>
+</ul>
+<p><strong>Token Authentication</strong></p>
+<ul class="simple">
+<li><p>Webmail uses Mailu session tokens</p></li>
+<li><p>Dovecot accepts with <code class="docutils literal notranslate"><span class="pre">nopassword=y</span></code> static passdb</p></li>
+<li><p>Token validation happens at webmail level, not dovecot</p></li>
+</ul>
+<p><strong>Trusted Network Relay</strong></p>
+<ul class="simple">
+<li><p>Dovecot relays to postfix:25 without authentication</p></li>
+<li><p>Postfix trusts pod network (<code class="docutils literal notranslate"><span class="pre">10.42.0.0/16</span></code>)</p></li>
+<li><p>No complex SASL configuration required</p></li>
+</ul>
+<p><strong>Service Isolation</strong></p>
+<ul class="simple">
+<li><p>Dedicated pod with clear logs</p></li>
+<li><p>Independent scaling and resource management</p></li>
+<li><p>No conflicts with front container’s dovecot usage</p></li>
+</ul>
+</section>
+</section>
+<section id="implementation-details">
+<h2>Implementation Details<a class="headerlink" href="#implementation-details" title="Link to this heading">¶</a></h2>
+<section id="dovecot-configuration">
+<h3>Dovecot Configuration<a class="headerlink" href="#dovecot-configuration" title="Link to this heading">¶</a></h3>
+<p>The construct generates a dovecot.conf template with key settings:</p>
+<div class="highlight-dovecot notranslate"><div class="highlight"><pre><span></span><span data-line="1"># Protocols - only submission
+</span><span data-line="2">protocols = submission
+</span><span data-line="3">
+</span><span data-line="4"># Allow low UIDs (mail user is UID 8)
+</span><span data-line="5">first_valid_uid = 8
+</span><span data-line="6">last_valid_uid = 0
+</span><span data-line="7">
+</span><span data-line="8"># Mail location (relay-only, no actual storage needed)
+</span><span data-line="9">mail_location = maildir:/tmp/mail
+</span><span data-line="10">
+</span><span data-line="11"># Submission relay configuration
+</span><span data-line="12">submission_relay_host = postfix.mailu.svc.cluster.local
+</span><span data-line="13">submission_relay_port = 25
+</span><span data-line="14">submission_relay_trusted = yes
+</span><span data-line="15">submission_relay_ssl = no
+</span><span data-line="16">
+</span><span data-line="17"># Authentication via static passdb
+</span><span data-line="18">passdb {
+</span><span data-line="19">  driver = static
+</span><span data-line="20">  args = nopassword=y
+</span><span data-line="21">}
+</span><span data-line="22">
+</span><span data-line="23"># User database (static, minimal config for relay)
+</span><span data-line="24">userdb {
+</span><span data-line="25">  driver = static
+</span><span data-line="26">  args = uid=mail gid=mail home=/tmp
+</span><span data-line="27">}
+</span></pre></div>
+</div>
+</section>
+<section id="build-time-configuration-substitution">
+<h3>Build-Time Configuration Substitution<a class="headerlink" href="#build-time-configuration-substitution" title="Link to this heading">¶</a></h3>
+<p>The construct uses <strong>build-time substitution</strong> to generate the final dovecot configuration during CDK8S synthesis:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kd">const</span><span class="w"> </span><span class="nx">dovecotConf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`# Dovecot Submission Service Configuration</span>
+</span><span data-line="2"><span class="sb"># Generated by CDK8S - values substituted at build time</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="sb"># Admin and hostname</span>
+</span><span data-line="5"><span class="sb">postmaster_address = admin@</span><span class="si">${</span><span class="nx">config</span><span class="p">.</span><span class="nx">domain</span><span class="si">}</span>
+</span><span data-line="6"><span class="sb">hostname = </span><span class="si">${</span><span class="nx">config</span><span class="p">.</span><span class="nx">domain</span><span class="si">}</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="sb"># Submission relay configuration</span>
+</span><span data-line="9"><span class="sb">submission_relay_host = </span><span class="si">${</span><span class="nx">postfixServiceName</span><span class="si">}</span>
+</span><span data-line="10"><span class="sb">submission_relay_port = 25</span>
+</span><span data-line="11"><span class="sb">submission_relay_trusted = yes</span>
+</span><span data-line="12"><span class="sb">submission_relay_ssl = no</span>
+</span><span data-line="13"><span class="sb">`</span><span class="p">;</span>
+</span></pre></div>
+</div>
+<p><strong>Benefits of build-time substitution</strong>:</p>
+<ul class="simple">
+<li><p>No runtime wrapper scripts or environment variable dependencies</p></li>
+<li><p>Final configuration visible in <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">configmap</span></code> output</p></li>
+<li><p>Simpler container startup (direct dovecot execution)</p></li>
+<li><p>Easier debugging (no runtime substitution logic)</p></li>
+</ul>
+<p>The postfix service name is passed from the chart using the full DNS name: <code class="docutils literal notranslate"><span class="pre">${postfixService.name}.${namespace}.svc.cluster.local</span></code></p>
+</section>
+<section id="service-discovery">
+<h3>Service Discovery<a class="headerlink" href="#service-discovery" title="Link to this heading">¶</a></h3>
+<p>The dovecot submission service is registered in the shared ConfigMap as <code class="docutils literal notranslate"><span class="pre">SUBMISSION_ADDRESS</span></code>:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">dovecotSubmissionConstruct</span><span class="o">?</span><span class="p">.</span><span class="nx">service</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="k">this</span><span class="p">.</span><span class="nx">sharedConfigMap</span><span class="p">.</span><span class="nx">addData</span><span class="p">(</span>
+</span><span data-line="3"><span class="w">    </span><span class="s1">&#39;SUBMISSION_ADDRESS&#39;</span><span class="p">,</span>
+</span><span data-line="4"><span class="w">    </span><span class="sb">`</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">dovecotSubmissionConstruct</span><span class="p">.</span><span class="nx">service</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="sb">.</span><span class="si">${</span><span class="nx">namespace</span><span class="si">}</span><span class="sb">.svc.cluster.local`</span>
+</span><span data-line="5"><span class="w">  </span><span class="p">);</span>
+</span><span data-line="6"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p>Webmail uses this environment variable to connect to the correct service, handling CDK8S’s hash-based service names automatically.</p>
+</section>
+</section>
+<section id="architecture-requirements">
+<h2>Architecture Requirements<a class="headerlink" href="#architecture-requirements" title="Link to this heading">¶</a></h2>
+<section id="amd64-only">
+<h3>AMD64 Only<a class="headerlink" href="#amd64-only" title="Link to this heading">¶</a></h3>
+<p>The official <code class="docutils literal notranslate"><span class="pre">dovecot/dovecot:2.3-latest</span></code> image only supports AMD64 architecture. The construct automatically adds:</p>
+<p><strong>Node Selector</strong>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">nodeSelector</span><span class="p">:</span>
+</span><span data-line="2"><span class="w">  </span><span class="nt">kubernetes.io/arch</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">amd64</span>
+</span></pre></div>
+</div>
+<p><strong>Toleration</strong> (for AMD64 taint):</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">tolerations</span><span class="p">:</span>
+</span><span data-line="2"><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kubernetes.io/arch</span>
+</span><span data-line="3"><span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Equal</span>
+</span><span data-line="4"><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">amd64</span>
+</span><span data-line="5"><span class="w">    </span><span class="nt">effect</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NoSchedule</span>
+</span></pre></div>
+</div>
+<p>This ensures the pod is scheduled to an AMD64 node in mixed-architecture clusters.</p>
+</section>
+<section id="configuration-mounting">
+<h3>Configuration Mounting<a class="headerlink" href="#configuration-mounting" title="Link to this heading">¶</a></h3>
+<p>The final dovecot configuration (with all values substituted at build time) is mounted directly from the ConfigMap:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kd">const</span><span class="w"> </span><span class="nx">configVolume</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">kplus</span><span class="p">.</span><span class="nx">Volume</span><span class="p">.</span><span class="nx">fromConfigMap</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;config-volume&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">configMap</span><span class="p">);</span>
+</span><span data-line="2"><span class="nx">container</span><span class="p">.</span><span class="nx">mount</span><span class="p">(</span><span class="s1">&#39;/etc/dovecot&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">configVolume</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">readOnly</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="4"><span class="p">});</span>
+</span></pre></div>
+</div>
+<p>The container starts dovecot directly with the mounted configuration:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">command</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;/usr/sbin/dovecot&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;-F&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;-c&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;/etc/dovecot/dovecot.conf&#39;</span><span class="p">]</span>
+</span></pre></div>
+</div>
+<p>No environment variables or wrapper scripts are needed - the ConfigMap contains the final, ready-to-use configuration.</p>
+</section>
+</section>
+<section id="webmail-integration">
+<h2>Webmail Integration<a class="headerlink" href="#webmail-integration" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">WebmailPatchConfigMap</span></code> construct patches Roundcube’s configuration to use the dovecot submission service:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nv">SUBMISSION_HOST</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SUBMISSION_ADDRESS</span><span class="k">:-</span><span class="nv">dovecot</span><span class="p">-submission</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span data-line="2">
+</span><span data-line="3">sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s|tls://[^:]*:10025|smtp://</span><span class="si">${</span><span class="nv">SUBMISSION_HOST</span><span class="si">}</span><span class="s2">:10025|g&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$RC_CONFIG</span><span class="s2">&quot;</span>
+</span></pre></div>
+</div>
+<p>This replaces the hardcoded <code class="docutils literal notranslate"><span class="pre">FRONT_ADDRESS:10025</span></code> reference with the dynamically discovered dovecot submission service.</p>
+</section>
+<section id="authentication-flow">
+<h2>Authentication Flow<a class="headerlink" href="#authentication-flow" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p><strong>User sends email from webmail</strong>: Roundcube submits to <code class="docutils literal notranslate"><span class="pre">${SUBMISSION_HOST}:10025</span></code></p></li>
+<li><p><strong>Dovecot authenticates</strong>: Static passdb with <code class="docutils literal notranslate"><span class="pre">nopassword=y</span></code> accepts the connection</p>
+<ul class="simple">
+<li><p>Token validation happens at webmail level, not dovecot</p></li>
+</ul>
+</li>
+<li><p><strong>Dovecot relays to postfix</strong>: Using <code class="docutils literal notranslate"><span class="pre">submission_relay_host</span></code>, dovecot forwards to <code class="docutils literal notranslate"><span class="pre">postfix:25</span></code> without authentication</p>
+<ul class="simple">
+<li><p>Trusted network (pod CIDR)</p></li>
+</ul>
+</li>
+<li><p><strong>Postfix accepts and delivers</strong>: Postfix trusts connections from the pod network and delivers the email</p></li>
+</ol>
+</section>
+<section id="why-this-approach-works">
+<h2>Why This Approach Works<a class="headerlink" href="#why-this-approach-works" title="Link to this heading">¶</a></h2>
+<p><strong>No Postfix Authentication Required</strong>:</p>
+<ul class="simple">
+<li><p>Connections come from trusted pod network</p></li>
+<li><p>Only the dovecot submission service can connect to postfix:25 from within the cluster</p></li>
+<li><p>Webmail has already authenticated the user via Mailu’s SSO</p></li>
+</ul>
+<p><strong>Token Authentication at Webmail Level</strong>:</p>
+<ul class="simple">
+<li><p>Roundcube uses Mailu’s session tokens</p></li>
+<li><p>By the time a request reaches dovecot submission, user is already authenticated</p></li>
+<li><p>Dovecot just needs to relay (not validate credentials)</p></li>
+</ul>
+<p><strong>Separate Service Isolation</strong>:</p>
+<ul class="simple">
+<li><p>Simplifies configuration (clean dovecot.conf instead of patching Mailu’s templates)</p></li>
+<li><p>Enables easy troubleshooting (dedicated pod with clear logs)</p></li>
+<li><p>Allows independent scaling and resource management</p></li>
+</ul>
+</section>
+<section id="configuration-example">
+<h2>Configuration Example<a class="headerlink" href="#configuration-example" title="Link to this heading">¶</a></h2>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">App</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s&#39;</span><span class="p">;</span>
+</span><span data-line="2"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">MailuChart</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s-mailu&#39;</span><span class="p">;</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">App</span><span class="p">();</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="ow">new</span><span class="w"> </span><span class="nx">MailuChart</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">namespace</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span>
+</span><span data-line="8"><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;example.com&#39;</span><span class="p">,</span>
+</span><span data-line="9"><span class="w">  </span><span class="nx">hostnames</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;mail.example.com&#39;</span><span class="p">],</span>
+</span><span data-line="10"><span class="w">  </span><span class="nx">subnet</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10.42.0.0/16&#39;</span><span class="p">,</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="w">  </span><span class="c1">// Database configuration</span>
+</span><span data-line="13"><span class="w">  </span><span class="nx">database</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="14"><span class="w">    </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;postgresql&#39;</span><span class="p">,</span>
+</span><span data-line="15"><span class="w">    </span><span class="nx">postgresql</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="16"><span class="w">      </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;postgres-rw&#39;</span><span class="p">,</span>
+</span><span data-line="17"><span class="w">      </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="kt">5432</span><span class="p">,</span>
+</span><span data-line="18"><span class="w">      </span><span class="nx">database</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span>
+</span><span data-line="19"><span class="w">      </span><span class="nx">secretName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;postgres-app&#39;</span><span class="p">,</span>
+</span><span data-line="20"><span class="w">      </span><span class="nx">secretKeys</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="21"><span class="w">        </span><span class="nx">username</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;username&#39;</span><span class="p">,</span>
+</span><span data-line="22"><span class="w">        </span><span class="nx">password</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;password&#39;</span><span class="p">,</span>
+</span><span data-line="23"><span class="w">      </span><span class="p">},</span>
+</span><span data-line="24"><span class="w">    </span><span class="p">},</span>
+</span><span data-line="25"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="26">
+</span><span data-line="27"><span class="w">  </span><span class="c1">// Redis configuration</span>
+</span><span data-line="28"><span class="w">  </span><span class="nx">redis</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="29"><span class="w">    </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;redis&#39;</span><span class="p">,</span>
+</span><span data-line="30"><span class="w">    </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="kt">6379</span><span class="p">,</span>
+</span><span data-line="31"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="32">
+</span><span data-line="33"><span class="w">  </span><span class="c1">// Secrets</span>
+</span><span data-line="34"><span class="w">  </span><span class="nx">secrets</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="35"><span class="w">    </span><span class="nx">mailuSecretKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu-secrets&#39;</span><span class="p">,</span>
+</span><span data-line="36"><span class="w">    </span><span class="nx">initialAdminPassword</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu-secrets&#39;</span><span class="p">,</span>
+</span><span data-line="37"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="38">
+</span><span data-line="39"><span class="w">  </span><span class="c1">// Optional: Custom dovecot submission resources</span>
+</span><span data-line="40"><span class="w">  </span><span class="nx">resources</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="41"><span class="w">    </span><span class="nx">dovecot</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="42"><span class="w">      </span><span class="nx">requests</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="43"><span class="w">        </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;100m&#39;</span><span class="p">,</span>
+</span><span data-line="44"><span class="w">        </span><span class="nx">memory</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;256Mi&#39;</span><span class="p">,</span>
+</span><span data-line="45"><span class="w">      </span><span class="p">},</span>
+</span><span data-line="46"><span class="w">      </span><span class="nx">limits</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="47"><span class="w">        </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;300m&#39;</span><span class="p">,</span>
+</span><span data-line="48"><span class="w">        </span><span class="nx">memory</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;512Mi&#39;</span><span class="p">,</span>
+</span><span data-line="49"><span class="w">      </span><span class="p">},</span>
+</span><span data-line="50"><span class="w">    </span><span class="p">},</span>
+</span><span data-line="51"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="52"><span class="p">});</span>
+</span><span data-line="53">
+</span><span data-line="54"><span class="nx">app</span><span class="p">.</span><span class="nx">synth</span><span class="p">();</span>
+</span></pre></div>
+</div>
+<p>The dovecot submission service is automatically deployed as part of the MailuChart. No additional configuration required!</p>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">¶</a></h2>
+<section id="dovecot-pod-stuck-in-crashloopbackoff">
+<h3>Dovecot pod stuck in CrashLoopBackOff<a class="headerlink" href="#dovecot-pod-stuck-in-crashloopbackoff" title="Link to this heading">¶</a></h3>
+<p><strong>Check logs</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/component<span class="o">=</span>dovecot-submission<span class="w"> </span>--tail<span class="o">=</span><span class="m">50</span>
+</span></pre></div>
+</div>
+<p><strong>Common issues</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Invalid configuration</strong>: Dovecot config validation failed</p>
+<ul class="simple">
+<li><p>Check for syntax errors in dovecot.conf template</p></li>
+<li><p>Verify environment variable substitution worked</p></li>
+</ul>
+</li>
+<li><p><strong>Architecture mismatch</strong>: Pod scheduled to ARM64 node</p>
+<ul class="simple">
+<li><p>Verify nodeSelector and toleration are applied</p></li>
+</ul>
+</li>
+<li><p><strong>UID errors</strong>: <code class="docutils literal notranslate"><span class="pre">first_valid_uid</span></code> not set correctly</p>
+<ul class="simple">
+<li><p>Ensure <code class="docutils literal notranslate"><span class="pre">first_valid_uid</span> <span class="pre">=</span> <span class="pre">8</span></code> is in the configuration</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="webmail-can-t-send-email">
+<h3>Webmail can’t send email<a class="headerlink" href="#webmail-can-t-send-email" title="Link to this heading">¶</a></h3>
+<p><strong>Check webmail logs</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/component<span class="o">=</span>webmail<span class="w"> </span>--tail<span class="o">=</span><span class="m">50</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>smtp
+</span></pre></div>
+</div>
+<p><strong>Verify service discovery</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>get<span class="w"> </span>configmap<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-l<span class="w"> </span><span class="s1">&#39;app.kubernetes.io/part-of=mailu&#39;</span><span class="w"> </span>-o<span class="w"> </span>yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>SUBMISSION_ADDRESS
+</span></pre></div>
+</div>
+<p>Should show the full service name.</p>
+<p><strong>Test connection</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nv">POD</span><span class="o">=</span><span class="k">$(</span>kubectl<span class="w"> </span>get<span class="w"> </span>pod<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/component<span class="o">=</span>webmail<span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{.items[0].metadata.name}&#39;</span><span class="k">)</span>
+</span><span data-line="2">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span><span class="nv">$POD</span><span class="w"> </span>--<span class="w"> </span>nc<span class="w"> </span>-zv<span class="w"> </span>&lt;submission-service-name&gt;<span class="w"> </span><span class="m">10025</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="architecture.html"><span class="std std-doc">Architecture Overview</span></a> - High-level design</p></li>
+<li><p><a class="reference internal" href="cdk8s-patterns.html"><span class="std std-doc">CDK8S Patterns</span></a> - Construct design patterns</p></li>
+<li><p><a class="reference internal" href="../how-to/configure-construct.html"><span class="std std-doc">Webmail Configuration</span></a> - Customizing webmail</p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="storage-architecture.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Storage Architecture</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="egress-gateway-considerations.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Egress Gateway Considerations for Mail Delivery</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

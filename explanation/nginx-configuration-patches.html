@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Nginx Configuration Patches - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Storage Architecture" href="storage-architecture.html" /><link rel="prev" title="Authentication Flows" href="authentication-flows.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/explanation/nginx-configuration-patches.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/explanation/nginx-configuration-patches.html"/>
+  <meta property="og:title" content="Nginx Configuration Patches"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/index.html">How-To Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Explanation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#patch-architecture">Patch Architecture</a><ul>
+<li><a class="reference internal" href="#why-patching-is-needed">Why Patching is Needed</a></li>
+<li><a class="reference internal" href="#patch-delivery-mechanism">Patch Delivery Mechanism</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#patch-script-workflow">Patch Script Workflow</a><ul>
+<li><a class="reference internal" href="#phase-1-generate-base-configuration">Phase 1: Generate Base Configuration</a></li>
+<li><a class="reference internal" href="#phase-2-apply-patches">Phase 2: Apply Patches</a><ul>
+<li><a class="reference internal" href="#patch-1-fix-auth-http-endpoint">Patch 1: Fix auth_http Endpoint</a></li>
+<li><a class="reference internal" href="#patch-2-inject-mail-protocol-listeners">Patch 2: Inject Mail Protocol Listeners</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#phase-3-verify-and-start">Phase 3: Verify and Start</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuration-file-structure">Configuration File Structure</a><ul>
+<li><a class="reference internal" href="#before-patching-config-py-output">Before Patching (config.py output)</a></li>
+<li><a class="reference internal" href="#after-patching-wrapper-script-output">After Patching (wrapper script output)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#integration-with-kubernetes">Integration with Kubernetes</a><ul>
+<li><a class="reference internal" href="#service-port-exposure">Service Port Exposure</a></li>
+<li><a class="reference internal" href="#traefik-configuration">Traefik Configuration</a></li>
+<li><a class="reference internal" href="#environment-variables-used">Environment Variables Used</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#patch-not-applied">Patch Not Applied</a></li>
+<li><a class="reference internal" href="#authentication-fails-on-mail-protocols">Authentication Fails on Mail Protocols</a></li>
+<li><a class="reference internal" href="#nginx-configuration-syntax-error">nginx Configuration Syntax Error</a></li>
+<li><a class="reference internal" href="#http-traffic-not-going-through-front">HTTP Traffic Not Going Through Front</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#code-reference">Code Reference</a></li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Explanation</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Nginx Configuration Patches</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="nginx-configuration-patches">
+<h1>Nginx Configuration Patches<a class="headerlink" href="#nginx-configuration-patches" title="Link to this heading">¶</a></h1>
+<p><strong>How cdk8s-mailu patches nginx configuration for Traefik TLS termination.</strong></p>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
+<p>When using <code class="docutils literal notranslate"><span class="pre">TLS_FLAVOR=notls</span></code> with Traefik TLS termination, the Front nginx container requires configuration patches to:</p>
+<ol class="arabic simple">
+<li><p>Add mail protocol listeners for ports 587, 465, 993, 995</p></li>
+<li><p>Configure auth_http to use Admin service instead of localhost</p></li>
+</ol>
+<p>This document explains the patching mechanism and what changes are applied.</p>
+<p><strong>Note</strong>: In cdk8s-mailu, Traefik routes HTTP traffic directly to Admin and Webmail services, bypassing Front nginx entirely. Therefore, HTTP location blocks and redirects are <strong>not needed</strong> and not applied.</p>
+</section>
+<section id="patch-architecture">
+<h2>Patch Architecture<a class="headerlink" href="#patch-architecture" title="Link to this heading">¶</a></h2>
+<section id="why-patching-is-needed">
+<h3>Why Patching is Needed<a class="headerlink" href="#why-patching-is-needed" title="Link to this heading">¶</a></h3>
+<p><strong>Mailu’s Default Behavior</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TLS_FLAVOR=notls</span></code> only configures HTTP on port 80</p></li>
+<li><p>Mail protocol ports (587, 465, 993, 995) are NOT created</p></li>
+<li><p>Assumes TLS handled internally or not needed</p></li>
+<li><p>auth_http points to localhost:8000 (doesn’t work in Kubernetes multi-pod architecture)</p></li>
+</ul>
+<p><strong>cdk8s-mailu Requirements</strong>:</p>
+<ul class="simple">
+<li><p>Traefik terminates TLS and forwards plaintext to nginx (for mail protocols only)</p></li>
+<li><p>nginx must listen on mail protocol ports to receive from Traefik</p></li>
+<li><p>nginx must authenticate via Admin service (separate pod)</p></li>
+<li><p>nginx must proxy to backend services after authentication (Postfix, Dovecot)</p></li>
+</ul>
+<p><strong>Solution</strong>: Wrapper script patches generated nginx.conf before nginx starts.</p>
+<p><strong>HTTP Traffic</strong>: Traefik routes HTTP directly to Admin and Webmail services, bypassing nginx completely.</p>
+</section>
+<section id="patch-delivery-mechanism">
+<h3>Patch Delivery Mechanism<a class="headerlink" href="#patch-delivery-mechanism" title="Link to this heading">¶</a></h3>
+<p><strong>ConfigMap → Init Container → Shared Volume</strong>:</p>
+<ol class="arabic">
+<li><p><strong>NginxPatchConfigMap</strong> construct creates ConfigMap with wrapper script</p></li>
+<li><p><strong>Front Deployment</strong> mounts ConfigMap at <code class="docutils literal notranslate"><span class="pre">/patch/entrypoint-wrapper.sh</span></code></p></li>
+<li><p><strong>Init Container</strong> copies script to shared volume and makes executable:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">initContainers</span><span class="p">:</span>
+</span><span data-line="2"><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">copy-entrypoint</span>
+</span><span data-line="3"><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">busybox</span>
+</span><span data-line="4"><span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;sh&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;-c&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;cp</span><span class="nv"> </span><span class="s">/patch/entrypoint-wrapper.sh</span><span class="nv"> </span><span class="s">/entrypoint/entrypoint-wrapper.sh</span><span class="nv"> </span><span class="s">&amp;&amp;</span><span class="nv"> </span><span class="s">chmod</span><span class="nv"> </span><span class="s">+x</span><span class="nv"> </span><span class="s">/entrypoint/entrypoint-wrapper.sh&#39;</span><span class="p p-Indicator">]</span>
+</span><span data-line="5"><span class="w">  </span><span class="nt">volumeMounts</span><span class="p">:</span>
+</span><span data-line="6"><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">entrypoint-volume</span>
+</span><span data-line="7"><span class="w">    </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/entrypoint</span>
+</span><span data-line="8"><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx-patch</span>
+</span><span data-line="9"><span class="w">    </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/patch</span>
+</span></pre></div>
+</div>
+</li>
+<li><p><strong>Main Container</strong> runs wrapper script instead of original entrypoint:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;/entrypoint/entrypoint-wrapper.sh&#39;</span><span class="p p-Indicator">]</span>
+</span></pre></div>
+</div>
+</li>
+</ol>
+<p><strong>Why Init Container?</strong></p>
+<ul class="simple">
+<li><p>ConfigMap files are read-only (cannot chmod +x directly)</p></li>
+<li><p>Shared emptyDir volume allows executable script</p></li>
+<li><p>Clean separation: init copies once, main container runs</p></li>
+</ul>
+</section>
+</section>
+<section id="patch-script-workflow">
+<h2>Patch Script Workflow<a class="headerlink" href="#patch-script-workflow" title="Link to this heading">¶</a></h2>
+<p>The wrapper script executes in three phases:</p>
+<section id="phase-1-generate-base-configuration">
+<h3>Phase 1: Generate Base Configuration<a class="headerlink" href="#phase-1-generate-base-configuration" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Run Mailu&#39;s config.py to generate nginx.conf from templates</span>
+</span><span data-line="2">python3<span class="w"> </span>/config.py
+</span></pre></div>
+</div>
+<p><strong>What config.py does</strong>:</p>
+<ul class="simple">
+<li><p>Reads environment variables (TLS_FLAVOR, HOSTNAMES, etc.)</p></li>
+<li><p>Generates <code class="docutils literal notranslate"><span class="pre">/etc/nginx/nginx.conf</span></code> from Jinja2 templates</p></li>
+<li><p>Creates base mail protocol listeners (port 25 only with TLS_FLAVOR=notls)</p></li>
+<li><p>Creates base HTTP server block for port 80</p></li>
+</ul>
+<p><strong>Output</strong>: <code class="docutils literal notranslate"><span class="pre">/etc/nginx/nginx.conf</span></code> with basic configuration</p>
+</section>
+<section id="phase-2-apply-patches">
+<h3>Phase 2: Apply Patches<a class="headerlink" href="#phase-2-apply-patches" title="Link to this heading">¶</a></h3>
+<p>Two patches are applied to the generated nginx.conf:</p>
+<section id="patch-1-fix-auth-http-endpoint">
+<h4>Patch 1: Fix auth_http Endpoint<a class="headerlink" href="#patch-1-fix-auth-http-endpoint" title="Link to this heading">¶</a></h4>
+<p><strong>Problem</strong>: Default config points to <code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:8000/auth/email</span></code></p>
+<ul class="simple">
+<li><p>Doesn’t work in Kubernetes (Admin is separate pod)</p></li>
+<li><p>Wrong endpoint path</p></li>
+</ul>
+<p><strong>Patch</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s|auth_http http://127.0.0.1:8000/auth/email;|auth_http http://\${ADMIN_ADDRESS}:8080/internal/auth/email;|g&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NGINX_CONF</span><span class="s2">&quot;</span>
+</span></pre></div>
+</div>
+<p><strong>Changes</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">127.0.0.1:8000</span></code> → <code class="docutils literal notranslate"><span class="pre">${ADMIN_ADDRESS}:8080</span></code> (Kubernetes service DNS)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/auth/email</span></code> → <code class="docutils literal notranslate"><span class="pre">/internal/auth/email</span></code> (correct Mailu endpoint)</p></li>
+</ul>
+<p><strong>Result</strong>:</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">auth_http</span><span class="w"> </span><span class="s">http://admin-service.mailu.svc.cluster.local:8080/internal/auth/email</span><span class="p">;</span>
+</span></pre></div>
+</div>
+</section>
+<section id="patch-2-inject-mail-protocol-listeners">
+<h4>Patch 2: Inject Mail Protocol Listeners<a class="headerlink" href="#patch-2-inject-mail-protocol-listeners" title="Link to this heading">¶</a></h4>
+<p><strong>Problem</strong>: TLS_FLAVOR=notls doesn’t create listeners for 587, 465, 993, 995</p>
+<p><strong>Patch</strong>: Inserts four server blocks into <code class="docutils literal notranslate"><span class="pre">mail{}</span></code> section after port 25 block:</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Submission (port 587) for Traefik TLS termination</span>
+</span><span data-line="2"><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">  </span><span class="kn">listen</span><span class="w"> </span><span class="mi">587</span><span class="p">;</span>
+</span><span data-line="4"><span class="w">  </span><span class="kn">protocol</span><span class="w"> </span><span class="s">smtp</span><span class="p">;</span>
+</span><span data-line="5"><span class="w">  </span><span class="kn">smtp_auth</span><span class="w"> </span><span class="s">plain</span><span class="p">;</span>
+</span><span data-line="6"><span class="w">  </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Auth-Port</span><span class="w"> </span><span class="mi">587</span><span class="p">;</span>
+</span><span data-line="7"><span class="w">  </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Client-Port</span><span class="w"> </span><span class="nv">$remote_port</span><span class="p">;</span>
+</span><span data-line="8"><span class="p">}</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="c1"># SMTPS (port 465) for Traefik TLS termination</span>
+</span><span data-line="11"><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="12"><span class="w">  </span><span class="kn">listen</span><span class="w"> </span><span class="mi">465</span><span class="p">;</span>
+</span><span data-line="13"><span class="w">  </span><span class="kn">protocol</span><span class="w"> </span><span class="s">smtp</span><span class="p">;</span>
+</span><span data-line="14"><span class="w">  </span><span class="kn">smtp_auth</span><span class="w"> </span><span class="s">plain</span><span class="p">;</span>
+</span><span data-line="15"><span class="w">  </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Auth-Port</span><span class="w"> </span><span class="mi">465</span><span class="p">;</span>
+</span><span data-line="16"><span class="w">  </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Client-Port</span><span class="w"> </span><span class="nv">$remote_port</span><span class="p">;</span>
+</span><span data-line="17"><span class="p">}</span>
+</span><span data-line="18">
+</span><span data-line="19"><span class="c1"># IMAPS (port 993) for Traefik TLS termination</span>
+</span><span data-line="20"><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="21"><span class="w">  </span><span class="kn">listen</span><span class="w"> </span><span class="mi">993</span><span class="p">;</span>
+</span><span data-line="22"><span class="w">  </span><span class="kn">protocol</span><span class="w"> </span><span class="s">imap</span><span class="p">;</span>
+</span><span data-line="23"><span class="w">  </span><span class="kn">imap_auth</span><span class="w"> </span><span class="s">plain</span><span class="p">;</span>
+</span><span data-line="24"><span class="w">  </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Auth-Port</span><span class="w"> </span><span class="mi">993</span><span class="p">;</span>
+</span><span data-line="25"><span class="w">  </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Client-Port</span><span class="w"> </span><span class="nv">$remote_port</span><span class="p">;</span>
+</span><span data-line="26"><span class="p">}</span>
+</span><span data-line="27">
+</span><span data-line="28"><span class="c1"># POP3S (port 995) for Traefik TLS termination</span>
+</span><span data-line="29"><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="30"><span class="w">  </span><span class="kn">listen</span><span class="w"> </span><span class="mi">995</span><span class="p">;</span>
+</span><span data-line="31"><span class="w">  </span><span class="kn">protocol</span><span class="w"> </span><span class="s">pop3</span><span class="p">;</span>
+</span><span data-line="32"><span class="w">  </span><span class="kn">pop3_auth</span><span class="w"> </span><span class="s">plain</span><span class="p">;</span>
+</span><span data-line="33"><span class="w">  </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Auth-Port</span><span class="w"> </span><span class="mi">995</span><span class="p">;</span>
+</span><span data-line="34"><span class="w">  </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Client-Port</span><span class="w"> </span><span class="nv">$remote_port</span><span class="p">;</span>
+</span><span data-line="35"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p><strong>Key Configuration</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">protocol</span> <span class="pre">smtp/imap/pop3</span></code>: nginx mail module protocol handlers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">smtp_auth</span> <span class="pre">plain</span></code> / <code class="docutils literal notranslate"><span class="pre">imap_auth</span> <span class="pre">plain</span></code> / <code class="docutils literal notranslate"><span class="pre">pop3_auth</span> <span class="pre">plain</span></code>: Enable PLAIN authentication</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auth_http_header</span> <span class="pre">Auth-Port</span></code>: Tells Admin which port client connected to</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auth_http_header</span> <span class="pre">Client-Port</span></code>: Passes client’s source port for logging</p></li>
+</ul>
+<p><strong>Authentication Flow</strong>:</p>
+<ol class="arabic simple">
+<li><p>Client sends credentials (username/password)</p></li>
+<li><p>nginx extracts credentials and sends to auth_http endpoint</p></li>
+<li><p>Admin validates and returns backend address</p></li>
+<li><p>nginx proxies connection to backend (Postfix or Dovecot)</p></li>
+</ol>
+</section>
+</section>
+<section id="phase-3-verify-and-start">
+<h3>Phase 3: Verify and Start<a class="headerlink" href="#phase-3-verify-and-start" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Verify patches were applied</span>
+</span><span data-line="2"><span class="k">if</span><span class="w"> </span>!<span class="w"> </span>grep<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;# Submission (port 587) for Traefik TLS termination&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NGINX_CONF</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+</span><span data-line="3"><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: Mail protocol patches not found in </span><span class="nv">$NGINX_CONF</span><span class="s2">&quot;</span>
+</span><span data-line="4"><span class="w">  </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+</span><span data-line="5"><span class="k">fi</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Patch verification: OK - All patches applied successfully&quot;</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># Start nginx in foreground</span>
+</span><span data-line="10"><span class="nb">exec</span><span class="w"> </span>/usr/sbin/nginx<span class="w"> </span>-g<span class="w"> </span><span class="s2">&quot;daemon off;&quot;</span>
+</span></pre></div>
+</div>
+<p><strong>Verification checks</strong>:</p>
+<ul class="simple">
+<li><p>Mail protocol listeners added (ports 587, 465, 993, 995)</p></li>
+<li><p>Fails with error if patches not found</p></li>
+</ul>
+<p><strong>Failure handling</strong>: Exit immediately if patches not applied (fail-fast approach)</p>
+</section>
+</section>
+<section id="configuration-file-structure">
+<h2>Configuration File Structure<a class="headerlink" href="#configuration-file-structure" title="Link to this heading">¶</a></h2>
+<section id="before-patching-config-py-output">
+<h3>Before Patching (config.py output)<a class="headerlink" href="#before-patching-config-py-output" title="Link to this heading">¶</a></h3>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># nginx.conf generated by Mailu config.py with TLS_FLAVOR=notls</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="k">mail</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="4"><span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="5"><span class="w">        </span><span class="kn">listen</span><span class="w"> </span><span class="mi">25</span><span class="p">;</span>
+</span><span data-line="6"><span class="w">        </span><span class="kn">protocol</span><span class="w"> </span><span class="s">smtp</span><span class="p">;</span>
+</span><span data-line="7"><span class="w">        </span><span class="kn">auth_http</span><span class="w"> </span><span class="s">http://127.0.0.1:8000/auth/email</span><span class="p">;</span><span class="w">  </span><span class="c1"># Wrong: localhost</span>
+</span><span data-line="8"><span class="w">    </span><span class="p">}</span>
+</span><span data-line="9"><span class="w">    </span><span class="c1"># No 587, 465, 993, 995 listeners</span>
+</span><span data-line="10"><span class="p">}</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="k">http</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="13"><span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="14"><span class="w">        </span><span class="kn">listen</span><span class="w"> </span><span class="mi">80</span><span class="p">;</span>
+</span><span data-line="15"><span class="w">        </span><span class="c1"># HTTP server (not used - Traefik routes directly to services)</span>
+</span><span data-line="16"><span class="w">    </span><span class="p">}</span>
+</span><span data-line="17"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+<section id="after-patching-wrapper-script-output">
+<h3>After Patching (wrapper script output)<a class="headerlink" href="#after-patching-wrapper-script-output" title="Link to this heading">¶</a></h3>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># nginx.conf after cdk8s-mailu patches applied</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="k">mail</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="4"><span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="5"><span class="w">        </span><span class="kn">listen</span><span class="w"> </span><span class="mi">25</span><span class="p">;</span>
+</span><span data-line="6"><span class="w">        </span><span class="kn">protocol</span><span class="w"> </span><span class="s">smtp</span><span class="p">;</span>
+</span><span data-line="7"><span class="w">        </span><span class="kn">auth_http</span><span class="w"> </span><span class="s">http://admin-service.mailu.svc.cluster.local:8080/internal/auth/email</span><span class="p">;</span><span class="w">  </span><span class="c1"># Fixed</span>
+</span><span data-line="8"><span class="w">    </span><span class="p">}</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="w">    </span><span class="c1"># NEW: Submission listener</span>
+</span><span data-line="11"><span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="12"><span class="w">        </span><span class="kn">listen</span><span class="w"> </span><span class="mi">587</span><span class="p">;</span>
+</span><span data-line="13"><span class="w">        </span><span class="kn">protocol</span><span class="w"> </span><span class="s">smtp</span><span class="p">;</span>
+</span><span data-line="14"><span class="w">        </span><span class="kn">smtp_auth</span><span class="w"> </span><span class="s">plain</span><span class="p">;</span>
+</span><span data-line="15"><span class="w">        </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Auth-Port</span><span class="w"> </span><span class="mi">587</span><span class="p">;</span>
+</span><span data-line="16"><span class="w">    </span><span class="p">}</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="w">    </span><span class="c1"># NEW: SMTPS listener</span>
+</span><span data-line="19"><span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="20"><span class="w">        </span><span class="kn">listen</span><span class="w"> </span><span class="mi">465</span><span class="p">;</span>
+</span><span data-line="21"><span class="w">        </span><span class="kn">protocol</span><span class="w"> </span><span class="s">smtp</span><span class="p">;</span>
+</span><span data-line="22"><span class="w">        </span><span class="kn">smtp_auth</span><span class="w"> </span><span class="s">plain</span><span class="p">;</span>
+</span><span data-line="23"><span class="w">        </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Auth-Port</span><span class="w"> </span><span class="mi">465</span><span class="p">;</span>
+</span><span data-line="24"><span class="w">    </span><span class="p">}</span>
+</span><span data-line="25">
+</span><span data-line="26"><span class="w">    </span><span class="c1"># NEW: IMAPS listener</span>
+</span><span data-line="27"><span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="28"><span class="w">        </span><span class="kn">listen</span><span class="w"> </span><span class="mi">993</span><span class="p">;</span>
+</span><span data-line="29"><span class="w">        </span><span class="kn">protocol</span><span class="w"> </span><span class="s">imap</span><span class="p">;</span>
+</span><span data-line="30"><span class="w">        </span><span class="kn">imap_auth</span><span class="w"> </span><span class="s">plain</span><span class="p">;</span>
+</span><span data-line="31"><span class="w">        </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Auth-Port</span><span class="w"> </span><span class="mi">993</span><span class="p">;</span>
+</span><span data-line="32"><span class="w">    </span><span class="p">}</span>
+</span><span data-line="33">
+</span><span data-line="34"><span class="w">    </span><span class="c1"># NEW: POP3S listener</span>
+</span><span data-line="35"><span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="36"><span class="w">        </span><span class="kn">listen</span><span class="w"> </span><span class="mi">995</span><span class="p">;</span>
+</span><span data-line="37"><span class="w">        </span><span class="kn">protocol</span><span class="w"> </span><span class="s">pop3</span><span class="p">;</span>
+</span><span data-line="38"><span class="w">        </span><span class="kn">pop3_auth</span><span class="w"> </span><span class="s">plain</span><span class="p">;</span>
+</span><span data-line="39"><span class="w">        </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Auth-Port</span><span class="w"> </span><span class="mi">995</span><span class="p">;</span>
+</span><span data-line="40"><span class="w">    </span><span class="p">}</span>
+</span><span data-line="41"><span class="p">}</span>
+</span><span data-line="42">
+</span><span data-line="43"><span class="k">http</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="44"><span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="45"><span class="w">        </span><span class="kn">listen</span><span class="w"> </span><span class="mi">80</span><span class="p">;</span>
+</span><span data-line="46"><span class="w">        </span><span class="c1"># HTTP server (not used - Traefik routes directly to services)</span>
+</span><span data-line="47"><span class="w">    </span><span class="p">}</span>
+</span><span data-line="48"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="integration-with-kubernetes">
+<h2>Integration with Kubernetes<a class="headerlink" href="#integration-with-kubernetes" title="Link to this heading">¶</a></h2>
+<section id="service-port-exposure">
+<h3>Service Port Exposure<a class="headerlink" href="#service-port-exposure" title="Link to this heading">¶</a></h3>
+<p>Front Service exposes only TLS-terminated mail protocol ports (no HTTP or plaintext mail ports):</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+</span><span data-line="2"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Service</span>
+</span><span data-line="3"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="4"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">front-service</span>
+</span><span data-line="5"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="6"><span class="w">  </span><span class="nt">ports</span><span class="p">:</span>
+</span><span data-line="7"><span class="w">  </span><span class="c1"># TLS-terminated SMTP ports (Traefik terminates TLS, forwards plaintext to Front)</span>
+</span><span data-line="8"><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smtps</span>
+</span><span data-line="9"><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">465</span>
+</span><span data-line="10"><span class="w">    </span><span class="nt">targetPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">465</span>
+</span><span data-line="11"><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">submission</span>
+</span><span data-line="12"><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">587</span>
+</span><span data-line="13"><span class="w">    </span><span class="nt">targetPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">587</span>
+</span><span data-line="14"><span class="w">  </span><span class="c1"># TLS-terminated IMAP port</span>
+</span><span data-line="15"><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">imaps</span>
+</span><span data-line="16"><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">993</span>
+</span><span data-line="17"><span class="w">    </span><span class="nt">targetPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">993</span>
+</span><span data-line="18"><span class="w">  </span><span class="c1"># TLS-terminated POP3 port</span>
+</span><span data-line="19"><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pop3s</span>
+</span><span data-line="20"><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">995</span>
+</span><span data-line="21"><span class="w">    </span><span class="nt">targetPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">995</span>
+</span></pre></div>
+</div>
+<p><strong>Not exposed</strong> (routed differently by Traefik):</p>
+<ul class="simple">
+<li><p>Port 25 (SMTP): Traefik routes directly to Postfix:25</p></li>
+<li><p>Port 80/443 (HTTP/HTTPS): Traefik routes directly to Admin:8080 and Webmail:80</p></li>
+<li><p>Port 143/110 (IMAP/POP3): Plaintext protocols disabled (use IMAPS/POP3S instead)</p></li>
+</ul>
+</section>
+<section id="traefik-configuration">
+<h3>Traefik Configuration<a class="headerlink" href="#traefik-configuration" title="Link to this heading">¶</a></h3>
+<p><strong>Required Traefik EntryPoints</strong> (configured in cluster infrastructure):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">smtps</span></code> (465) - SMTPS with TLS termination</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">smtp-submission</span></code> (587) - Submission with TLS termination (or passthrough)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">imaps</span></code> (993) - IMAPS with TLS termination</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pop3s</span></code> (995) - POP3S with TLS termination</p></li>
+</ul>
+<p><strong>Example IngressRouteTCP</strong> (created by TraefikIngressConstruct):</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.containo.us/v1alpha1</span>
+</span><span data-line="2"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IngressRouteTCP</span>
+</span><span data-line="3"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="4"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-submission</span>
+</span><span data-line="5"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="6"><span class="w">  </span><span class="nt">entryPoints</span><span class="p">:</span>
+</span><span data-line="7"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smtp-submission</span><span class="w">  </span><span class="c1"># 587</span>
+</span><span data-line="8"><span class="w">  </span><span class="nt">routes</span><span class="p">:</span>
+</span><span data-line="9"><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HostSNI(`*`)</span>
+</span><span data-line="10"><span class="w">    </span><span class="nt">services</span><span class="p">:</span>
+</span><span data-line="11"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">front-service</span>
+</span><span data-line="12"><span class="w">      </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">587</span>
+</span><span data-line="13"><span class="w">  </span><span class="c1"># Note: Submission (587) typically uses STARTTLS, not TLS wrapping</span>
+</span><span data-line="14"><span class="w">  </span><span class="c1"># So TLS section may be omitted (passthrough)</span>
+</span></pre></div>
+</div>
+<p><strong>Example with TLS termination</strong> (SMTPS/IMAPS/POP3S):</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.containo.us/v1alpha1</span>
+</span><span data-line="2"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IngressRouteTCP</span>
+</span><span data-line="3"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="4"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-smtps</span>
+</span><span data-line="5"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="6"><span class="w">  </span><span class="nt">entryPoints</span><span class="p">:</span>
+</span><span data-line="7"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smtps</span><span class="w">  </span><span class="c1"># 465</span>
+</span><span data-line="8"><span class="w">  </span><span class="nt">routes</span><span class="p">:</span>
+</span><span data-line="9"><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HostSNI(`*`)</span>
+</span><span data-line="10"><span class="w">    </span><span class="nt">services</span><span class="p">:</span>
+</span><span data-line="11"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">front-service</span>
+</span><span data-line="12"><span class="w">      </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">465</span>
+</span><span data-line="13"><span class="w">  </span><span class="nt">tls</span><span class="p">:</span>
+</span><span data-line="14"><span class="w">    </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-tls</span>
+</span><span data-line="15"><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
+</span><span data-line="16"><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-mail-tls</span>
+</span></pre></div>
+</div>
+<p><strong>Traffic Flow</strong> (TLS-terminated mail protocols):</p>
+<ol class="arabic simple">
+<li><p>Mail client connects to Traefik:465/587/993/995 with TLS</p></li>
+<li><p>Traefik terminates TLS (for 465/993/995; passthrough for 587)</p></li>
+<li><p>Traefik forwards plaintext to Front:465/587/993/995</p></li>
+<li><p>Front nginx receives on patched listener</p></li>
+<li><p>Front nginx authenticates via Admin service</p></li>
+<li><p>Front nginx proxies to backend (Postfix or Dovecot)</p></li>
+</ol>
+</section>
+<section id="environment-variables-used">
+<h3>Environment Variables Used<a class="headerlink" href="#environment-variables-used" title="Link to this heading">¶</a></h3>
+<p>Wrapper script relies on these environment variables:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ADMIN_ADDRESS</span></code>: Admin service DNS name (set by MailuChart)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TLS_FLAVOR</span></code>: Must be “notls” for patches to make sense</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HOSTNAMES</span></code>: Comma-separated list of domains (used by config.py)</p></li>
+</ul>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">¶</a></h2>
+<section id="patch-not-applied">
+<h3>Patch Not Applied<a class="headerlink" href="#patch-not-applied" title="Link to this heading">¶</a></h3>
+<p><strong>Symptoms</strong>: nginx fails to start, or mail clients get “connection refused”</p>
+<p><strong>Check</strong>:</p>
+<ol class="arabic">
+<li><p>Verify ConfigMap exists:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>get<span class="w"> </span>configmap<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-nginx-patch-configmap
+</span></pre></div>
+</div>
+</li>
+<li><p>Check wrapper script is executable:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>deployment/front-deployment<span class="w"> </span>--<span class="w"> </span>ls<span class="w"> </span>-l<span class="w"> </span>/entrypoint/entrypoint-wrapper.sh
+</span></pre></div>
+</div>
+</li>
+<li><p>Check init container logs:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>deployment/front-deployment<span class="w"> </span>-c<span class="w"> </span>copy-entrypoint
+</span></pre></div>
+</div>
+</li>
+<li><p>Check main container logs for patch verification:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>deployment/front-deployment<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;Patch verification&quot;</span>
+</span></pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="authentication-fails-on-mail-protocols">
+<h3>Authentication Fails on Mail Protocols<a class="headerlink" href="#authentication-fails-on-mail-protocols" title="Link to this heading">¶</a></h3>
+<p><strong>Symptoms</strong>: Mail clients get “Authentication failed” on ports 587/993/995</p>
+<p><strong>Check</strong>:</p>
+<ol class="arabic">
+<li><p>Verify auth_http endpoint is correct:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>deployment/front-deployment<span class="w"> </span>--<span class="w"> </span>cat<span class="w"> </span>/etc/nginx/nginx.conf<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>auth_http
+</span></pre></div>
+</div>
+<p>Should show: <code class="docutils literal notranslate"><span class="pre">auth_http</span> <span class="pre">http://admin-service....:8080/internal/auth/email;</span></code></p>
+</li>
+<li><p>Test Admin endpoint from Front pod:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>deployment/front-deployment<span class="w"> </span>--<span class="w"> </span>wget<span class="w"> </span>-O-<span class="w"> </span>http://admin-service:8080/internal/auth/email
+</span></pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="nginx-configuration-syntax-error">
+<h3>nginx Configuration Syntax Error<a class="headerlink" href="#nginx-configuration-syntax-error" title="Link to this heading">¶</a></h3>
+<p><strong>Symptoms</strong>: nginx fails to start with “configuration file test failed”</p>
+<p><strong>Check</strong>:</p>
+<ol class="arabic">
+<li><p>View full nginx configuration:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>deployment/front-deployment<span class="w"> </span>--<span class="w"> </span>cat<span class="w"> </span>/etc/nginx/nginx.conf
+</span></pre></div>
+</div>
+</li>
+<li><p>Test nginx configuration manually:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>deployment/front-deployment<span class="w"> </span>--<span class="w"> </span>nginx<span class="w"> </span>-t
+</span></pre></div>
+</div>
+</li>
+</ol>
+<p><strong>Common issues</strong>:</p>
+<ul class="simple">
+<li><p>sed pattern didn’t match (Mailu version changed template structure)</p></li>
+<li><p>Escaping issues in patch script</p></li>
+<li><p>Duplicate server blocks</p></li>
+</ul>
+</section>
+<section id="http-traffic-not-going-through-front">
+<h3>HTTP Traffic Not Going Through Front<a class="headerlink" href="#http-traffic-not-going-through-front" title="Link to this heading">¶</a></h3>
+<p><strong>This is expected behavior</strong> in cdk8s-mailu:</p>
+<ul class="simple">
+<li><p>Traefik routes HTTP directly to Admin:8080 and Webmail:80</p></li>
+<li><p>Front nginx only handles mail protocols (SMTP, IMAP, POP3)</p></li>
+<li><p>This is <strong>by design</strong> for simplified architecture</p></li>
+<li><p>No HTTP location blocks or redirects are configured in Front nginx</p></li>
+</ul>
+</section>
+</section>
+<section id="code-reference">
+<h2>Code Reference<a class="headerlink" href="#code-reference" title="Link to this heading">¶</a></h2>
+<p><strong>Source</strong>: <a class="reference internal" href="#../../src/constructs/nginx-patch-configmap.ts"><span class="xref myst">src/constructs/nginx-patch-configmap.ts</span></a></p>
+<p><strong>Key Components</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">NginxPatchConfigMap</span></code> class: Creates ConfigMap with wrapper script</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wrapperScript</span></code> variable: Complete bash script with all patches</p></li>
+<li><p>sed patterns: Text transformations applied to nginx.conf</p></li>
+</ul>
+<p><strong>Usage in MailuChart</strong>:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1">// Create nginx patch ConfigMap</span>
+</span><span data-line="2"><span class="k">this</span><span class="p">.</span><span class="nx">nginxPatchConfigMap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">NginxPatchConfigMap</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;nginx-patch&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">namespace</span><span class="o">:</span><span class="w"> </span><span class="kt">this.namespace</span><span class="p">,</span>
+</span><span data-line="4"><span class="p">});</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="c1">// Mount in Front deployment</span>
+</span><span data-line="7"><span class="k">this</span><span class="p">.</span><span class="nx">frontConstruct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FrontConstruct</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;front&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="8"><span class="w">  </span><span class="nx">config</span><span class="o">:</span><span class="w"> </span><span class="kt">this.config</span><span class="p">,</span>
+</span><span data-line="9"><span class="w">  </span><span class="nx">namespace</span><span class="o">:</span><span class="w"> </span><span class="kt">this.namespace</span><span class="p">,</span>
+</span><span data-line="10"><span class="w">  </span><span class="nx">sharedConfigMap</span><span class="o">:</span><span class="w"> </span><span class="kt">this.sharedConfigMap</span><span class="p">,</span>
+</span><span data-line="11"><span class="w">  </span><span class="nx">nginxPatchConfigMap</span><span class="o">:</span><span class="w"> </span><span class="kt">this.nginxPatchConfigMap.configMap</span><span class="p">,</span>
+</span><span data-line="12"><span class="p">});</span>
+</span></pre></div>
+</div>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="architecture.html"><span class="std std-doc">Architecture Overview</span></a> - Complete system architecture</p></li>
+<li><p><a class="reference internal" href="authentication-flows.html"><span class="std std-doc">Authentication Flows</span></a> - How auth_http protocol works</p></li>
+<li><p><a class="reference internal" href="../reference/component-specifications.html"><span class="std std-doc">Component Specifications</span></a> - Front component details</p></li>
+<li><p><a class="reference internal" href="../how-to/configure-tls.html"><span class="std std-doc">TLS Configuration</span></a> - Traefik TLS termination setup</p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="authentication-flows.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Authentication Flows</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="storage-architecture.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Storage Architecture</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

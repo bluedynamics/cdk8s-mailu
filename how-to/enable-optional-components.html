@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Enable Optional Components - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Configure TLS Termination" href="configure-tls.html" /><link rel="prev" title="Customize Storage" href="customize-storage.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/how-to/enable-optional-components.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/how-to/enable-optional-components.html"/>
+  <meta property="og:title" content="Enable Optional Components"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">How-To Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/index.html">Explanation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#problem">Problem</a></li>
+<li><a class="reference internal" href="#solution">Solution</a></li>
+<li><a class="reference internal" href="#component-overview">Component Overview</a><ul>
+<li><a class="reference internal" href="#core-components-always-enabled">Core Components (Always Enabled)</a></li>
+<li><a class="reference internal" href="#optional-components-disabled-by-default">Optional Components (Disabled by Default)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#enable-webmail-roundcube">Enable Webmail (Roundcube)</a></li>
+<li><a class="reference internal" href="#enable-clamav-antivirus">Enable ClamAV (Antivirus)</a></li>
+<li><a class="reference internal" href="#enable-fetchmail-external-account-fetching">Enable Fetchmail (External Account Fetching)</a></li>
+<li><a class="reference internal" href="#enable-webdav-caldav-carddav">Enable Webdav (CalDAV/CardDAV)</a></li>
+<li><a class="reference internal" href="#enable-multiple-optional-components">Enable Multiple Optional Components</a></li>
+<li><a class="reference internal" href="#disable-optional-components">Disable Optional Components</a></li>
+<li><a class="reference internal" href="#apply-component-changes">Apply Component Changes</a></li>
+<li><a class="reference internal" href="#verify-component-status">Verify Component Status</a></li>
+<li><a class="reference internal" href="#component-specific-configuration">Component-Specific Configuration</a><ul>
+<li><a class="reference internal" href="#webmail-type-roundcube-vs-snappymail">Webmail Type (Roundcube vs SnappyMail)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#resource-planning">Resource Planning</a><ul>
+<li><a class="reference internal" href="#minimal-deployment-core-only">Minimal Deployment (Core Only)</a></li>
+<li><a class="reference internal" href="#full-featured-deployment-all-optional">Full-Featured Deployment (All Optional)</a></li>
+<li><a class="reference internal" href="#recommended-deployment-webmail-webdav">Recommended Deployment (Webmail + Webdav)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#clamav-pod-stuck-in-crashloopbackoff">ClamAV pod stuck in CrashLoopBackOff</a></li>
+<li><a class="reference internal" href="#webmail-not-accessible">Webmail not accessible</a></li>
+<li><a class="reference internal" href="#fetchmail-not-pulling-emails">Fetchmail not pulling emails</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">How-To Guides</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Enable Optional Components</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="enable-optional-components">
+<h1>Enable Optional Components<a class="headerlink" href="#enable-optional-components" title="Link to this heading">¶</a></h1>
+<p><strong>How to enable or disable optional Mailu components based on your requirements.</strong></p>
+<section id="problem">
+<h2>Problem<a class="headerlink" href="#problem" title="Link to this heading">¶</a></h2>
+<p>You need to add optional features like webmail, antivirus scanning, CalDAV/CardDAV, or external email fetching to your Mailu deployment.</p>
+</section>
+<section id="solution">
+<h2>Solution<a class="headerlink" href="#solution" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">MailuChart</span></code> accepts a <code class="docutils literal notranslate"><span class="pre">components</span></code> configuration object that controls which optional components are deployed. Core components (front, admin, postfix, dovecot, rspamd) are always enabled.</p>
+</section>
+<section id="component-overview">
+<h2>Component Overview<a class="headerlink" href="#component-overview" title="Link to this heading">¶</a></h2>
+<section id="core-components-always-enabled">
+<h3>Core Components (Always Enabled)<a class="headerlink" href="#core-components-always-enabled" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Component</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Can Disable?</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Front</strong></p></td>
+<td><p>Nginx reverse proxy</p></td>
+<td><p>No (required)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Admin</strong></p></td>
+<td><p>Web admin interface</p></td>
+<td><p>No (required)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Postfix</strong></p></td>
+<td><p>SMTP server</p></td>
+<td><p>No (required)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Dovecot</strong></p></td>
+<td><p>IMAP/POP3 server</p></td>
+<td><p>No (required)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Rspamd</strong></p></td>
+<td><p>Spam filter</p></td>
+<td><p>No (required)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="optional-components-disabled-by-default">
+<h3>Optional Components (Disabled by Default)<a class="headerlink" href="#optional-components-disabled-by-default" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Component</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Resource Cost</p></th>
+<th class="head"><p>Use Case</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Webmail</strong></p></td>
+<td><p>Roundcube web interface</p></td>
+<td><p>Low (100m/256Mi)</p></td>
+<td><p>Web-based email access</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>ClamAV</strong></p></td>
+<td><p>Antivirus scanner</p></td>
+<td><p><strong>High</strong> (1000m/2Gi)</p></td>
+<td><p>Virus scanning</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Fetchmail</strong></p></td>
+<td><p>External account fetching</p></td>
+<td><p>Low (50m/128Mi)</p></td>
+<td><p>Consolidate external emails</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Webdav</strong></p></td>
+<td><p>CalDAV/CardDAV server</p></td>
+<td><p>Low (50m/128Mi)</p></td>
+<td><p>Calendar/contact sync</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="enable-webmail-roundcube">
+<h2>Enable Webmail (Roundcube)<a class="headerlink" href="#enable-webmail-roundcube" title="Link to this heading">¶</a></h2>
+<p>Add browser-based email access for users:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">App</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s&#39;</span><span class="p">;</span>
+</span><span data-line="2"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">MailuChart</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s-mailu&#39;</span><span class="p">;</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">App</span><span class="p">();</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="ow">new</span><span class="w"> </span><span class="nx">MailuChart</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">namespace</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span>
+</span><span data-line="8"><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;example.com&#39;</span><span class="p">,</span>
+</span><span data-line="9"><span class="w">  </span><span class="nx">hostnames</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;mail.example.com&#39;</span><span class="p">],</span>
+</span><span data-line="10"><span class="w">  </span><span class="nx">subnet</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10.42.0.0/16&#39;</span><span class="p">,</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="w">  </span><span class="c1">// ... other config ...</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="w">  </span><span class="nx">components</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="15"><span class="w">    </span><span class="nx">webmail</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w">  </span><span class="c1">// Enable Roundcube webmail</span>
+</span><span data-line="16"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="17"><span class="p">});</span>
+</span><span data-line="18">
+</span><span data-line="19"><span class="nx">app</span><span class="p">.</span><span class="nx">synth</span><span class="p">();</span>
+</span></pre></div>
+</div>
+<p><strong>Access webmail</strong>: Navigate to <code class="docutils literal notranslate"><span class="pre">https://mail.example.com/webmail</span></code> (or your configured ingress hostname).</p>
+<p><strong>Features</strong>:</p>
+<ul class="simple">
+<li><p>Modern web interface for email</p></li>
+<li><p>Contact management</p></li>
+<li><p>Message filters and folders</p></li>
+<li><p>Mobile-responsive design</p></li>
+</ul>
+<p><strong>Resources</strong>: ~100m CPU, 256Mi memory (lightweight)</p>
+</section>
+<section id="enable-clamav-antivirus">
+<h2>Enable ClamAV (Antivirus)<a class="headerlink" href="#enable-clamav-antivirus" title="Link to this heading">¶</a></h2>
+<p>⚠️ <strong>Warning</strong>: ClamAV is very resource-intensive. Only enable if virus scanning is a hard requirement.</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">components</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">clamav</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="3"><span class="p">},</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1">// ClamAV requires additional storage for virus signatures</span>
+</span><span data-line="6"><span class="nx">storage</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">storageClass</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;longhorn&#39;</span><span class="p">,</span>
+</span><span data-line="8"><span class="w">  </span><span class="nx">clamav</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">  </span><span class="c1">// Virus signature database</span>
+</span><span data-line="9"><span class="p">},</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="c1">// Recommend higher resources for ClamAV</span>
+</span><span data-line="12"><span class="nx">resources</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="13"><span class="w">  </span><span class="nx">clamav</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="14"><span class="w">    </span><span class="nx">requests</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;1000m&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">memory</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;2Gi&#39;</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="15"><span class="w">    </span><span class="nx">limits</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;4000m&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">memory</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;4Gi&#39;</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="16"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="17"><span class="p">},</span>
+</span></pre></div>
+</div>
+<p><strong>Startup time</strong>: 5-10 minutes (downloads virus signatures on first start)</p>
+<p><strong>Resources</strong>: ~1000m CPU, 2Gi memory (very high)</p>
+<p><strong>Consider alternatives</strong>:</p>
+<ul class="simple">
+<li><p>Server-side scanning may not be necessary if users have endpoint antivirus</p></li>
+<li><p>Cloud-based scanning services (external)</p></li>
+<li><p>SPF/DKIM/DMARC for spam prevention (already included in Rspamd)</p></li>
+</ul>
+</section>
+<section id="enable-fetchmail-external-account-fetching">
+<h2>Enable Fetchmail (External Account Fetching)<a class="headerlink" href="#enable-fetchmail-external-account-fetching" title="Link to this heading">¶</a></h2>
+<p>Pull emails from external POP3/IMAP accounts into Mailu:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">components</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">fetchmail</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="3"><span class="p">},</span>
+</span></pre></div>
+</div>
+<p><strong>Use case</strong>: Consolidate multiple external email accounts (Gmail, Yahoo, etc.) into your Mailu server.</p>
+<p><strong>Configuration</strong>: After enabling, configure fetch rules via Mailu admin UI:</p>
+<ol class="arabic simple">
+<li><p>Login to Mailu admin: <code class="docutils literal notranslate"><span class="pre">https://mail.example.com/admin</span></code></p></li>
+<li><p>Navigate to <strong>Fetch</strong> section</p></li>
+<li><p>Add external account credentials and fetch rules</p></li>
+</ol>
+<p><strong>Resources</strong>: ~50m CPU, 128Mi memory (minimal)</p>
+</section>
+<section id="enable-webdav-caldav-carddav">
+<h2>Enable Webdav (CalDAV/CardDAV)<a class="headerlink" href="#enable-webdav-caldav-carddav" title="Link to this heading">¶</a></h2>
+<p>Add calendar and contact synchronization:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">components</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">webdav</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="3"><span class="p">},</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1">// Webdav requires storage for calendar/contact data</span>
+</span><span data-line="6"><span class="nx">storage</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">storageClass</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;longhorn&#39;</span><span class="p">,</span>
+</span><span data-line="8"><span class="w">  </span><span class="nx">webdav</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;20Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">  </span><span class="c1">// Adjust based on user count</span>
+</span><span data-line="9"><span class="p">},</span>
+</span></pre></div>
+</div>
+<p><strong>Access</strong>:</p>
+<ul class="simple">
+<li><p><strong>CalDAV</strong>: <code class="docutils literal notranslate"><span class="pre">https://mail.example.com/webdav/&lt;username&gt;/calendar</span></code></p></li>
+<li><p><strong>CardDAV</strong>: <code class="docutils literal notranslate"><span class="pre">https://mail.example.com/webdav/&lt;username&gt;/contacts</span></code></p></li>
+</ul>
+<p><strong>Compatible clients</strong>:</p>
+<ul class="simple">
+<li><p>Thunderbird (Lightning plugin)</p></li>
+<li><p>Apple Calendar and Contacts</p></li>
+<li><p>Android (DAVx⁵ app)</p></li>
+<li><p>iOS native calendar/contacts</p></li>
+</ul>
+<p><strong>Resources</strong>: ~50m CPU, 128Mi memory (minimal)</p>
+</section>
+<section id="enable-multiple-optional-components">
+<h2>Enable Multiple Optional Components<a class="headerlink" href="#enable-multiple-optional-components" title="Link to this heading">¶</a></h2>
+<p>Combine multiple optional features:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">components</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">webmail</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w">    </span><span class="c1">// Web-based email access</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">fetchmail</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w">  </span><span class="c1">// External account consolidation</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">webdav</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w">     </span><span class="c1">// Calendar and contacts</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">clamav</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w">    </span><span class="c1">// Explicitly disabled (high resources)</span>
+</span><span data-line="6"><span class="p">},</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="nx">storage</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="9"><span class="w">  </span><span class="nx">storageClass</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;longhorn&#39;</span><span class="p">,</span>
+</span><span data-line="10"><span class="w">  </span><span class="nx">webdav</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;20Gi&#39;</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="11"><span class="w">  </span><span class="c1">// ClamAV storage not needed (disabled)</span>
+</span><span data-line="12"><span class="p">},</span>
+</span></pre></div>
+</div>
+</section>
+<section id="disable-optional-components">
+<h2>Disable Optional Components<a class="headerlink" href="#disable-optional-components" title="Link to this heading">¶</a></h2>
+<p>Optional components are disabled by default. Explicitly set to <code class="docutils literal notranslate"><span class="pre">false</span></code> if needed:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">components</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">webmail</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w">   </span><span class="c1">// Disable webmail</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">clamav</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w">    </span><span class="c1">// Disable antivirus</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">fetchmail</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w"> </span><span class="c1">// Disable external fetching</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">webdav</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w">    </span><span class="c1">// Disable CalDAV/CardDAV</span>
+</span><span data-line="6"><span class="p">},</span>
+</span></pre></div>
+</div>
+<p><strong>Note</strong>: Core components (front, admin, postfix, dovecot, rspamd) cannot be disabled.</p>
+</section>
+<section id="apply-component-changes">
+<h2>Apply Component Changes<a class="headerlink" href="#apply-component-changes" title="Link to this heading">¶</a></h2>
+<p>After modifying component configuration:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Regenerate manifests</span>
+</span><span data-line="2">npm<span class="w"> </span>run<span class="w"> </span>synth
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Apply changes</span>
+</span><span data-line="5">kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>dist/mailu.k8s.yaml
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Watch new pods starting</span>
+</span><span data-line="8">kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-w
+</span></pre></div>
+</div>
+<p><strong>Adding components</strong>: New deployments and services will be created.</p>
+<p><strong>Removing components</strong>: Existing deployments and services will be deleted. PVCs are retained (manual cleanup required if desired).</p>
+</section>
+<section id="verify-component-status">
+<h2>Verify Component Status<a class="headerlink" href="#verify-component-status" title="Link to this heading">¶</a></h2>
+<p>Check which components are running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># List all Mailu pods</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>mailu
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Expected pods with all optional components enabled:</span>
+</span><span data-line="5"><span class="c1"># - mailu-front-*</span>
+</span><span data-line="6"><span class="c1"># - mailu-admin-*</span>
+</span><span data-line="7"><span class="c1"># - mailu-postfix-*</span>
+</span><span data-line="8"><span class="c1"># - mailu-dovecot-*</span>
+</span><span data-line="9"><span class="c1"># - mailu-rspamd-*</span>
+</span><span data-line="10"><span class="c1"># - mailu-webmail-*        (if webmail enabled)</span>
+</span><span data-line="11"><span class="c1"># - mailu-clamav-*         (if clamav enabled)</span>
+</span><span data-line="12"><span class="c1"># - mailu-fetchmail-*      (if fetchmail enabled)</span>
+</span><span data-line="13"><span class="c1"># - mailu-webdav-*         (if webdav enabled)</span>
+</span><span data-line="14">
+</span><span data-line="15"><span class="c1"># Check services</span>
+</span><span data-line="16">kubectl<span class="w"> </span>get<span class="w"> </span>svc<span class="w"> </span>-n<span class="w"> </span>mailu
+</span></pre></div>
+</div>
+</section>
+<section id="component-specific-configuration">
+<h2>Component-Specific Configuration<a class="headerlink" href="#component-specific-configuration" title="Link to this heading">¶</a></h2>
+<section id="webmail-type-roundcube-vs-snappymail">
+<h3>Webmail Type (Roundcube vs SnappyMail)<a class="headerlink" href="#webmail-type-roundcube-vs-snappymail" title="Link to this heading">¶</a></h3>
+<p>Choose webmail client (Roundcube is default):</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">components</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">webmail</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="3"><span class="p">},</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="nx">mailu</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="6"><span class="w">  </span><span class="nx">webmailType</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;roundcube&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// or &#39;snappymail&#39;</span>
+</span><span data-line="7"><span class="p">},</span>
+</span></pre></div>
+</div>
+<p><strong>Roundcube</strong>: Traditional, mature, full-featured PHP webmail (recommended).</p>
+<p><strong>SnappyMail</strong>: Modern, lightweight alternative.</p>
+</section>
+</section>
+<section id="resource-planning">
+<h2>Resource Planning<a class="headerlink" href="#resource-planning" title="Link to this heading">¶</a></h2>
+<p>Estimate total resource requirements with optional components:</p>
+<section id="minimal-deployment-core-only">
+<h3>Minimal Deployment (Core Only)<a class="headerlink" href="#minimal-deployment-core-only" title="Link to this heading">¶</a></h3>
+<p><strong>Total resources</strong>:</p>
+<ul class="simple">
+<li><p>CPU requests: ~650m</p></li>
+<li><p>Memory requests: ~2.5Gi</p></li>
+</ul>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">components</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="c1">// All optional components disabled (default)</span>
+</span><span data-line="3"><span class="p">},</span>
+</span></pre></div>
+</div>
+</section>
+<section id="full-featured-deployment-all-optional">
+<h3>Full-Featured Deployment (All Optional)<a class="headerlink" href="#full-featured-deployment-all-optional" title="Link to this heading">¶</a></h3>
+<p><strong>Total resources</strong>:</p>
+<ul class="simple">
+<li><p>CPU requests: ~1.9Gi (including ClamAV)</p></li>
+<li><p>Memory requests: ~5.1Gi (including ClamAV)</p></li>
+</ul>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">components</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">webmail</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">clamav</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">fetchmail</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">webdav</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="6"><span class="p">},</span>
+</span></pre></div>
+</div>
+</section>
+<section id="recommended-deployment-webmail-webdav">
+<h3>Recommended Deployment (Webmail + Webdav)<a class="headerlink" href="#recommended-deployment-webmail-webdav" title="Link to this heading">¶</a></h3>
+<p><strong>Total resources</strong>:</p>
+<ul class="simple">
+<li><p>CPU requests: ~800m (no ClamAV)</p></li>
+<li><p>Memory requests: ~2.9Gi (no ClamAV)</p></li>
+</ul>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">components</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">webmail</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">fetchmail</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w">  </span><span class="c1">// Add if needed</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">webdav</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">clamav</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w">     </span><span class="c1">// Skip unless required</span>
+</span><span data-line="6"><span class="p">},</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">¶</a></h2>
+<section id="clamav-pod-stuck-in-crashloopbackoff">
+<h3>ClamAV pod stuck in CrashLoopBackOff<a class="headerlink" href="#clamav-pod-stuck-in-crashloopbackoff" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: ClamAV pod fails to start with OOMKilled or initialization timeout.</p>
+<p><strong>Solution</strong>: Increase memory limits:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">resources</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">clamav</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">    </span><span class="nx">requests</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;1000m&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">memory</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;2Gi&#39;</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="4"><span class="w">    </span><span class="nx">limits</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;4000m&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">memory</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;4Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">  </span><span class="c1">// Increased</span>
+</span><span data-line="5"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="6"><span class="p">},</span>
+</span></pre></div>
+</div>
+<p>Also ensure storage is adequate for virus signature database:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check PVC size</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>pvc<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>clamav
+</span></pre></div>
+</div>
+</section>
+<section id="webmail-not-accessible">
+<h3>Webmail not accessible<a class="headerlink" href="#webmail-not-accessible" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: <code class="docutils literal notranslate"><span class="pre">404</span> <span class="pre">Not</span> <span class="pre">Found</span></code> when accessing <code class="docutils literal notranslate"><span class="pre">/webmail</span></code> URL.</p>
+<p><strong>Solution</strong>: Verify webmail component is enabled and pod is running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check webmail pod status</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>webmail
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Check webmail pod logs</span>
+</span><span data-line="5">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/component<span class="o">=</span>webmail
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Check service discovery</span>
+</span><span data-line="8">kubectl<span class="w"> </span>get<span class="w"> </span>configmap<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-config<span class="w"> </span>-o<span class="w"> </span>yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>WEBMAIL
+</span></pre></div>
+</div>
+</section>
+<section id="fetchmail-not-pulling-emails">
+<h3>Fetchmail not pulling emails<a class="headerlink" href="#fetchmail-not-pulling-emails" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: External emails not appearing in Mailu mailboxes.</p>
+<p><strong>Solution</strong>: Check fetchmail configuration in admin UI and pod logs:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check fetchmail pod logs</span>
+</span><span data-line="2">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/component<span class="o">=</span>fetchmail
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Verify fetch rules configured in admin UI</span>
+</span><span data-line="5"><span class="c1"># Navigate to https://mail.example.com/admin → Fetch</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/component-specifications.html"><span class="std std-doc">Component Specifications</span></a> - Resource requirements per component</p></li>
+<li><p><a class="reference internal" href="scale-resources.html"><span class="std std-doc">Scale Resources</span></a> - Adjust resource allocations</p></li>
+<li><p><a class="reference internal" href="customize-storage.html"><span class="std std-doc">Customize Storage</span></a> - Configure PVC sizes</p></li>
+<li><p><a class="reference internal" href="configure-tls.html"><span class="std std-doc">Configure TLS</span></a> - Set up ingress for webmail access</p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="customize-storage.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Customize Storage</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="configure-tls.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Configure TLS Termination</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

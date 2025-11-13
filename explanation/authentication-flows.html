@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Authentication Flows - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Nginx Configuration Patches" href="nginx-configuration-patches.html" /><link rel="prev" title="Architecture Overview" href="architecture.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/explanation/authentication-flows.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/explanation/authentication-flows.html"/>
+  <meta property="og:title" content="Authentication Flows"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/index.html">How-To Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Explanation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#authentication-methods">Authentication Methods</a><ul>
+<li><a class="reference internal" href="#nginx-auth-http-protocol-mail-clients">nginx auth_http Protocol (Mail Clients)</a></li>
+<li><a class="reference internal" href="#sso-integration-webmail">SSO Integration (Webmail)</a></li>
+<li><a class="reference internal" href="#network-isolation-trust-dovecot-submission">Network Isolation Trust (Dovecot-Submission)</a></li>
+<li><a class="reference internal" href="#mx-mail-reception-no-authentication">MX Mail Reception (No Authentication)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#authentication-flow-comparison">Authentication Flow Comparison</a></li>
+<li><a class="reference internal" href="#security-considerations">Security Considerations</a><ul>
+<li><a class="reference internal" href="#credential-storage">Credential Storage</a></li>
+<li><a class="reference internal" href="#network-security">Network Security</a></li>
+<li><a class="reference internal" href="#authentication-best-practices">Authentication Best Practices</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#troubleshooting-authentication-issues">Troubleshooting Authentication Issues</a><ul>
+<li><a class="reference internal" href="#mail-client-authentication-failures">Mail Client Authentication Failures</a></li>
+<li><a class="reference internal" href="#webmail-login-failures">Webmail Login Failures</a></li>
+<li><a class="reference internal" href="#webmail-sending-failures">Webmail Sending Failures</a></li>
+<li><a class="reference internal" href="#mx-reception-issues">MX Reception Issues</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Explanation</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Authentication Flows</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="authentication-flows">
+<h1>Authentication Flows<a class="headerlink" href="#authentication-flows" title="Link to this heading">¶</a></h1>
+<p><strong>Understanding authentication mechanisms in cdk8s-mailu deployments.</strong></p>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
+<p>cdk8s-mailu uses multiple authentication mechanisms depending on the access path and component. Understanding these flows is crucial for security configuration and troubleshooting access issues.</p>
+</section>
+<section id="authentication-methods">
+<h2>Authentication Methods<a class="headerlink" href="#authentication-methods" title="Link to this heading">¶</a></h2>
+<section id="nginx-auth-http-protocol-mail-clients">
+<h3>nginx auth_http Protocol (Mail Clients)<a class="headerlink" href="#nginx-auth-http-protocol-mail-clients" title="Link to this heading">¶</a></h3>
+<p><strong>Used for</strong>: Authenticated SMTP submission (587/465) and IMAP/POP3 access (993/995) from mail clients (Thunderbird, Outlook, mobile apps).</p>
+<p><strong>How it works</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Client Connection</strong>: Mail client connects to Traefik on port 587, 465, 993, or 995</p></li>
+<li><p><strong>TLS Termination</strong>: Traefik decrypts TLS and forwards plaintext connection to Front (Nginx)</p></li>
+<li><p><strong>Authentication Subrequest</strong>: Before proxying to backend, Nginx makes an HTTP subrequest to Admin</p>
+<ul class="simple">
+<li><p>URL: <code class="docutils literal notranslate"><span class="pre">http://admin-service:8080/internal/auth/email</span></code></p></li>
+<li><p>Headers: <code class="docutils literal notranslate"><span class="pre">Auth-User</span></code>, <code class="docutils literal notranslate"><span class="pre">Auth-Pass</span></code>, <code class="docutils literal notranslate"><span class="pre">Auth-Protocol</span></code>, <code class="docutils literal notranslate"><span class="pre">Client-IP</span></code></p></li>
+</ul>
+</li>
+<li><p><strong>Credential Validation</strong>: Admin queries PostgreSQL/SQLite for user credentials</p></li>
+<li><p><strong>Response</strong>:</p>
+<ul class="simple">
+<li><p><strong>Success (HTTP 200)</strong>: Admin returns backend server address in <code class="docutils literal notranslate"><span class="pre">Auth-Status:</span> <span class="pre">OK</span></code> header</p></li>
+<li><p><strong>Failure (HTTP 403)</strong>: Admin returns <code class="docutils literal notranslate"><span class="pre">Auth-Status:</span> <span class="pre">Invalid</span> <span class="pre">credentials</span></code></p></li>
+</ul>
+</li>
+<li><p><strong>Backend Routing</strong>: If authenticated, Nginx proxies connection to appropriate backend:</p>
+<ul class="simple">
+<li><p>SMTP (587/465) → Postfix:25</p></li>
+<li><p>IMAP (993/143) → Dovecot:143</p></li>
+<li><p>POP3 (995/110) → Dovecot:110</p></li>
+</ul>
+</li>
+</ol>
+<p><strong>Key Points</strong>:</p>
+<ul class="simple">
+<li><p>Authentication happens on <strong>every connection</strong> (not just once)</p></li>
+<li><p>Credentials never reach the backend services (Front handles auth)</p></li>
+<li><p>Admin acts as centralized authentication backend for all protocols</p></li>
+<li><p>Uses standard SMTP/IMAP/POP3 username/password authentication</p></li>
+</ul>
+<p><strong>Configuration</strong>:</p>
+<ul class="simple">
+<li><p>Implemented in nginx-patch-configmap.ts via <code class="docutils literal notranslate"><span class="pre">auth_http</span></code> directive</p></li>
+<li><p>TLS_FLAVOR=notls ensures Front receives plaintext after Traefik TLS termination</p></li>
+<li><p>Admin endpoint <code class="docutils literal notranslate"><span class="pre">/internal/auth/email</span></code> is internal-only (not exposed via Ingress)</p></li>
+</ul>
+<p><strong>Code Reference</strong>:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1">// src/constructs/nginx-patch-configmap.ts</span>
+</span><span data-line="2"><span class="nx">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">listen</span><span class="w"> </span><span class="mf">587</span><span class="p">;</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">auth_http</span><span class="w"> </span><span class="nx">http</span><span class="o">:</span><span class="c1">//admin-service:8080/internal/auth/email;</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">proxy_pass</span><span class="w"> </span><span class="nx">postfix</span><span class="o">-</span><span class="nx">service</span><span class="o">:</span><span class="kt">25</span><span class="p">;</span>
+</span><span data-line="6"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+<section id="sso-integration-webmail">
+<h3>SSO Integration (Webmail)<a class="headerlink" href="#sso-integration-webmail" title="Link to this heading">¶</a></h3>
+<p><strong>Used for</strong>: Roundcube webmail access via browser.</p>
+<p><strong>How it works</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>User Access</strong>: User navigates to <code class="docutils literal notranslate"><span class="pre">https://mail.example.com/webmail</span></code> in browser</p></li>
+<li><p><strong>SSO Check</strong>: Webmail (Roundcube) checks for existing SSO session via Admin</p></li>
+<li><p><strong>Login Prompt</strong>: If no session, Webmail redirects to Admin login page</p></li>
+<li><p><strong>Admin Authentication</strong>: User enters credentials, Admin validates against database</p></li>
+<li><p><strong>Session Creation</strong>: Admin creates SSO session (stored in PostgreSQL/SQLite)</p></li>
+<li><p><strong>Redirect Back</strong>: Admin redirects user back to Webmail with session token</p></li>
+<li><p><strong>Session Validation</strong>: Webmail validates session token with Admin</p></li>
+<li><p><strong>Access Granted</strong>: User accesses webmail interface</p></li>
+</ol>
+<p><strong>Key Points</strong>:</p>
+<ul class="simple">
+<li><p>Single Sign-On: Login once, access both Admin and Webmail</p></li>
+<li><p>Session-based: Browser cookie maintains authentication state</p></li>
+<li><p>Shared database: Admin and Webmail use same PostgreSQL database for session storage</p></li>
+<li><p>No password re-entry: Webmail trusts Admin’s authentication</p></li>
+</ul>
+<p><strong>Configuration</strong>:</p>
+<ul class="simple">
+<li><p>Webmail environment variable: <code class="docutils literal notranslate"><span class="pre">ADMIN_ADDRESS</span></code> points to Admin service</p></li>
+<li><p>Admin environment variables: <code class="docutils literal notranslate"><span class="pre">WEB_ADMIN='/admin'</span></code> and <code class="docutils literal notranslate"><span class="pre">WEB_WEBMAIL='/webmail'</span></code> configure URL paths</p></li>
+<li><p>Session storage: PostgreSQL (production) or SQLite (development)</p></li>
+<li><p>Default URLs: <code class="docutils literal notranslate"><span class="pre">https://mail.example.com/admin</span></code> and <code class="docutils literal notranslate"><span class="pre">https://mail.example.com/webmail</span></code></p></li>
+</ul>
+<p><strong>Database Tables</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">user</span></code> - User accounts and credentials</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">domain</span></code> - Email domains</p></li>
+<li><p>Admin SSO session table (managed by Mailu Admin)</p></li>
+</ul>
+</section>
+<section id="network-isolation-trust-dovecot-submission">
+<h3>Network Isolation Trust (Dovecot-Submission)<a class="headerlink" href="#network-isolation-trust-dovecot-submission" title="Link to this heading">¶</a></h3>
+<p><strong>Used for</strong>: Webmail sending emails (Roundcube → Dovecot-Submission → Postfix).</p>
+<p><strong>How it works</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>User Composes Email</strong>: User writes email in Roundcube web interface</p></li>
+<li><p><strong>Session Already Authenticated</strong>: User already logged in via Admin SSO</p></li>
+<li><p><strong>Webmail → Dovecot-Submission</strong>: Roundcube connects to <code class="docutils literal notranslate"><span class="pre">dovecot-submission-service:10025</span></code></p></li>
+<li><p><strong>Trust Model</strong>: Dovecot-Submission accepts connection <strong>without password validation</strong></p>
+<ul class="simple">
+<li><p>Configuration: <code class="docutils literal notranslate"><span class="pre">auth_mechanisms</span> <span class="pre">=</span> <span class="pre">plain</span></code> with <code class="docutils literal notranslate"><span class="pre">nopassword=y</span></code></p></li>
+<li><p>Trust basis: Only webmail pod can reach this service (Kubernetes NetworkPolicy)</p></li>
+</ul>
+</li>
+<li><p><strong>Relay to Postfix</strong>: Dovecot-Submission relays message to Postfix:25</p></li>
+<li><p><strong>Delivery</strong>: Postfix delivers to recipient’s MX server</p></li>
+</ol>
+<p><strong>Key Points</strong>:</p>
+<ul class="simple">
+<li><p><strong>Not actual token authentication</strong>: Despite documentation mentioning “tokens”, this is network isolation trust</p></li>
+<li><p><strong>Network isolation</strong>: Dovecot-Submission:10025 only accessible from webmail namespace/pods</p></li>
+<li><p><strong>No credential storage</strong>: Webmail doesn’t store user passwords</p></li>
+<li><p><strong>Session-based trust</strong>: User authenticated to webmail session = trusted sender</p></li>
+<li><p><strong>Separate from Front</strong>: Webmail bypasses Front/Nginx entirely for sending</p></li>
+</ul>
+<p><strong>Why This Architecture?</strong></p>
+<p>The separate dovecot-submission service exists because:</p>
+<ol class="arabic simple">
+<li><p><strong>Front’s bundled dovecot was not configurable</strong> for this use case</p></li>
+<li><p><strong>Webmail needs to send without prompting for password again</strong></p></li>
+<li><p><strong>Network isolation provides security</strong> (only webmail can access submission port)</p></li>
+<li><p><strong>Simplifies webmail configuration</strong> (no complex credential management)</p></li>
+</ol>
+<p><strong>Configuration</strong>:</p>
+<p>Dovecot-Submission service configuration (ConfigMap):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Dovecot submission configuration</span>
+</span><span data-line="2"><span class="n">auth_mechanisms</span> <span class="o">=</span> <span class="n">plain</span>
+</span><span data-line="3"><span class="n">service</span> <span class="n">auth</span> <span class="p">{</span>
+</span><span data-line="4">  <span class="n">unix_listener</span> <span class="n">auth</span><span class="o">-</span><span class="n">userdb</span> <span class="p">{</span>
+</span><span data-line="5">    <span class="n">mode</span> <span class="o">=</span> <span class="mi">0600</span>
+</span><span data-line="6">    <span class="n">user</span> <span class="o">=</span> <span class="n">dovecot</span>
+</span><span data-line="7">  <span class="p">}</span>
+</span><span data-line="8"><span class="p">}</span>
+</span><span data-line="9"><span class="c1"># Network isolation trust</span>
+</span><span data-line="10"><span class="n">passdb</span> <span class="p">{</span>
+</span><span data-line="11">  <span class="n">driver</span> <span class="o">=</span> <span class="n">static</span>
+</span><span data-line="12">  <span class="n">args</span> <span class="o">=</span> <span class="n">nopassword</span><span class="o">=</span><span class="n">y</span> <span class="n">allow_nets</span><span class="o">=</span><span class="mf">0.0.0.0</span><span class="o">/</span><span class="mi">0</span>
+</span><span data-line="13"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p>Webmail environment variable:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">SUBMISSION_HOST</span><span class="o">=</span><span class="n">dovecot</span><span class="o">-</span><span class="n">submission</span><span class="o">-</span><span class="n">service</span>
+</span><span data-line="2"><span class="n">SUBMISSION_PORT</span><span class="o">=</span><span class="mi">10025</span>
+</span></pre></div>
+</div>
+<p><strong>Code Reference</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">src/constructs/dovecot-submission-construct.ts</span></code> - Separate submission service</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">src/constructs/webmail-construct.ts</span></code> - Webmail SUBMISSION_HOST configuration</p></li>
+</ul>
+</section>
+<section id="mx-mail-reception-no-authentication">
+<h3>MX Mail Reception (No Authentication)<a class="headerlink" href="#mx-mail-reception-no-authentication" title="Link to this heading">¶</a></h3>
+<p><strong>Used for</strong>: Receiving inbound email from internet mail servers.</p>
+<p><strong>How it works</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>External MTA → Traefik:25</strong>: Internet mail server connects to your MX record</p></li>
+<li><p><strong>Traefik → Postfix:25</strong>: Traefik routes directly to Postfix (bypasses Front/Nginx)</p></li>
+<li><p><strong>No Authentication Required</strong>: SMTP MX reception is unauthenticated by design (RFC 5321)</p></li>
+<li><p><strong>Spam Filtering</strong>: Postfix calls Rspamd for spam/virus scanning</p></li>
+<li><p><strong>Delivery</strong>: If accepted, Postfix delivers via LMTP to Dovecot:2525</p></li>
+</ol>
+<p><strong>Key Points</strong>:</p>
+<ul class="simple">
+<li><p><strong>No credentials required</strong>: MX reception must accept from any sender</p></li>
+<li><p><strong>Bypasses Front</strong>: Port 25 traffic goes directly to Postfix</p></li>
+<li><p><strong>Spam protection</strong>: Rspamd provides spam/virus filtering instead of authentication</p></li>
+<li><p><strong>Rate limiting</strong>: Traefik InFlightConn + Postfix anvil limits prevent abuse</p></li>
+</ul>
+<p><strong>Configuration</strong>:</p>
+<ul class="simple">
+<li><p>Traefik IngressRouteTCP for port 25 routes directly to Postfix service</p></li>
+<li><p>Postfix configuration: <code class="docutils literal notranslate"><span class="pre">smtpd_relay_restrictions</span></code> controls who can relay</p></li>
+<li><p>No nginx auth_http on port 25</p></li>
+</ul>
+</section>
+</section>
+<section id="authentication-flow-comparison">
+<h2>Authentication Flow Comparison<a class="headerlink" href="#authentication-flow-comparison" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Access Path</p></th>
+<th class="head"><p>Method</p></th>
+<th class="head"><p>Authentication</p></th>
+<th class="head"><p>Backend</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Mail client SMTP (587/465)</strong></p></td>
+<td><p>nginx auth_http</p></td>
+<td><p>Username/password</p></td>
+<td><p>Admin:8080 → Postfix:25</p></td>
+<td><p>Every connection authenticated</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Mail client IMAP/POP3 (993/995)</strong></p></td>
+<td><p>nginx auth_http</p></td>
+<td><p>Username/password</p></td>
+<td><p>Admin:8080 → Dovecot:143/110</p></td>
+<td><p>Every connection authenticated</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Webmail access (HTTPS)</strong></p></td>
+<td><p>SSO session</p></td>
+<td><p>Username/password (first login)</p></td>
+<td><p>Admin database</p></td>
+<td><p>Session cookie for subsequent access</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Webmail sending (SMTP)</strong></p></td>
+<td><p>Network isolation</p></td>
+<td><p>None (trust)</p></td>
+<td><p>Dovecot-Submission:10025 → Postfix:25</p></td>
+<td><p>Webmail session = trusted</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>MX mail (port 25)</strong></p></td>
+<td><p>None</p></td>
+<td><p>None</p></td>
+<td><p>Postfix:25 directly</p></td>
+<td><p>Standard SMTP, spam filtering only</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="security-considerations">
+<h2>Security Considerations<a class="headerlink" href="#security-considerations" title="Link to this heading">¶</a></h2>
+<section id="credential-storage">
+<h3>Credential Storage<a class="headerlink" href="#credential-storage" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>User passwords</strong>: Hashed in PostgreSQL/SQLite (bcrypt or similar)</p></li>
+<li><p><strong>Admin credentials</strong>: Never stored in Kubernetes Secrets (only in database)</p></li>
+<li><p><strong>Webmail</strong>: No password storage (relies on Admin SSO session)</p></li>
+<li><p><strong>API token</strong>: Optional, stored in Secret if API enabled</p></li>
+</ul>
+</section>
+<section id="network-security">
+<h3>Network Security<a class="headerlink" href="#network-security" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>TLS Termination</strong>: Traefik handles all TLS (HTTPS, SMTPS, IMAPS, POP3S)</p></li>
+<li><p><strong>Plaintext backends</strong>: All backend services receive plaintext (TLS_FLAVOR=notls)</p></li>
+<li><p><strong>Internal traffic</strong>: Kubernetes service mesh (no encryption needed within cluster)</p></li>
+<li><p><strong>Dovecot-Submission isolation</strong>: Only webmail namespace can access port 10025</p></li>
+</ul>
+</section>
+<section id="authentication-best-practices">
+<h3>Authentication Best Practices<a class="headerlink" href="#authentication-best-practices" title="Link to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p><strong>Use PostgreSQL in production</strong>: SQLite suitable only for small deployments</p></li>
+<li><p><strong>Enable strong passwords</strong>: Configure password complexity requirements in Admin</p></li>
+<li><p><strong>Monitor auth failures</strong>: Watch Admin logs for brute-force attempts</p></li>
+<li><p><strong>Rate limiting</strong>: Configure Traefik and Postfix rate limits</p></li>
+<li><p><strong>API token protection</strong>: If enabling API, use strong random token in Secret</p></li>
+</ol>
+</section>
+</section>
+<section id="troubleshooting-authentication-issues">
+<h2>Troubleshooting Authentication Issues<a class="headerlink" href="#troubleshooting-authentication-issues" title="Link to this heading">¶</a></h2>
+<section id="mail-client-authentication-failures">
+<h3>Mail Client Authentication Failures<a class="headerlink" href="#mail-client-authentication-failures" title="Link to this heading">¶</a></h3>
+<p><strong>Symptoms</strong>: “Invalid credentials” or “Authentication failed” in mail client</p>
+<p><strong>Check</strong>:</p>
+<ol class="arabic">
+<li><p>Verify credentials in Admin web UI (<code class="docutils literal notranslate"><span class="pre">https://admin.example.com</span></code>)</p></li>
+<li><p>Check Admin logs for auth_http requests:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>deployment/admin-deployment<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>auth/email
+</span></pre></div>
+</div>
+</li>
+<li><p>Verify Front can reach Admin:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>deployment/front-deployment<span class="w"> </span>--<span class="w"> </span>curl<span class="w"> </span>http://admin-service:8080/internal/auth/email
+</span></pre></div>
+</div>
+</li>
+<li><p>Check database connectivity (PostgreSQL or SQLite)</p></li>
+</ol>
+</section>
+<section id="webmail-login-failures">
+<h3>Webmail Login Failures<a class="headerlink" href="#webmail-login-failures" title="Link to this heading">¶</a></h3>
+<p><strong>Symptoms</strong>: Cannot login to webmail, or login page redirects loop</p>
+<p><strong>Check</strong>:</p>
+<ol class="arabic">
+<li><p>Verify SSO configuration in Admin environment variables:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>get<span class="w"> </span>deployment<span class="w"> </span>admin-deployment<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{.spec.template.spec.containers[0].env}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s1">&#39;WEB_ADMIN|WEB_WEBMAIL&#39;</span>
+</span></pre></div>
+</div>
+</li>
+<li><p>Check database connection (Admin and Webmail share database)</p></li>
+<li><p>Verify session storage is working (check Admin logs)</p></li>
+<li><p>Clear browser cookies and retry</p></li>
+</ol>
+</section>
+<section id="webmail-sending-failures">
+<h3>Webmail Sending Failures<a class="headerlink" href="#webmail-sending-failures" title="Link to this heading">¶</a></h3>
+<p><strong>Symptoms</strong>: Cannot send email from webmail, but receiving works</p>
+<p><strong>Check</strong>:</p>
+<ol class="arabic">
+<li><p>Verify dovecot-submission service is running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>dovecot-submission
+</span></pre></div>
+</div>
+</li>
+<li><p>Check Webmail can reach dovecot-submission:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>deployment/webmail-deployment<span class="w"> </span>--<span class="w"> </span>nc<span class="w"> </span>-zv<span class="w"> </span>dovecot-submission-service<span class="w"> </span><span class="m">10025</span>
+</span></pre></div>
+</div>
+</li>
+<li><p>Check dovecot-submission logs:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>deployment/dovecot-submission-deployment
+</span></pre></div>
+</div>
+</li>
+<li><p>Verify SUBMISSION_HOST environment variable in Webmail</p></li>
+</ol>
+</section>
+<section id="mx-reception-issues">
+<h3>MX Reception Issues<a class="headerlink" href="#mx-reception-issues" title="Link to this heading">¶</a></h3>
+<p><strong>Symptoms</strong>: Cannot receive email from internet</p>
+<p><strong>Check</strong>:</p>
+<ol class="arabic">
+<li><p>Verify MX DNS records point to your server</p></li>
+<li><p>Check Traefik IngressRouteTCP for port 25:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>get<span class="w"> </span>ingressroutetcp<span class="w"> </span>-A
+</span></pre></div>
+</div>
+</li>
+<li><p>Test SMTP from external server:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">telnet<span class="w"> </span>mail.example.com<span class="w"> </span><span class="m">25</span>
+</span></pre></div>
+</div>
+</li>
+<li><p>Check Postfix logs for delivery errors:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>deployment/postfix-deployment<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;status=&#39;</span>
+</span></pre></div>
+</div>
+</li>
+</ol>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="architecture.html"><span class="std std-doc">Architecture Overview</span></a> - Complete system architecture with all flows</p></li>
+<li><p><a class="reference internal" href="../reference/component-specifications.html"><span class="std std-doc">Component Specifications</span></a> - Port and service details</p></li>
+<li><p><a class="reference internal" href="nginx-configuration-patches.html"><span class="std std-doc">Nginx Configuration Patches</span></a> - How nginx auth_http is implemented</p></li>
+<li><p><a class="reference internal" href="../how-to/manage-secrets.html"><span class="std std-doc">Manage Secrets</span></a> - Secret management for credentials</p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="architecture.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Architecture Overview</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="nginx-configuration-patches.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Nginx Configuration Patches</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

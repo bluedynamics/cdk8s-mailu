@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Egress Gateway Considerations for Mail Delivery - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="CDK8S Patterns" href="cdk8s-patterns.html" /><link rel="prev" title="Dovecot Submission Service" href="dovecot-submission.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/explanation/egress-gateway-considerations.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/explanation/egress-gateway-considerations.html"/>
+  <meta property="og:title" content="Egress Gateway Considerations for Mail Delivery"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/index.html">How-To Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Explanation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#the-problem">The Problem</a></li>
+<li><a class="reference internal" href="#solution-options">Solution Options</a><ul>
+<li><a class="reference internal" href="#option-1-list-all-node-ips-in-spf">Option 1: List All Node IPs in SPF</a></li>
+<li><a class="reference internal" href="#option-2-cilium-egress-gateway-recommended">Option 2: Cilium Egress Gateway (Recommended)</a></li>
+<li><a class="reference internal" href="#option-3-loadbalancer-with-static-egress-ip">Option 3: LoadBalancer with Static Egress IP</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ip-stability-choices">IP Stability Choices</a><ul>
+<li><a class="reference internal" href="#server-s-native-ip">Server&#8217;s Native IP</a></li>
+<li><a class="reference internal" href="#floating-ip">Floating IP</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ipv6-considerations">IPv6 Considerations</a></li>
+<li><a class="reference internal" href="#reverse-dns-ptr-records">Reverse DNS (PTR Records)</a></li>
+<li><a class="reference internal" href="#the-cdk8s-mailu-library">The cdk8s-mailu Library</a></li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Explanation</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Egress Gateway Considerations for Mail Delivery</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="egress-gateway-considerations-for-mail-delivery">
+<h1>Egress Gateway Considerations for Mail Delivery<a class="headerlink" href="#egress-gateway-considerations-for-mail-delivery" title="Link to this heading">¶</a></h1>
+<section id="the-problem">
+<h2>The Problem<a class="headerlink" href="#the-problem" title="Link to this heading">¶</a></h2>
+<p>Kubernetes uses the node’s IP address as the source IP for outbound connections from pods. In a multi-node cluster, this means your mail server can send emails from different IP addresses depending on which node hosts the pod at any given time.</p>
+<p><strong>Why this matters for email</strong>:</p>
+<ul class="simple">
+<li><p><strong>SPF (Sender Policy Framework)</strong> requires you to list all authorized sending IPs in DNS</p></li>
+<li><p>Multiple sending IPs means larger SPF records and brittle configuration</p></li>
+<li><p>Adding/removing nodes requires DNS updates</p></li>
+<li><p>Inconsistent sender IPs may hurt email reputation</p></li>
+</ul>
+</section>
+<section id="solution-options">
+<h2>Solution Options<a class="headerlink" href="#solution-options" title="Link to this heading">¶</a></h2>
+<section id="option-1-list-all-node-ips-in-spf">
+<h3>Option 1: List All Node IPs in SPF<a class="headerlink" href="#option-1-list-all-node-ips-in-spf" title="Link to this heading">¶</a></h3>
+<p>Add every node’s public IP to your SPF record.</p>
+<p><strong>When to use</strong>:</p>
+<ul class="simple">
+<li><p>Small, stable cluster (2-3 nodes)</p></li>
+<li><p>Nodes rarely change</p></li>
+<li><p>Simple infrastructure without CNI egress features</p></li>
+</ul>
+<p><strong>Trade-offs</strong>:</p>
+<ul class="simple">
+<li><p>❌ Brittle - every node change requires DNS update</p></li>
+<li><p>❌ SPF records have 10 DNS lookup limit</p></li>
+<li><p>❌ No consistent sender identity</p></li>
+</ul>
+</section>
+<section id="option-2-cilium-egress-gateway-recommended">
+<h3>Option 2: Cilium Egress Gateway (Recommended)<a class="headerlink" href="#option-2-cilium-egress-gateway-recommended" title="Link to this heading">¶</a></h3>
+<p>Configure a dedicated egress node to route all mail traffic through a single IP.</p>
+<p><strong>When to use</strong>:</p>
+<ul class="simple">
+<li><p>Cluster uses Cilium CNI (1.17.0+)</p></li>
+<li><p>Need consistent sender IP for reputation</p></li>
+<li><p>Want flexibility in pod placement</p></li>
+</ul>
+<p><strong>Trade-offs</strong>:</p>
+<ul class="simple">
+<li><p>✅ Single IP in SPF record</p></li>
+<li><p>✅ Node changes don’t affect SPF</p></li>
+<li><p>✅ Consistent sender identity</p></li>
+<li><p>⚠️ Requires CNI support (Cilium)</p></li>
+<li><p>⚠️ Additional configuration complexity</p></li>
+</ul>
+</section>
+<section id="option-3-loadbalancer-with-static-egress-ip">
+<h3>Option 3: LoadBalancer with Static Egress IP<a class="headerlink" href="#option-3-loadbalancer-with-static-egress-ip" title="Link to this heading">¶</a></h3>
+<p>Use a cloud LoadBalancer’s static IP for outbound traffic.</p>
+<p><strong>When to use</strong>:</p>
+<ul class="simple">
+<li><p>Cloud provider supports egress via LoadBalancer</p></li>
+<li><p>Need high availability with automatic failover</p></li>
+<li><p>Budget allows for LoadBalancer costs</p></li>
+</ul>
+<p><strong>Trade-offs</strong>:</p>
+<ul class="simple">
+<li><p>✅ HA with automatic failover</p></li>
+<li><p>✅ Cloud-native solution</p></li>
+<li><p>⚠️ Additional cost (cloud LoadBalancer)</p></li>
+<li><p>⚠️ Limited provider support for egress</p></li>
+</ul>
+</section>
+</section>
+<section id="ip-stability-choices">
+<h2>IP Stability Choices<a class="headerlink" href="#ip-stability-choices" title="Link to this heading">¶</a></h2>
+<p>When implementing egress gateway, you can use:</p>
+<section id="server-s-native-ip">
+<h3>Server’s Native IP<a class="headerlink" href="#server-s-native-ip" title="Link to this heading">¶</a></h3>
+<p>The node’s assigned public IP.</p>
+<p><strong>When to use</strong>: Cost-sensitive deployments, low node turnover</p>
+<p><strong>Considerations</strong>:</p>
+<ul class="simple">
+<li><p>Zero additional cost</p></li>
+<li><p>IP changes if node is replaced</p></li>
+<li><p>Requires DNS update when node changes</p></li>
+</ul>
+</section>
+<section id="floating-ip">
+<h3>Floating IP<a class="headerlink" href="#floating-ip" title="Link to this heading">¶</a></h3>
+<p>Cloud provider’s reassignable static IP (e.g., Hetzner Floating IP).</p>
+<p><strong>When to use</strong>: Need to survive node replacements without DNS changes</p>
+<p><strong>Considerations</strong>:</p>
+<ul class="simple">
+<li><p>Additional cost (~€1-2/month)</p></li>
+<li><p>IP survives node replacement</p></li>
+<li><p>Can be reassigned to new node</p></li>
+</ul>
+</section>
+</section>
+<section id="ipv6-considerations">
+<h2>IPv6 Considerations<a class="headerlink" href="#ipv6-considerations" title="Link to this heading">¶</a></h2>
+<p><strong>Cilium egress gateway</strong> (as of v1.17.0):</p>
+<ul class="simple">
+<li><p>✅ Full support for IPv4 egress policies</p></li>
+<li><p>⚠️ Limited IPv6 support - uses node’s native IPv6 address</p></li>
+</ul>
+<p>If dual-stack IPv6 is critical:</p>
+<ul class="simple">
+<li><p>Include node’s IPv6 address in SPF record</p></li>
+<li><p>Configure reverse DNS (PTR) for IPv6 address</p></li>
+<li><p>Monitor Cilium roadmap for IPv6 egress gateway support</p></li>
+</ul>
+</section>
+<section id="reverse-dns-ptr-records">
+<h2>Reverse DNS (PTR Records)<a class="headerlink" href="#reverse-dns-ptr-records" title="Link to this heading">¶</a></h2>
+<p>Email servers check that your sending IP resolves to your mail server hostname.</p>
+<p><strong>Requirements</strong>:</p>
+<ul class="simple">
+<li><p>PTR record: <code class="docutils literal notranslate"><span class="pre">your-ip</span></code> → <code class="docutils literal notranslate"><span class="pre">mail.example.com</span></code></p></li>
+<li><p>Forward DNS: <code class="docutils literal notranslate"><span class="pre">mail.example.com</span></code> → <code class="docutils literal notranslate"><span class="pre">your-ip</span></code></p></li>
+<li><p>Matches HELO hostname in SMTP</p></li>
+</ul>
+<p><strong>Configuration</strong>: Set in cloud provider console (e.g., Hetzner: Servers → Networking → Reverse DNS)</p>
+</section>
+<section id="the-cdk8s-mailu-library">
+<h2>The cdk8s-mailu Library<a class="headerlink" href="#the-cdk8s-mailu-library" title="Link to this heading">¶</a></h2>
+<p>This library generates Kubernetes manifests for Mailu but <strong>does not configure egress routing</strong> - that’s a cluster-level networking concern.</p>
+<p><strong>What this library provides</strong>:</p>
+<ul class="simple">
+<li><p>Pod manifests for all Mailu components</p></li>
+<li><p>Service definitions for internal routing</p></li>
+<li><p>Configuration for TLS, storage, databases</p></li>
+</ul>
+<p><strong>What you must configure separately</strong>:</p>
+<ul class="simple">
+<li><p>Egress gateway (via Cilium, CNI, or cloud provider)</p></li>
+<li><p>DNS SPF records authorizing sending IPs</p></li>
+<li><p>PTR (reverse DNS) records</p></li>
+<li><p>LoadBalancer or Ingress for inbound traffic</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc7208.html">SPF Record Syntax (RFC 7208)</a></p></li>
+<li><p><a class="reference external" href="https://docs.cilium.io/en/stable/network/egress-gateway/">Cilium Egress Gateway Documentation</a></p></li>
+<li><p><a class="reference external" href="https://mailu.io/master/dns.html">Mailu Documentation - DNS Configuration</a></p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="dovecot-submission.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Dovecot Submission Service</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="cdk8s-patterns.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">CDK8S Patterns</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

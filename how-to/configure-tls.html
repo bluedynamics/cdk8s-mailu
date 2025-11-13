@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Configure TLS Termination - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Manage Secrets" href="manage-secrets.html" /><link rel="prev" title="Enable Optional Components" href="enable-optional-components.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/how-to/configure-tls.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/how-to/configure-tls.html"/>
+  <meta property="og:title" content="Configure TLS Termination"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">How-To Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/index.html">Explanation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#problem">Problem</a></li>
+<li><a class="reference internal" href="#solution">Solution</a></li>
+<li><a class="reference internal" href="#architecture-overview">Architecture Overview</a></li>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#built-in-tls-configuration">Built-in TLS Configuration</a></li>
+<li><a class="reference internal" href="#option-1-automated-traefik-ingress-recommended">Option 1: Automated Traefik Ingress (Recommended)</a><ul>
+<li><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#option-2-manual-traefik-ingressroute-creation">Option 2: Manual Traefik IngressRoute Creation</a><ul>
+<li><a class="reference internal" href="#step-1-create-tls-certificate">Step 1: Create TLS Certificate</a></li>
+<li><a class="reference internal" href="#step-2-create-http-https-ingressroute">Step 2: Create HTTP/HTTPS IngressRoute</a></li>
+<li><a class="reference internal" href="#step-3-create-mail-protocol-ingressroutes">Step 3: Create Mail Protocol IngressRoutes</a></li>
+<li><a class="reference internal" href="#step-4-configure-traefik-entry-points">Step 4: Configure Traefik Entry Points</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#smtp-rate-limiting-strategy">SMTP Rate Limiting Strategy</a><ul>
+<li><a class="reference internal" href="#layer-1-traefik-inflightconn-ingress-level">Layer 1: Traefik InFlightConn (Ingress Level)</a></li>
+<li><a class="reference internal" href="#layer-2-postfix-anvil-application-level">Layer 2: Postfix anvil (Application Level)</a></li>
+<li><a class="reference internal" href="#why-port-25-bypasses-nginx">Why Port 25 Bypasses nginx</a></li>
+<li><a class="reference internal" href="#adjusting-rate-limits">Adjusting Rate Limits</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#verify-tls-configuration">Verify TLS Configuration</a><ul>
+<li><a class="reference internal" href="#test-https-access">Test HTTPS Access</a></li>
+<li><a class="reference internal" href="#test-mail-protocols">Test Mail Protocols</a></li>
+<li><a class="reference internal" href="#configure-email-client">Configure Email Client</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#certificate-not-provisioned">Certificate not provisioned</a></li>
+<li><a class="reference internal" href="#mail-client-cannot-connect">Mail client cannot connect</a></li>
+<li><a class="reference internal" href="#tls-handshake-failures">TLS handshake failures</a></li>
+<li><a class="reference internal" href="#webmail-not-accessible-over-https">Webmail not accessible over HTTPS</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#alternative-nodeport-for-testing">Alternative: NodePort for Testing</a></li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">How-To Guides</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Configure TLS Termination</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="configure-tls-termination">
+<h1>Configure TLS Termination<a class="headerlink" href="#configure-tls-termination" title="Link to this heading">¶</a></h1>
+<p><strong>How to set up TLS/SSL encryption for Mailu using Traefik ingress controller.</strong></p>
+<section id="problem">
+<h2>Problem<a class="headerlink" href="#problem" title="Link to this heading">¶</a></h2>
+<p>You need to configure secure HTTPS access to Mailu webmail and admin interfaces, plus TLS-encrypted SMTP/IMAP/POP3 connections for mail clients.</p>
+</section>
+<section id="solution">
+<h2>Solution<a class="headerlink" href="#solution" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">cdk8s-mailu</span></code> library is designed for <strong>Traefik TLS termination</strong>. Traefik handles TLS certificates (Let’s Encrypt) and decrypts traffic, while Mailu components communicate in plaintext internally. This is the recommended production pattern for Kubernetes deployments.</p>
+<p><strong>Two approaches available</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Automated</strong> (recommended): Use cdk8s-mailu’s built-in Traefik ingress support</p></li>
+<li><p><strong>Manual</strong>: Create Traefik IngressRoute resources separately (for advanced customization)</p></li>
+</ol>
+</section>
+<section id="architecture-overview">
+<h2>Architecture Overview<a class="headerlink" href="#architecture-overview" title="Link to this heading">¶</a></h2>
+<p><strong>TLS Termination Flow</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">Client (TLS)
+</span><span data-line="2">    ↓
+</span><span data-line="3">Traefik IngressRoute (TLS termination with Let&#39;s Encrypt)
+</span><span data-line="4">    ↓
+</span><span data-line="5">Mailu Front Service (plaintext, port 80 for HTTP, 25/587/465/993/995 for mail)
+</span><span data-line="6">    ↓
+</span><span data-line="7">Backend Services (plaintext internal communication)
+</span></pre></div>
+</div>
+<p><strong>Why this design?</strong>:</p>
+<ul class="simple">
+<li><p>Centralized certificate management (Traefik + cert-manager)</p></li>
+<li><p>Automatic certificate renewal</p></li>
+<li><p>No certificate distribution to mail pods</p></li>
+<li><p>Standard Kubernetes ingress pattern</p></li>
+</ul>
+</section>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">¶</a></h2>
+<p>Before configuring TLS, ensure you have:</p>
+<ol class="arabic simple">
+<li><p><strong>Traefik ingress controller</strong> installed</p></li>
+<li><p><strong>cert-manager</strong> installed (for Let’s Encrypt certificates)</p></li>
+<li><p><strong>DNS records</strong> pointing to your cluster:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mail.example.com</span></code> → Cluster ingress IP</p></li>
+</ul>
+</li>
+<li><p><strong>Cluster ingress</strong> accessible from internet (ports 80, 443, 25, 587, 465, 993, 995)</p></li>
+</ol>
+</section>
+<section id="built-in-tls-configuration">
+<h2>Built-in TLS Configuration<a class="headerlink" href="#built-in-tls-configuration" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">cdk8s-mailu</span></code> automatically configures Mailu for Traefik TLS termination:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">App</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s&#39;</span><span class="p">;</span>
+</span><span data-line="2"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">MailuChart</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s-mailu&#39;</span><span class="p">;</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">App</span><span class="p">();</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="ow">new</span><span class="w"> </span><span class="nx">MailuChart</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">namespace</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span>
+</span><span data-line="8"><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;example.com&#39;</span><span class="p">,</span>
+</span><span data-line="9"><span class="w">  </span><span class="nx">hostnames</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;mail.example.com&#39;</span><span class="p">],</span><span class="w">  </span><span class="c1">// Used for TLS certificate</span>
+</span><span data-line="10"><span class="w">  </span><span class="nx">subnet</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10.42.0.0/16&#39;</span><span class="p">,</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="w">  </span><span class="c1">// ... database, redis, secrets config ...</span>
+</span><span data-line="13"><span class="p">});</span>
+</span><span data-line="14">
+</span><span data-line="15"><span class="nx">app</span><span class="p">.</span><span class="nx">synth</span><span class="p">();</span>
+</span></pre></div>
+</div>
+<p><strong>What this does automatically</strong>:</p>
+<ul class="simple">
+<li><p>Sets <code class="docutils literal notranslate"><span class="pre">TLS_FLAVOR=notls</span></code> (Traefik handles TLS, not Mailu)</p></li>
+<li><p>Mounts nginx-patch ConfigMap to Front container</p></li>
+<li><p>Patches nginx to support mail protocol TLS ports (587, 465, 993, 995)</p></li>
+<li><p>Configures plaintext internal communication between components</p></li>
+</ul>
+<p><strong>No additional TLS configuration needed</strong> in the CDK8S code!</p>
+</section>
+<section id="option-1-automated-traefik-ingress-recommended">
+<h2>Option 1: Automated Traefik Ingress (Recommended)<a class="headerlink" href="#option-1-automated-traefik-ingress-recommended" title="Link to this heading">¶</a></h2>
+<p><strong>New in cdk8s-mailu</strong>: Built-in support for automatic ingress resource creation.</p>
+<p>Add the <code class="docutils literal notranslate"><span class="pre">ingress</span></code> configuration to your MailuChart:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">App</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s&#39;</span><span class="p">;</span>
+</span><span data-line="2"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">MailuChart</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s-mailu&#39;</span><span class="p">;</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">App</span><span class="p">();</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="ow">new</span><span class="w"> </span><span class="nx">MailuChart</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">namespace</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span>
+</span><span data-line="8"><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;example.com&#39;</span><span class="p">,</span>
+</span><span data-line="9"><span class="w">  </span><span class="nx">hostnames</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;mail.example.com&#39;</span><span class="p">],</span>
+</span><span data-line="10"><span class="w">  </span><span class="nx">subnet</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10.42.0.0/16&#39;</span><span class="p">,</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="w">  </span><span class="c1">// Database, redis, secrets config...</span>
+</span><span data-line="13"><span class="w">  </span><span class="nx">database</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="14"><span class="w">  </span><span class="nx">redis</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="15"><span class="w">  </span><span class="nx">secrets</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="16">
+</span><span data-line="17"><span class="w">  </span><span class="c1">// Automated Traefik ingress (NEW!)</span>
+</span><span data-line="18"><span class="w">  </span><span class="nx">ingress</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="19"><span class="w">    </span><span class="nx">enabled</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="20"><span class="w">    </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;traefik&#39;</span><span class="p">,</span>
+</span><span data-line="21"><span class="w">    </span><span class="nx">traefik</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="22"><span class="w">      </span><span class="nx">hostname</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mail.example.com&#39;</span><span class="p">,</span>
+</span><span data-line="23"><span class="w">      </span><span class="nx">certIssuer</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;letsencrypt-cluster-issuer&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// Your cert-manager ClusterIssuer</span>
+</span><span data-line="24"><span class="w">      </span><span class="nx">enableTcp</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w">  </span><span class="c1">// Enable TCP routes for SMTP/IMAP/POP3</span>
+</span><span data-line="25"><span class="w">      </span><span class="nx">smtpConnectionLimit</span><span class="o">:</span><span class="w"> </span><span class="kt">15</span><span class="p">,</span><span class="w">  </span><span class="c1">// Max concurrent SMTP connections per IP</span>
+</span><span data-line="26"><span class="w">    </span><span class="p">},</span>
+</span><span data-line="27"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="28"><span class="p">});</span>
+</span><span data-line="29">
+</span><span data-line="30"><span class="nx">app</span><span class="p">.</span><span class="nx">synth</span><span class="p">();</span>
+</span></pre></div>
+</div>
+<p><strong>What this creates automatically</strong>:</p>
+<ul class="simple">
+<li><p>✅ Kubernetes Ingress with cert-manager annotation for HTTPS (admin UI, webmail)</p></li>
+<li><p>✅ Traefik TLSOption with Mailu-compatible cipher suites</p></li>
+<li><p>✅ Traefik IngressRouteTCP for SMTP (port 25) with rate limiting</p></li>
+<li><p>✅ Traefik IngressRouteTCP for SMTPS (port 465) with TLS termination</p></li>
+<li><p>✅ Traefik IngressRouteTCP for Submission (port 587) with TLS termination</p></li>
+<li><p>✅ Traefik IngressRouteTCP for IMAPS (port 993) with TLS termination</p></li>
+<li><p>✅ Traefik IngressRouteTCP for POP3S (port 995) with TLS termination</p></li>
+<li><p>✅ Traefik IngressRouteTCP for IMAP (port 143, plaintext)</p></li>
+<li><p>✅ Traefik IngressRouteTCP for POP3 (port 110, plaintext)</p></li>
+<li><p>✅ Traefik MiddlewareTCP for SMTP connection rate limiting</p></li>
+</ul>
+<p><strong>Benefits</strong>:</p>
+<ul class="simple">
+<li><p>One-click ingress setup</p></li>
+<li><p>Type-safe configuration</p></li>
+<li><p>Automatic service name resolution</p></li>
+<li><p>Production-ready defaults</p></li>
+<li><p>Consistent with Mailu security requirements</p></li>
+</ul>
+<section id="configuration-options">
+<h3>Configuration Options<a class="headerlink" href="#configuration-options" title="Link to this heading">¶</a></h3>
+<p>All ingress options are optional with sensible defaults:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">ingress</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">enabled</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w">              </span><span class="c1">// Enable ingress creation</span>
+</span><span data-line="3"><span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;traefik&#39;</span><span class="p">,</span><span class="w">           </span><span class="c1">// Ingress type (only &#39;traefik&#39; supported currently)</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">traefik</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="5"><span class="w">    </span><span class="nx">hostname</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mail.example.com&#39;</span><span class="p">,</span><span class="w">           </span><span class="c1">// Required: FQDN for ingress</span>
+</span><span data-line="6"><span class="w">    </span><span class="nx">certIssuer</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;letsencrypt-cluster-issuer&#39;</span><span class="p">,</span><span class="w"> </span><span class="c1">// Default: &#39;letsencrypt-cluster-issuer&#39;</span>
+</span><span data-line="7"><span class="w">    </span><span class="nx">enableTcp</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w">                        </span><span class="c1">// Default: true (enable TCP routes)</span>
+</span><span data-line="8"><span class="w">    </span><span class="nx">smtpConnectionLimit</span><span class="o">:</span><span class="w"> </span><span class="kt">15</span><span class="p">,</span><span class="w">                </span><span class="c1">// Default: 15 (concurrent SMTP connections per IP)</span>
+</span><span data-line="9"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="10"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p>After deploying, cert-manager will automatically provision a Let’s Encrypt certificate for <code class="docutils literal notranslate"><span class="pre">mail.example.com</span></code>.</p>
+</section>
+</section>
+<section id="option-2-manual-traefik-ingressroute-creation">
+<h2>Option 2: Manual Traefik IngressRoute Creation<a class="headerlink" href="#option-2-manual-traefik-ingressroute-creation" title="Link to this heading">¶</a></h2>
+<p>If you need more control or want to customize the ingress resources, you can create them manually.</p>
+<section id="step-1-create-tls-certificate">
+<h3>Step 1: Create TLS Certificate<a class="headerlink" href="#step-1-create-tls-certificate" title="Link to this heading">¶</a></h3>
+<p>Use cert-manager to provision a Let’s Encrypt certificate:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cert-manager.io/v1</span>
+</span><span data-line="2"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Certificate</span>
+</span><span data-line="3"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="4"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-tls</span>
+</span><span data-line="5"><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu</span>
+</span><span data-line="6"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="7"><span class="w">  </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-tls-cert</span>
+</span><span data-line="8"><span class="w">  </span><span class="nt">issuerRef</span><span class="p">:</span>
+</span><span data-line="9"><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">letsencrypt-prod</span><span class="w">  </span><span class="c1"># Your ClusterIssuer</span>
+</span><span data-line="10"><span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ClusterIssuer</span>
+</span><span data-line="11"><span class="w">  </span><span class="nt">dnsNames</span><span class="p">:</span>
+</span><span data-line="12"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mail.example.com</span>
+</span></pre></div>
+</div>
+<p>Apply:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>mailu-certificate.yaml
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Wait for certificate to be ready</span>
+</span><span data-line="4">kubectl<span class="w"> </span>get<span class="w"> </span>certificate<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>-w
+</span></pre></div>
+</div>
+</section>
+<section id="step-2-create-http-https-ingressroute">
+<h3>Step 2: Create HTTP/HTTPS IngressRoute<a class="headerlink" href="#step-2-create-http-https-ingressroute" title="Link to this heading">¶</a></h3>
+<p>Route web traffic (admin UI, webmail) through Traefik:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.io/v1alpha1</span>
+</span><span data-line="2"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IngressRoute</span>
+</span><span data-line="3"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="4"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-web</span>
+</span><span data-line="5"><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu</span>
+</span><span data-line="6"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="7"><span class="w">  </span><span class="nt">entryPoints</span><span class="p">:</span>
+</span><span data-line="8"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">websecure</span><span class="w">  </span><span class="c1"># HTTPS entry point</span>
+</span><span data-line="9"><span class="w">  </span><span class="nt">routes</span><span class="p">:</span>
+</span><span data-line="10"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Host(`mail.example.com`)</span>
+</span><span data-line="11"><span class="w">      </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Rule</span>
+</span><span data-line="12"><span class="w">      </span><span class="nt">services</span><span class="p">:</span>
+</span><span data-line="13"><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-front</span>
+</span><span data-line="14"><span class="w">          </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span><span class="w">  </span><span class="c1"># Mailu front service (plaintext internal)</span>
+</span><span data-line="15"><span class="w">  </span><span class="nt">tls</span><span class="p">:</span>
+</span><span data-line="16"><span class="w">    </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-tls-cert</span><span class="w">  </span><span class="c1"># Certificate from cert-manager</span>
+</span><span data-line="17"><span class="nn">---</span>
+</span><span data-line="18"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.io/v1alpha1</span>
+</span><span data-line="19"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IngressRoute</span>
+</span><span data-line="20"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="21"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-web-redirect</span>
+</span><span data-line="22"><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu</span>
+</span><span data-line="23"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="24"><span class="w">  </span><span class="nt">entryPoints</span><span class="p">:</span>
+</span><span data-line="25"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">web</span><span class="w">  </span><span class="c1"># HTTP entry point</span>
+</span><span data-line="26"><span class="w">  </span><span class="nt">routes</span><span class="p">:</span>
+</span><span data-line="27"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Host(`mail.example.com`)</span>
+</span><span data-line="28"><span class="w">      </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Rule</span>
+</span><span data-line="29"><span class="w">      </span><span class="nt">middlewares</span><span class="p">:</span>
+</span><span data-line="30"><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redirect-to-https</span>
+</span><span data-line="31"><span class="w">      </span><span class="nt">services</span><span class="p">:</span>
+</span><span data-line="32"><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-front</span>
+</span><span data-line="33"><span class="w">          </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span>
+</span><span data-line="34"><span class="nn">---</span>
+</span><span data-line="35"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.io/v1alpha1</span>
+</span><span data-line="36"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Middleware</span>
+</span><span data-line="37"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="38"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redirect-to-https</span>
+</span><span data-line="39"><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu</span>
+</span><span data-line="40"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="41"><span class="w">  </span><span class="nt">redirectScheme</span><span class="p">:</span>
+</span><span data-line="42"><span class="w">    </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https</span>
+</span><span data-line="43"><span class="w">    </span><span class="nt">permanent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span></pre></div>
+</div>
+</section>
+<section id="step-3-create-mail-protocol-ingressroutes">
+<h3>Step 3: Create Mail Protocol IngressRoutes<a class="headerlink" href="#step-3-create-mail-protocol-ingressroutes" title="Link to this heading">¶</a></h3>
+<p>Route SMTP, IMAP, POP3 traffic with TLS termination:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># SMTP Submission (port 587)</span>
+</span><span data-line="2"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.io/v1alpha1</span>
+</span><span data-line="3"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IngressRouteTCP</span>
+</span><span data-line="4"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="5"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-smtp-submission</span>
+</span><span data-line="6"><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu</span>
+</span><span data-line="7"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="8"><span class="w">  </span><span class="nt">entryPoints</span><span class="p">:</span>
+</span><span data-line="9"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smtp-submission</span><span class="w">  </span><span class="c1"># Traefik TCP entry point on port 587</span>
+</span><span data-line="10"><span class="w">  </span><span class="nt">routes</span><span class="p">:</span>
+</span><span data-line="11"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HostSNI(`*`)</span>
+</span><span data-line="12"><span class="w">      </span><span class="nt">services</span><span class="p">:</span>
+</span><span data-line="13"><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-front</span>
+</span><span data-line="14"><span class="w">          </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">587</span>
+</span><span data-line="15"><span class="w">  </span><span class="nt">tls</span><span class="p">:</span>
+</span><span data-line="16"><span class="w">    </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-tls-cert</span>
+</span><span data-line="17"><span class="nn">---</span>
+</span><span data-line="18"><span class="c1"># SMTPS (port 465)</span>
+</span><span data-line="19"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.io/v1alpha1</span>
+</span><span data-line="20"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IngressRouteTCP</span>
+</span><span data-line="21"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="22"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-smtps</span>
+</span><span data-line="23"><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu</span>
+</span><span data-line="24"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="25"><span class="w">  </span><span class="nt">entryPoints</span><span class="p">:</span>
+</span><span data-line="26"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smtps</span><span class="w">  </span><span class="c1"># Traefik TCP entry point on port 465</span>
+</span><span data-line="27"><span class="w">  </span><span class="nt">routes</span><span class="p">:</span>
+</span><span data-line="28"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HostSNI(`*`)</span>
+</span><span data-line="29"><span class="w">      </span><span class="nt">services</span><span class="p">:</span>
+</span><span data-line="30"><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-front</span>
+</span><span data-line="31"><span class="w">          </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">465</span>
+</span><span data-line="32"><span class="w">  </span><span class="nt">tls</span><span class="p">:</span>
+</span><span data-line="33"><span class="w">    </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-tls-cert</span>
+</span><span data-line="34"><span class="nn">---</span>
+</span><span data-line="35"><span class="c1"># IMAPS (port 993)</span>
+</span><span data-line="36"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.io/v1alpha1</span>
+</span><span data-line="37"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IngressRouteTCP</span>
+</span><span data-line="38"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="39"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-imaps</span>
+</span><span data-line="40"><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu</span>
+</span><span data-line="41"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="42"><span class="w">  </span><span class="nt">entryPoints</span><span class="p">:</span>
+</span><span data-line="43"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">imaps</span><span class="w">  </span><span class="c1"># Traefik TCP entry point on port 993</span>
+</span><span data-line="44"><span class="w">  </span><span class="nt">routes</span><span class="p">:</span>
+</span><span data-line="45"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HostSNI(`*`)</span>
+</span><span data-line="46"><span class="w">      </span><span class="nt">services</span><span class="p">:</span>
+</span><span data-line="47"><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-front</span>
+</span><span data-line="48"><span class="w">          </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">993</span>
+</span><span data-line="49"><span class="w">  </span><span class="nt">tls</span><span class="p">:</span>
+</span><span data-line="50"><span class="w">    </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-tls-cert</span>
+</span><span data-line="51"><span class="nn">---</span>
+</span><span data-line="52"><span class="c1"># POP3S (port 995)</span>
+</span><span data-line="53"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.io/v1alpha1</span>
+</span><span data-line="54"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IngressRouteTCP</span>
+</span><span data-line="55"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="56"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-pop3s</span>
+</span><span data-line="57"><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu</span>
+</span><span data-line="58"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="59"><span class="w">  </span><span class="nt">entryPoints</span><span class="p">:</span>
+</span><span data-line="60"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pop3s</span><span class="w">  </span><span class="c1"># Traefik TCP entry point on port 995</span>
+</span><span data-line="61"><span class="w">  </span><span class="nt">routes</span><span class="p">:</span>
+</span><span data-line="62"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HostSNI(`*`)</span>
+</span><span data-line="63"><span class="w">      </span><span class="nt">services</span><span class="p">:</span>
+</span><span data-line="64"><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-front</span>
+</span><span data-line="65"><span class="w">          </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">995</span>
+</span><span data-line="66"><span class="w">  </span><span class="nt">tls</span><span class="p">:</span>
+</span><span data-line="67"><span class="w">    </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-tls-cert</span>
+</span><span data-line="68"><span class="nn">---</span>
+</span><span data-line="69"><span class="c1"># SMTP (port 25, plaintext for receiving mail from other servers)</span>
+</span><span data-line="70"><span class="c1"># Port 25 routes directly to Postfix (bypassing Front/nginx) with rate limiting</span>
+</span><span data-line="71"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.io/v1alpha1</span>
+</span><span data-line="72"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MiddlewareTCP</span>
+</span><span data-line="73"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="74"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smtp-connection-limit</span>
+</span><span data-line="75"><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu</span>
+</span><span data-line="76"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="77"><span class="w">  </span><span class="nt">inFlightConn</span><span class="p">:</span>
+</span><span data-line="78"><span class="w">    </span><span class="nt">amount</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span><span class="w">  </span><span class="c1"># Max 15 simultaneous connections per source IP</span>
+</span><span data-line="79"><span class="nn">---</span>
+</span><span data-line="80"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.io/v1alpha1</span>
+</span><span data-line="81"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IngressRouteTCP</span>
+</span><span data-line="82"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="83"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-smtp</span>
+</span><span data-line="84"><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu</span>
+</span><span data-line="85"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="86"><span class="w">  </span><span class="nt">entryPoints</span><span class="p">:</span>
+</span><span data-line="87"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smtp</span><span class="w">  </span><span class="c1"># Traefik TCP entry point on port 25</span>
+</span><span data-line="88"><span class="w">  </span><span class="nt">routes</span><span class="p">:</span>
+</span><span data-line="89"><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HostSNI(`*`)</span>
+</span><span data-line="90"><span class="w">      </span><span class="nt">middlewares</span><span class="p">:</span>
+</span><span data-line="91"><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smtp-connection-limit</span><span class="w">  </span><span class="c1"># Apply rate limiting</span>
+</span><span data-line="92"><span class="w">      </span><span class="nt">services</span><span class="p">:</span>
+</span><span data-line="93"><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu-postfix</span><span class="w">  </span><span class="c1"># Direct to Postfix (bypasses Front/nginx)</span>
+</span><span data-line="94"><span class="w">          </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+</span><span data-line="95"><span class="w">  </span><span class="c1"># No TLS for port 25 (SMTP servers use STARTTLS opportunistically)</span>
+</span></pre></div>
+</div>
+<p>Apply:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>mailu-ingressroutes.yaml
+</span></pre></div>
+</div>
+</section>
+<section id="step-4-configure-traefik-entry-points">
+<h3>Step 4: Configure Traefik Entry Points<a class="headerlink" href="#step-4-configure-traefik-entry-points" title="Link to this heading">¶</a></h3>
+<p>Ensure Traefik has the required TCP entry points configured. This is typically done in Traefik’s Helm values or static configuration:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Traefik Helm values or static config</span>
+</span><span data-line="2"><span class="nt">ports</span><span class="p">:</span>
+</span><span data-line="3"><span class="w">  </span><span class="nt">web</span><span class="p">:</span>
+</span><span data-line="4"><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span>
+</span><span data-line="5"><span class="w">    </span><span class="nt">exposedPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span>
+</span><span data-line="6"><span class="w">  </span><span class="nt">websecure</span><span class="p">:</span>
+</span><span data-line="7"><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">443</span>
+</span><span data-line="8"><span class="w">    </span><span class="nt">exposedPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">443</span>
+</span><span data-line="9"><span class="w">  </span><span class="nt">smtp</span><span class="p">:</span>
+</span><span data-line="10"><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+</span><span data-line="11"><span class="w">    </span><span class="nt">exposedPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+</span><span data-line="12"><span class="w">  </span><span class="nt">smtp-submission</span><span class="p">:</span>
+</span><span data-line="13"><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">587</span>
+</span><span data-line="14"><span class="w">    </span><span class="nt">exposedPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">587</span>
+</span><span data-line="15"><span class="w">  </span><span class="nt">smtps</span><span class="p">:</span>
+</span><span data-line="16"><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">465</span>
+</span><span data-line="17"><span class="w">    </span><span class="nt">exposedPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">465</span>
+</span><span data-line="18"><span class="w">  </span><span class="nt">imaps</span><span class="p">:</span>
+</span><span data-line="19"><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">993</span>
+</span><span data-line="20"><span class="w">    </span><span class="nt">exposedPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">993</span>
+</span><span data-line="21"><span class="w">  </span><span class="nt">pop3s</span><span class="p">:</span>
+</span><span data-line="22"><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">995</span>
+</span><span data-line="23"><span class="w">    </span><span class="nt">exposedPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">995</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="smtp-rate-limiting-strategy">
+<h2>SMTP Rate Limiting Strategy<a class="headerlink" href="#smtp-rate-limiting-strategy" title="Link to this heading">¶</a></h2>
+<p>Port 25 (SMTP) uses a <strong>hybrid rate limiting approach</strong> to protect against spam and connection flooding:</p>
+<section id="layer-1-traefik-inflightconn-ingress-level">
+<h3>Layer 1: Traefik InFlightConn (Ingress Level)<a class="headerlink" href="#layer-1-traefik-inflightconn-ingress-level" title="Link to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">MiddlewareTCP</span></code> resource limits <strong>simultaneous connections</strong> per source IP:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.io/v1alpha1</span>
+</span><span data-line="2"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MiddlewareTCP</span>
+</span><span data-line="3"><span class="nt">metadata</span><span class="p">:</span>
+</span><span data-line="4"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smtp-connection-limit</span>
+</span><span data-line="5"><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mailu</span>
+</span><span data-line="6"><span class="nt">spec</span><span class="p">:</span>
+</span><span data-line="7"><span class="w">  </span><span class="nt">inFlightConn</span><span class="p">:</span>
+</span><span data-line="8"><span class="w">    </span><span class="nt">amount</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span><span class="w">  </span><span class="c1"># Max 15 concurrent connections per IP</span>
+</span></pre></div>
+</div>
+<p><strong>What it protects against</strong>:</p>
+<ul class="simple">
+<li><p>Connection flooding attacks</p></li>
+<li><p>Resource exhaustion at ingress layer</p></li>
+<li><p>Fast rejection before traffic reaches Postfix</p></li>
+</ul>
+<p><strong>Limitations</strong>:</p>
+<ul class="simple">
+<li><p>Does NOT limit connection rate over time (e.g., rapid connect/disconnect)</p></li>
+<li><p>Does NOT limit message rate or recipient rate</p></li>
+</ul>
+</section>
+<section id="layer-2-postfix-anvil-application-level">
+<h3>Layer 2: Postfix anvil (Application Level)<a class="headerlink" href="#layer-2-postfix-anvil-application-level" title="Link to this heading">¶</a></h3>
+<p>Postfix’s built-in <code class="docutils literal notranslate"><span class="pre">anvil(8)</span></code> daemon provides comprehensive SMTP rate limiting:</p>
+<p><strong>Configured automatically by cdk8s-mailu</strong>:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1">// In PostfixConstruct - automatically applied</span>
+</span><span data-line="2"><span class="nx">POSTFIX_smtpd_client_connection_rate_limit</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;60&quot;</span><span class="w">   </span><span class="c1">// 60 connections per minute per IP</span>
+</span><span data-line="3"><span class="nx">POSTFIX_smtpd_client_connection_count_limit</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;10&quot;</span><span class="w">  </span><span class="c1">// 10 simultaneous connections per IP</span>
+</span><span data-line="4"><span class="nx">POSTFIX_smtpd_client_message_rate_limit</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;100&quot;</span><span class="w">     </span><span class="c1">// 100 messages per minute per IP</span>
+</span><span data-line="5"><span class="nx">POSTFIX_smtpd_client_recipient_rate_limit</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;300&quot;</span><span class="w">   </span><span class="c1">// 300 recipients per minute per IP</span>
+</span><span data-line="6"><span class="nx">POSTFIX_anvil_rate_time_unit</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;60s&quot;</span><span class="w">                </span><span class="c1">// Time unit for rate calculations</span>
+</span></pre></div>
+</div>
+<p><strong>What it protects against</strong>:</p>
+<ul class="simple">
+<li><p>High connection rates (rapid connect/disconnect attacks)</p></li>
+<li><p>Message flooding</p></li>
+<li><p>Recipient harvesting attacks</p></li>
+<li><p>Spam relay attempts</p></li>
+</ul>
+<p><strong>How it works</strong>:</p>
+<ul class="simple">
+<li><p>Postfix <code class="docutils literal notranslate"><span class="pre">anvil</span></code> daemon tracks per-IP statistics in memory</p></li>
+<li><p>Automatically rejects connections/messages exceeding limits with SMTP error codes</p></li>
+<li><p>Trusted networks (defined in <code class="docutils literal notranslate"><span class="pre">$mynetworks</span></code>) are exempt from limits</p></li>
+<li><p>Statistics reset on Postfix pod restart (no persistent state)</p></li>
+</ul>
+</section>
+<section id="why-port-25-bypasses-nginx">
+<h3>Why Port 25 Bypasses nginx<a class="headerlink" href="#why-port-25-bypasses-nginx" title="Link to this heading">¶</a></h3>
+<p><strong>Traditional Mailu architecture</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">Port 25: Traefik → Front (nginx) → Postfix
+</span></pre></div>
+</div>
+<p><strong>Optimized architecture</strong> (used by cdk8s-mailu):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">Port 25: Traefik (InFlightConn) → Postfix (anvil rate limits)
+</span></pre></div>
+</div>
+<p><strong>Rationale</strong>:</p>
+<ul class="simple">
+<li><p>Port 25 never requires authentication (RFC 5321 - MX mail delivery standard)</p></li>
+<li><p>nginx provides zero security value for port 25 (no auth to proxy)</p></li>
+<li><p>Postfix has robust spam filtering (Rspamd, DNSBL, rate limiting)</p></li>
+<li><p>Reduced latency for incoming mail (one less proxy hop)</p></li>
+<li><p>Improved reliability (nginx restart doesn’t affect MX delivery)</p></li>
+</ul>
+<p><strong>Authenticated ports (587, 465, 993, 995)</strong> still route through Front (nginx) for protocol-aware authentication proxy.</p>
+</section>
+<section id="adjusting-rate-limits">
+<h3>Adjusting Rate Limits<a class="headerlink" href="#adjusting-rate-limits" title="Link to this heading">¶</a></h3>
+<p>If you need to customize rate limits for your deployment size:</p>
+<p><strong>Small deployments (&lt; 50 users)</strong>:</p>
+<ul class="simple">
+<li><p>Use default limits (60 conn/min, 100 msg/min)</p></li>
+<li><p>Automated ingress: <code class="docutils literal notranslate"><span class="pre">smtpConnectionLimit:</span> <span class="pre">15</span></code></p></li>
+</ul>
+<p><strong>Medium deployments (50-500 users)</strong>:</p>
+<ul class="simple">
+<li><p>Automated ingress: <code class="docutils literal notranslate"><span class="pre">smtpConnectionLimit:</span> <span class="pre">25</span></code></p></li>
+<li><p>Increase Postfix limits:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">connection_rate_limit:</span> <span class="pre">120</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">message_rate_limit:</span> <span class="pre">200</span></code></p></li>
+</ul>
+</li>
+</ul>
+<p><strong>Large deployments (500+ users)</strong>:</p>
+<ul class="simple">
+<li><p>Automated ingress: <code class="docutils literal notranslate"><span class="pre">smtpConnectionLimit:</span> <span class="pre">50</span></code></p></li>
+<li><p>Increase Postfix limits:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">connection_rate_limit:</span> <span class="pre">180</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">message_rate_limit:</span> <span class="pre">300</span></code></p></li>
+</ul>
+</li>
+</ul>
+<p><strong>Note</strong>: Rate limits should protect against abuse, not regulate legitimate traffic. Most legitimate mail servers send at well below these thresholds.</p>
+</section>
+</section>
+<section id="verify-tls-configuration">
+<h2>Verify TLS Configuration<a class="headerlink" href="#verify-tls-configuration" title="Link to this heading">¶</a></h2>
+<section id="test-https-access">
+<h3>Test HTTPS Access<a class="headerlink" href="#test-https-access" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Should return 200 OK and valid TLS certificate</span>
+</span><span data-line="2">curl<span class="w"> </span>-I<span class="w"> </span>https://mail.example.com/admin
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Check certificate details</span>
+</span><span data-line="5">openssl<span class="w"> </span>s_client<span class="w"> </span>-connect<span class="w"> </span>mail.example.com:443<span class="w"> </span>-servername<span class="w"> </span>mail.example.com<span class="w"> </span>&lt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>openssl<span class="w"> </span>x509<span class="w"> </span>-noout<span class="w"> </span>-subject<span class="w"> </span>-dates
+</span></pre></div>
+</div>
+</section>
+<section id="test-mail-protocols">
+<h3>Test Mail Protocols<a class="headerlink" href="#test-mail-protocols" title="Link to this heading">¶</a></h3>
+<p><strong>SMTP Submission (587)</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">openssl<span class="w"> </span>s_client<span class="w"> </span>-connect<span class="w"> </span>mail.example.com:587<span class="w"> </span>-starttls<span class="w"> </span>smtp
+</span><span data-line="2"><span class="c1"># Should show TLS handshake success</span>
+</span></pre></div>
+</div>
+<p><strong>IMAPS (993)</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">openssl<span class="w"> </span>s_client<span class="w"> </span>-connect<span class="w"> </span>mail.example.com:993
+</span><span data-line="2"><span class="c1"># Should show TLS handshake and IMAP greeting</span>
+</span></pre></div>
+</div>
+<p><strong>SMTPS (465)</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">openssl<span class="w"> </span>s_client<span class="w"> </span>-connect<span class="w"> </span>mail.example.com:465
+</span><span data-line="2"><span class="c1"># Should show TLS handshake and SMTP greeting</span>
+</span></pre></div>
+</div>
+</section>
+<section id="configure-email-client">
+<h3>Configure Email Client<a class="headerlink" href="#configure-email-client" title="Link to this heading">¶</a></h3>
+<p>Use these settings in your email client (Thunderbird, Outlook, etc.):</p>
+<p><strong>Incoming Mail (IMAP)</strong>:</p>
+<ul class="simple">
+<li><p>Server: <code class="docutils literal notranslate"><span class="pre">mail.example.com</span></code></p></li>
+<li><p>Port: <code class="docutils literal notranslate"><span class="pre">993</span></code></p></li>
+<li><p>Security: <code class="docutils literal notranslate"><span class="pre">SSL/TLS</span></code></p></li>
+<li><p>Authentication: <code class="docutils literal notranslate"><span class="pre">Normal</span> <span class="pre">password</span></code></p></li>
+</ul>
+<p><strong>Outgoing Mail (SMTP)</strong>:</p>
+<ul class="simple">
+<li><p>Server: <code class="docutils literal notranslate"><span class="pre">mail.example.com</span></code></p></li>
+<li><p>Port: <code class="docutils literal notranslate"><span class="pre">587</span></code> (or <code class="docutils literal notranslate"><span class="pre">465</span></code>)</p></li>
+<li><p>Security: <code class="docutils literal notranslate"><span class="pre">STARTTLS</span></code> (587) or <code class="docutils literal notranslate"><span class="pre">SSL/TLS</span></code> (465)</p></li>
+<li><p>Authentication: <code class="docutils literal notranslate"><span class="pre">Normal</span> <span class="pre">password</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">¶</a></h2>
+<section id="certificate-not-provisioned">
+<h3>Certificate not provisioned<a class="headerlink" href="#certificate-not-provisioned" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: Certificate stuck in “Issuing” state or shows errors.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check certificate status</span>
+</span><span data-line="2">kubectl<span class="w"> </span>describe<span class="w"> </span>certificate<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-tls
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Check cert-manager logs</span>
+</span><span data-line="5">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>cert-manager<span class="w"> </span>deploy/cert-manager
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Common causes:</span>
+</span><span data-line="8"><span class="c1"># - DNS not pointing to cluster</span>
+</span><span data-line="9"><span class="c1"># - Firewall blocking port 80 (Let&#39;s Encrypt HTTP-01 challenge)</span>
+</span><span data-line="10"><span class="c1"># - Rate limit exceeded (Let&#39;s Encrypt has rate limits)</span>
+</span></pre></div>
+</div>
+<p><strong>Solution</strong>: Verify DNS and ensure port 80 is accessible from internet.</p>
+</section>
+<section id="mail-client-cannot-connect">
+<h3>Mail client cannot connect<a class="headerlink" href="#mail-client-cannot-connect" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: Email client shows connection timeout or certificate errors.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Test connectivity from outside cluster</span>
+</span><span data-line="2">telnet<span class="w"> </span>mail.example.com<span class="w"> </span><span class="m">587</span>
+</span><span data-line="3">telnet<span class="w"> </span>mail.example.com<span class="w"> </span><span class="m">993</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Check IngressRoute status</span>
+</span><span data-line="6">kubectl<span class="w"> </span>get<span class="w"> </span>ingressroutetcp<span class="w"> </span>-n<span class="w"> </span>mailu
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Check Traefik logs</span>
+</span><span data-line="9">kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span>-l<span class="w"> </span>app.kubernetes.io/name<span class="o">=</span>traefik
+</span></pre></div>
+</div>
+<p><strong>Common causes</strong>:</p>
+<ul class="simple">
+<li><p>Traefik entry points not configured for mail ports</p></li>
+<li><p>Firewall blocking mail ports</p></li>
+<li><p>Service type not LoadBalancer or NodePort</p></li>
+</ul>
+</section>
+<section id="tls-handshake-failures">
+<h3>TLS handshake failures<a class="headerlink" href="#tls-handshake-failures" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: <code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">s_client</span></code> fails or shows certificate errors.</p>
+<p><strong>Solution</strong>: Verify certificate secret exists and contains valid data:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check secret</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-tls
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># View certificate details</span>
+</span><span data-line="5">kubectl<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-tls<span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{.data.tls\.crt}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="w"> </span>-d<span class="w"> </span><span class="p">|</span><span class="w"> </span>openssl<span class="w"> </span>x509<span class="w"> </span>-noout<span class="w"> </span>-text
+</span></pre></div>
+</div>
+</section>
+<section id="webmail-not-accessible-over-https">
+<h3>Webmail not accessible over HTTPS<a class="headerlink" href="#webmail-not-accessible-over-https" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: HTTPS redirects failing or webmail shows “not found”.</p>
+<p><strong>Solution</strong>: Check Ingress and service:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Verify Ingress exists</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>ingress<span class="w"> </span>-n<span class="w"> </span>mailu
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Check IngressRoute if using manual setup</span>
+</span><span data-line="5">kubectl<span class="w"> </span>get<span class="w"> </span>ingressroute<span class="w"> </span>-n<span class="w"> </span>mailu
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Test internal service</span>
+</span><span data-line="8">kubectl<span class="w"> </span>port-forward<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>svc/mailu-front<span class="w"> </span><span class="m">8080</span>:80
+</span><span data-line="9">curl<span class="w"> </span>http://localhost:8080/admin
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="alternative-nodeport-for-testing">
+<h2>Alternative: NodePort for Testing<a class="headerlink" href="#alternative-nodeport-for-testing" title="Link to this heading">¶</a></h2>
+<p>For testing without Traefik, use NodePort service type (not recommended for production):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Expose Front service as NodePort (after deploying with cdk8s-mailu)</span>
+</span><span data-line="2">kubectl<span class="w"> </span>patch<span class="w"> </span>svc<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-front<span class="w"> </span>-p<span class="w"> </span><span class="s1">&#39;{&quot;spec&quot;:{&quot;type&quot;:&quot;NodePort&quot;}}&#39;</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Get assigned node ports</span>
+</span><span data-line="5">kubectl<span class="w"> </span>get<span class="w"> </span>svc<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-front
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Access via http://&lt;node-ip&gt;:&lt;node-port&gt;</span>
+</span></pre></div>
+</div>
+<p><strong>Note</strong>: This exposes Mailu without TLS encryption. Only use for testing.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../explanation/dovecot-submission.html"><span class="std std-doc">Dovecot Submission Service</span></a> - Understanding webmail email sending</p></li>
+<li><p><a class="reference internal" href="../explanation/architecture.html"><span class="std std-doc">Architecture</span></a> - Component relationships</p></li>
+<li><p><a class="reference internal" href="manage-secrets.html"><span class="std std-doc">Manage Secrets</span></a> - Creating TLS certificate secrets manually</p></li>
+<li><p><a class="reference internal" href="../reference/configuration-options.html"><span class="std std-doc">Configuration Reference</span></a> - Complete ingress configuration options</p></li>
+<li><p><a class="reference external" href="https://doc.traefik.io/traefik/routing/routers/">Traefik Documentation</a> - IngressRoute configuration</p></li>
+<li><p><a class="reference external" href="https://cert-manager.io/docs/">cert-manager Documentation</a> - Certificate provisioning</p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="enable-optional-components.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Enable Optional Components</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="manage-secrets.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Manage Secrets</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

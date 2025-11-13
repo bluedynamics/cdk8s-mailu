@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Customize Storage - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Enable Optional Components" href="enable-optional-components.html" /><link rel="prev" title="Scale Resources" href="scale-resources.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/how-to/customize-storage.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/how-to/customize-storage.html"/>
+  <meta property="og:title" content="Customize Storage"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">How-To Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/index.html">Explanation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#problem">Problem</a></li>
+<li><a class="reference internal" href="#solution">Solution</a></li>
+<li><a class="reference internal" href="#understanding-storage-requirements">Understanding Storage Requirements</a></li>
+<li><a class="reference internal" href="#set-global-storage-class">Set Global Storage Class</a></li>
+<li><a class="reference internal" href="#customize-component-storage-sizes">Customize Component Storage Sizes</a><ul>
+<li><a class="reference internal" href="#small-deployment-50-users">Small Deployment (&lt; 50 users)</a></li>
+<li><a class="reference internal" href="#medium-deployment-50-500-users">Medium Deployment (50-500 users)</a></li>
+<li><a class="reference internal" href="#large-deployment-500-users">Large Deployment (500+ users)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#override-storage-class-per-component">Override Storage Class Per Component</a></li>
+<li><a class="reference internal" href="#enable-optional-component-storage">Enable Optional Component Storage</a></li>
+<li><a class="reference internal" href="#expand-existing-pvcs">Expand Existing PVCs</a><ul>
+<li><a class="reference internal" href="#step-1-update-configuration">Step 1: Update configuration</a></li>
+<li><a class="reference internal" href="#step-2-regenerate-and-apply">Step 2: Regenerate and apply</a></li>
+<li><a class="reference internal" href="#step-3-verify-expansion">Step 3: Verify expansion</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#storage-performance-optimization">Storage Performance Optimization</a><ul>
+<li><a class="reference internal" href="#longhorn-replica-configuration">Longhorn Replica Configuration</a></li>
+<li><a class="reference internal" href="#monitor-storage-usage">Monitor Storage Usage</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#pvc-stuck-in-pending">PVC stuck in Pending</a></li>
+<li><a class="reference internal" href="#pvc-expansion-not-working">PVC expansion not working</a></li>
+<li><a class="reference internal" href="#out-of-storage-space">Out of storage space</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#estimate-storage-requirements">Estimate Storage Requirements</a><ul>
+<li><a class="reference internal" href="#calculating-dovecot-mailbox-storage">Calculating Dovecot mailbox storage</a></li>
+<li><a class="reference internal" href="#monitoring-actual-usage">Monitoring actual usage</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">How-To Guides</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Customize Storage</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="customize-storage">
+<h1>Customize Storage<a class="headerlink" href="#customize-storage" title="Link to this heading">¶</a></h1>
+<p><strong>How to adjust PersistentVolumeClaim sizes and storage classes for Mailu components.</strong></p>
+<section id="problem">
+<h2>Problem<a class="headerlink" href="#problem" title="Link to this heading">¶</a></h2>
+<p>You need to customize storage sizes for mailboxes, queues, and other persistent data based on your expected user count, email volume, or available storage classes.</p>
+</section>
+<section id="solution">
+<h2>Solution<a class="headerlink" href="#solution" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">MailuChart</span></code> accepts a <code class="docutils literal notranslate"><span class="pre">storage</span></code> configuration object that controls PVC sizes and storage classes for each component. Configure a global storage class and override sizes per component.</p>
+</section>
+<section id="understanding-storage-requirements">
+<h2>Understanding Storage Requirements<a class="headerlink" href="#understanding-storage-requirements" title="Link to this heading">¶</a></h2>
+<p>Different Mailu components have different storage needs:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Component</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Typical Size</p></th>
+<th class="head"><p>Growth Rate</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Dovecot</strong></p></td>
+<td><p>User mailboxes (largest)</p></td>
+<td><p>50-500Gi</p></td>
+<td><p>1-5GB per active user</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Postfix</strong></p></td>
+<td><p>Mail queue</p></td>
+<td><p>5-10Gi</p></td>
+<td><p>Temporary, self-cleaning</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Rspamd</strong></p></td>
+<td><p>Spam learning data</p></td>
+<td><p>5Gi</p></td>
+<td><p>Slow growth</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Admin</strong></p></td>
+<td><p>DKIM keys, config</p></td>
+<td><p>5Gi</p></td>
+<td><p>Minimal growth</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>ClamAV</strong></p></td>
+<td><p>Virus signatures</p></td>
+<td><p>5Gi</p></td>
+<td><p>Periodic updates</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Webdav</strong></p></td>
+<td><p>Calendars, contacts</p></td>
+<td><p>5-20Gi</p></td>
+<td><p>50-200MB per user</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="set-global-storage-class">
+<h2>Set Global Storage Class<a class="headerlink" href="#set-global-storage-class" title="Link to this heading">¶</a></h2>
+<p>Configure a default storage class for all components:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">App</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s&#39;</span><span class="p">;</span>
+</span><span data-line="2"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">MailuChart</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s-mailu&#39;</span><span class="p">;</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">App</span><span class="p">();</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="ow">new</span><span class="w"> </span><span class="nx">MailuChart</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">namespace</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span>
+</span><span data-line="8"><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;example.com&#39;</span><span class="p">,</span>
+</span><span data-line="9"><span class="w">  </span><span class="nx">hostnames</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;mail.example.com&#39;</span><span class="p">],</span>
+</span><span data-line="10"><span class="w">  </span><span class="nx">subnet</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10.42.0.0/16&#39;</span><span class="p">,</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="w">  </span><span class="c1">// ... other config ...</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="w">  </span><span class="nx">storage</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="15"><span class="w">    </span><span class="nx">storageClass</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;longhorn&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// Applied to all components</span>
+</span><span data-line="16"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="17"><span class="p">});</span>
+</span><span data-line="18">
+</span><span data-line="19"><span class="nx">app</span><span class="p">.</span><span class="nx">synth</span><span class="p">();</span>
+</span></pre></div>
+</div>
+<p><strong>Common storage classes</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">longhorn</span></code> - Longhorn distributed storage (recommended for production)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">local-path</span></code> - K3s default local storage (testing only)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">standard</span></code> - Cloud provider default</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gp2</span></code>, <code class="docutils literal notranslate"><span class="pre">gp3</span></code> - AWS EBS</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pd-standard</span></code>, <code class="docutils literal notranslate"><span class="pre">pd-ssd</span></code> - GCP Persistent Disk</p></li>
+</ul>
+</section>
+<section id="customize-component-storage-sizes">
+<h2>Customize Component Storage Sizes<a class="headerlink" href="#customize-component-storage-sizes" title="Link to this heading">¶</a></h2>
+<section id="small-deployment-50-users">
+<h3>Small Deployment (&lt; 50 users)<a class="headerlink" href="#small-deployment-50-users" title="Link to this heading">¶</a></h3>
+<p>Minimal storage footprint for personal or small team use:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">storage</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">storageClass</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;longhorn&#39;</span><span class="p">,</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="w">  </span><span class="nx">admin</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;5Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">      </span><span class="c1">// Default</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">postfix</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;5Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">    </span><span class="c1">// Default</span>
+</span><span data-line="6"><span class="w">  </span><span class="nx">dovecot</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;50Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">   </span><span class="c1">// ~1GB per user</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">rspamd</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;5Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">     </span><span class="c1">// Default</span>
+</span><span data-line="8"><span class="p">},</span>
+</span></pre></div>
+</div>
+</section>
+<section id="medium-deployment-50-500-users">
+<h3>Medium Deployment (50-500 users)<a class="headerlink" href="#medium-deployment-50-500-users" title="Link to this heading">¶</a></h3>
+<p>Scale mailbox storage for more users:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">storage</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">storageClass</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;longhorn&#39;</span><span class="p">,</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="w">  </span><span class="nx">admin</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;5Gi&#39;</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">postfix</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">    </span><span class="c1">// Larger queue for volume</span>
+</span><span data-line="6"><span class="w">  </span><span class="nx">dovecot</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;200Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">   </span><span class="c1">// ~4GB per user average</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">rspamd</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">     </span><span class="c1">// More spam learning data</span>
+</span><span data-line="8"><span class="p">},</span>
+</span></pre></div>
+</div>
+</section>
+<section id="large-deployment-500-users">
+<h3>Large Deployment (500+ users)<a class="headerlink" href="#large-deployment-500-users" title="Link to this heading">¶</a></h3>
+<p>Production-scale storage with capacity planning:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">storage</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">storageClass</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;longhorn&#39;</span><span class="p">,</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="w">  </span><span class="nx">admin</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10Gi&#39;</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">postfix</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;20Gi&#39;</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="6"><span class="w">  </span><span class="nx">dovecot</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;1000Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">  </span><span class="c1">// Plan for 2GB per user</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">rspamd</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;20Gi&#39;</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="8"><span class="p">},</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="override-storage-class-per-component">
+<h2>Override Storage Class Per Component<a class="headerlink" href="#override-storage-class-per-component" title="Link to this heading">¶</a></h2>
+<p>Use different storage classes for different performance tiers:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">storage</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="c1">// Default storage class (standard tier)</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">storageClass</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;longhorn&#39;</span><span class="p">,</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="w">  </span><span class="c1">// High-performance storage for mailboxes (SSD-backed)</span>
+</span><span data-line="6"><span class="w">  </span><span class="nx">dovecot</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="7"><span class="w">    </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;200Gi&#39;</span><span class="p">,</span>
+</span><span data-line="8"><span class="w">    </span><span class="nx">storageClass</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;longhorn-fast&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// Override with faster class</span>
+</span><span data-line="9"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="w">  </span><span class="c1">// Standard storage for queues and caches</span>
+</span><span data-line="12"><span class="w">  </span><span class="nx">postfix</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">  </span><span class="c1">// Uses default &#39;longhorn&#39;</span>
+</span><span data-line="13"><span class="w">  </span><span class="nx">rspamd</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">   </span><span class="c1">// Uses default &#39;longhorn&#39;</span>
+</span><span data-line="14"><span class="p">},</span>
+</span></pre></div>
+</div>
+<p><strong>Use cases for per-component storage classes</strong>:</p>
+<ul class="simple">
+<li><p>Fast SSDs for Dovecot mailboxes (high IOPS)</p></li>
+<li><p>Standard disks for Postfix queue (temporary data)</p></li>
+<li><p>Cheaper storage for backups</p></li>
+</ul>
+</section>
+<section id="enable-optional-component-storage">
+<h2>Enable Optional Component Storage<a class="headerlink" href="#enable-optional-component-storage" title="Link to this heading">¶</a></h2>
+<p>When enabling optional components, configure their storage:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">components</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">clamav</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">webdav</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+</span><span data-line="4"><span class="p">},</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="nx">storage</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">storageClass</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;longhorn&#39;</span><span class="p">,</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="w">  </span><span class="c1">// Required for enabled optional components</span>
+</span><span data-line="10"><span class="w">  </span><span class="nx">clamav</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">  </span><span class="c1">// Virus signature database</span>
+</span><span data-line="11"><span class="w">  </span><span class="nx">webdav</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;20Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">  </span><span class="c1">// Calendars and contacts</span>
+</span><span data-line="12"><span class="p">},</span>
+</span></pre></div>
+</div>
+</section>
+<section id="expand-existing-pvcs">
+<h2>Expand Existing PVCs<a class="headerlink" href="#expand-existing-pvcs" title="Link to this heading">¶</a></h2>
+<p><strong>Important</strong>: PVC sizes can be increased but <strong>never decreased</strong>. Shrinking requires deleting and recreating the PVC (data loss).</p>
+<section id="step-1-update-configuration">
+<h3>Step 1: Update configuration<a class="headerlink" href="#step-1-update-configuration" title="Link to this heading">¶</a></h3>
+<p>Increase the size in your CDK8S configuration:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">storage</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">storageClass</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;longhorn&#39;</span><span class="p">,</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">dovecot</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;500Gi&#39;</span><span class="w"> </span><span class="p">},</span><span class="w">  </span><span class="c1">// Increased from 200Gi</span>
+</span><span data-line="4"><span class="p">},</span>
+</span></pre></div>
+</div>
+</section>
+<section id="step-2-regenerate-and-apply">
+<h3>Step 2: Regenerate and apply<a class="headerlink" href="#step-2-regenerate-and-apply" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Regenerate manifests with new size</span>
+</span><span data-line="2">npm<span class="w"> </span>run<span class="w"> </span>synth
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Apply changes</span>
+</span><span data-line="5">kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>dist/mailu.k8s.yaml
+</span></pre></div>
+</div>
+</section>
+<section id="step-3-verify-expansion">
+<h3>Step 3: Verify expansion<a class="headerlink" href="#step-3-verify-expansion" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check PVC status</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>pvc<span class="w"> </span>-n<span class="w"> </span>mailu
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Verify new size (should show RESIZING or new size)</span>
+</span><span data-line="5">kubectl<span class="w"> </span>describe<span class="w"> </span>pvc<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>mailu-dovecot-pvc
+</span></pre></div>
+</div>
+<p><strong>Note</strong>: The storage class must support volume expansion (<code class="docutils literal notranslate"><span class="pre">allowVolumeExpansion:</span> <span class="pre">true</span></code>). Check with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>get<span class="w"> </span>storageclass<span class="w"> </span>&lt;storage-class-name&gt;<span class="w"> </span>-o<span class="w"> </span>yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>allowVolumeExpansion
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="storage-performance-optimization">
+<h2>Storage Performance Optimization<a class="headerlink" href="#storage-performance-optimization" title="Link to this heading">¶</a></h2>
+<section id="longhorn-replica-configuration">
+<h3>Longhorn Replica Configuration<a class="headerlink" href="#longhorn-replica-configuration" title="Link to this heading">¶</a></h3>
+<p>For Longhorn storage, consider replica settings based on data criticality:</p>
+<p><strong>High availability</strong> (mailboxes):</p>
+<ul class="simple">
+<li><p>3 replicas across nodes</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">longhorn</span></code> storage class with 2-3 replicas</p></li>
+</ul>
+<p><strong>Standard reliability</strong> (queues, caches):</p>
+<ul class="simple">
+<li><p>2 replicas</p></li>
+<li><p>Use default <code class="docutils literal notranslate"><span class="pre">longhorn</span></code> storage class</p></li>
+</ul>
+<p><strong>Single replica</strong> (temporary data):</p>
+<ul class="simple">
+<li><p>1 replica</p></li>
+<li><p>Lower storage overhead</p></li>
+<li><p>Not recommended for mailboxes</p></li>
+</ul>
+<p><strong>Note</strong>: Replica configuration is set at the storage class level, not per-PVC.</p>
+</section>
+<section id="monitor-storage-usage">
+<h3>Monitor Storage Usage<a class="headerlink" href="#monitor-storage-usage" title="Link to this heading">¶</a></h3>
+<p>Track storage consumption to plan capacity:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check PVC usage</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>pvc<span class="w"> </span>-n<span class="w"> </span>mailu
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Detailed usage per pod</span>
+</span><span data-line="5">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>&lt;dovecot-pod-name&gt;<span class="w"> </span>--<span class="w"> </span>df<span class="w"> </span>-h<span class="w"> </span>/mail
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Check available capacity on nodes (Longhorn)</span>
+</span><span data-line="8">kubectl<span class="w"> </span>get<span class="w"> </span>nodes.longhorn.io<span class="w"> </span>-n<span class="w"> </span>longhorn-system
+</span></pre></div>
+</div>
+<p>Set up monitoring alerts at 70% and 85% capacity thresholds.</p>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">¶</a></h2>
+<section id="pvc-stuck-in-pending">
+<h3>PVC stuck in Pending<a class="headerlink" href="#pvc-stuck-in-pending" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: PVC shows <code class="docutils literal notranslate"><span class="pre">Pending</span></code> status, pod cannot start.</p>
+<p><strong>Solution</strong>: Check storage class exists and has available capacity.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check PVC status</span>
+</span><span data-line="2">kubectl<span class="w"> </span>describe<span class="w"> </span>pvc<span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>&lt;pvc-name&gt;
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Check storage class</span>
+</span><span data-line="5">kubectl<span class="w"> </span>get<span class="w"> </span>storageclass
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Check node storage capacity (Longhorn)</span>
+</span><span data-line="8">kubectl<span class="w"> </span>get<span class="w"> </span>nodes.longhorn.io<span class="w"> </span>-n<span class="w"> </span>longhorn-system
+</span></pre></div>
+</div>
+</section>
+<section id="pvc-expansion-not-working">
+<h3>PVC expansion not working<a class="headerlink" href="#pvc-expansion-not-working" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: PVC size unchanged after applying new configuration.</p>
+<p><strong>Solution</strong>: Verify storage class supports expansion:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check storage class expansion support</span>
+</span><span data-line="2">kubectl<span class="w"> </span>get<span class="w"> </span>storageclass<span class="w"> </span>&lt;storage-class-name&gt;<span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{.allowVolumeExpansion}&#39;</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># If false, expansion is not supported</span>
+</span><span data-line="5"><span class="c1"># Alternative: Create new PVC with larger size and migrate data</span>
+</span></pre></div>
+</div>
+</section>
+<section id="out-of-storage-space">
+<h3>Out of storage space<a class="headerlink" href="#out-of-storage-space" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom</strong>: Pods show disk pressure, writes failing.</p>
+<p><strong>Immediate fix</strong>: Increase PVC size (see expansion section above).</p>
+<p><strong>Long-term</strong>:</p>
+<ul class="simple">
+<li><p>Set up storage monitoring and alerting</p></li>
+<li><p>Review mailbox quotas in Mailu admin UI</p></li>
+<li><p>Enable email compression in Dovecot</p></li>
+<li><p>Implement email retention policies</p></li>
+</ul>
+</section>
+</section>
+<section id="estimate-storage-requirements">
+<h2>Estimate Storage Requirements<a class="headerlink" href="#estimate-storage-requirements" title="Link to this heading">¶</a></h2>
+<section id="calculating-dovecot-mailbox-storage">
+<h3>Calculating Dovecot mailbox storage<a class="headerlink" href="#calculating-dovecot-mailbox-storage" title="Link to this heading">¶</a></h3>
+<p><strong>Formula</strong>: <code class="docutils literal notranslate"><span class="pre">Total</span> <span class="pre">Storage</span> <span class="pre">=</span> <span class="pre">(Active</span> <span class="pre">Users</span> <span class="pre">×</span> <span class="pre">Average</span> <span class="pre">MB</span> <span class="pre">per</span> <span class="pre">User</span> <span class="pre">×</span> <span class="pre">Growth</span> <span class="pre">Factor)</span> <span class="pre">+</span> <span class="pre">Buffer</span></code></p>
+<p><strong>Example</strong> (100 users):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">Active users: 100
+</span><span data-line="2">Average per user: 3GB (typical)
+</span><span data-line="3">Growth factor: 1.5 (50% growth over 2 years)
+</span><span data-line="4">Buffer: 20% (for spikes)
+</span><span data-line="5">
+</span><span data-line="6">Calculation: (100 × 3GB × 1.5) + 20% = 450GB × 1.2 = 540GB
+</span><span data-line="7">Recommended: 600Gi PVC
+</span></pre></div>
+</div>
+</section>
+<section id="monitoring-actual-usage">
+<h3>Monitoring actual usage<a class="headerlink" href="#monitoring-actual-usage" title="Link to this heading">¶</a></h3>
+<p>Deploy with initial estimates, then adjust based on actual usage:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Check current mailbox usage</span>
+</span><span data-line="2">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>&lt;dovecot-pod&gt;<span class="w"> </span>--<span class="w"> </span>du<span class="w"> </span>-sh<span class="w"> </span>/mail
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Per-user breakdown (if accessible)</span>
+</span><span data-line="5">kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>mailu<span class="w"> </span>&lt;dovecot-pod&gt;<span class="w"> </span>--<span class="w"> </span>du<span class="w"> </span>-sh<span class="w"> </span>/mail/*
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/component-specifications.html"><span class="std std-doc">Component Specifications</span></a> - Default storage sizes</p></li>
+<li><p><a class="reference internal" href="scale-resources.html"><span class="std std-doc">Scale Resources</span></a> - Adjust CPU/memory</p></li>
+<li><p><a class="reference internal" href="enable-optional-components.html"><span class="std std-doc">Enable Optional Components</span></a> - Add components requiring storage</p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="scale-resources.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Scale Resources</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="enable-optional-components.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Enable Optional Components</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Quick Start: Deploy Your First Mailu Instance - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="How-To Guides" href="../how-to/index.html" /><link rel="prev" title="Tutorials" href="index.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/tutorials/01-quick-start.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/tutorials/01-quick-start.html"/>
+  <meta property="og:title" content="Quick Start: Deploy Your First Mailu Instance"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/index.html">How-To Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/index.html">Explanation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#what-you-ll-build">What you&#8217;ll build</a></li>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#step-1-create-a-new-cdk8s-project">Step 1: Create a new CDK8S project</a></li>
+<li><a class="reference internal" href="#step-2-install-cdk8s-mailu">Step 2: Install cdk8s-mailu</a></li>
+<li><a class="reference internal" href="#step-3-create-your-mailu-chart">Step 3: Create your Mailu chart</a></li>
+<li><a class="reference internal" href="#step-4-synthesize-manifests">Step 4: Synthesize manifests</a></li>
+<li><a class="reference internal" href="#step-5-deploy-to-kubernetes">Step 5: Deploy to Kubernetes</a></li>
+<li><a class="reference internal" href="#step-6-verify-deployment">Step 6: Verify deployment</a></li>
+<li><a class="reference internal" href="#what-s-next">What&#8217;s next?</a></li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Tutorials</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Quick Start: Deploy Your First Mailu Instance</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="quick-start-deploy-your-first-mailu-instance">
+<h1>Quick Start: Deploy Your First Mailu Instance<a class="headerlink" href="#quick-start-deploy-your-first-mailu-instance" title="Link to this heading">¶</a></h1>
+<p><strong>Learn how to deploy a basic Mailu mail server using cdk8s-mailu in under 30 minutes.</strong></p>
+<section id="what-you-ll-build">
+<h2>What you’ll build<a class="headerlink" href="#what-you-ll-build" title="Link to this heading">¶</a></h2>
+<p>By the end of this tutorial, you’ll have:</p>
+<ul class="simple">
+<li><p>A working Mailu deployment on Kubernetes</p></li>
+<li><p>Basic understanding of the MailuChart construct</p></li>
+<li><p>Knowledge of essential configuration options</p></li>
+<li><p>A functional mail server ready for testing</p></li>
+</ul>
+</section>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Kubernetes cluster (minikube, kind, or cloud provider)</p></li>
+<li><p>kubectl configured and working</p></li>
+<li><p>Node.js 16+ installed</p></li>
+<li><p>npm or yarn package manager</p></li>
+<li><p>Basic familiarity with TypeScript</p></li>
+</ul>
+</section>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>This tutorial will guide you through:</p>
+<ol class="arabic simple">
+<li><p>Setting up a new CDK8S project</p></li>
+<li><p>Installing cdk8s-mailu</p></li>
+<li><p>Creating a basic MailuChart</p></li>
+<li><p>Synthesizing Kubernetes manifests</p></li>
+<li><p>Deploying to your cluster</p></li>
+<li><p>Testing the deployment</p></li>
+</ol>
+</section>
+<section id="step-1-create-a-new-cdk8s-project">
+<h2>Step 1: Create a new CDK8S project<a class="headerlink" href="#step-1-create-a-new-cdk8s-project" title="Link to this heading">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">mkdir<span class="w"> </span>my-mailu-deployment
+</span><span data-line="2"><span class="nb">cd</span><span class="w"> </span>my-mailu-deployment
+</span><span data-line="3">cdk8s<span class="w"> </span>init<span class="w"> </span>typescript-app
+</span></pre></div>
+</div>
+</section>
+<section id="step-2-install-cdk8s-mailu">
+<h2>Step 2: Install cdk8s-mailu<a class="headerlink" href="#step-2-install-cdk8s-mailu" title="Link to this heading">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">npm<span class="w"> </span>install<span class="w"> </span>cdk8s-mailu
+</span></pre></div>
+</div>
+</section>
+<section id="step-3-create-your-mailu-chart">
+<h2>Step 3: Create your Mailu chart<a class="headerlink" href="#step-3-create-your-mailu-chart" title="Link to this heading">¶</a></h2>
+<p>Replace the contents of <code class="docutils literal notranslate"><span class="pre">main.ts</span></code> with a basic Mailu configuration:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">App</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s&#39;</span><span class="p">;</span>
+</span><span data-line="2"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">MailuChart</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;cdk8s-mailu&#39;</span><span class="p">;</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">App</span><span class="p">();</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="ow">new</span><span class="w"> </span><span class="nx">MailuChart</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="7"><span class="w">  </span><span class="c1">// Basic domain configuration</span>
+</span><span data-line="8"><span class="w">  </span><span class="nx">namespace</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span>
+</span><span data-line="9"><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;example.com&#39;</span><span class="p">,</span>
+</span><span data-line="10"><span class="w">  </span><span class="nx">hostnames</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;mail.example.com&#39;</span><span class="p">],</span>
+</span><span data-line="11"><span class="w">  </span><span class="nx">subnet</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;10.42.0.0/16&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// Your Kubernetes pod CIDR</span>
+</span><span data-line="12"><span class="w">  </span><span class="nx">timezone</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;UTC&#39;</span><span class="p">,</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="w">  </span><span class="c1">// Database configuration (PostgreSQL recommended)</span>
+</span><span data-line="15"><span class="w">  </span><span class="nx">database</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="16"><span class="w">    </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;postgresql&#39;</span><span class="p">,</span>
+</span><span data-line="17"><span class="w">    </span><span class="nx">postgresql</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="18"><span class="w">      </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;postgres-rw&#39;</span><span class="p">,</span><span class="w">      </span><span class="c1">// Your PostgreSQL service</span>
+</span><span data-line="19"><span class="w">      </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="kt">5432</span><span class="p">,</span>
+</span><span data-line="20"><span class="w">      </span><span class="nx">database</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span>
+</span><span data-line="21"><span class="w">      </span><span class="nx">secretName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;postgres-app&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// Secret with DB credentials</span>
+</span><span data-line="22"><span class="w">      </span><span class="nx">secretKeys</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="23"><span class="w">        </span><span class="nx">username</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;username&#39;</span><span class="p">,</span>
+</span><span data-line="24"><span class="w">        </span><span class="nx">password</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;password&#39;</span><span class="p">,</span>
+</span><span data-line="25"><span class="w">      </span><span class="p">},</span>
+</span><span data-line="26"><span class="w">    </span><span class="p">},</span>
+</span><span data-line="27"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="28">
+</span><span data-line="29"><span class="w">  </span><span class="c1">// Redis configuration</span>
+</span><span data-line="30"><span class="w">  </span><span class="nx">redis</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="31"><span class="w">    </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;redis&#39;</span><span class="p">,</span>
+</span><span data-line="32"><span class="w">    </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="kt">6379</span><span class="p">,</span>
+</span><span data-line="33"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="34">
+</span><span data-line="35"><span class="w">  </span><span class="c1">// Secrets (create these in Kubernetes first!)</span>
+</span><span data-line="36"><span class="w">  </span><span class="nx">secrets</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="37"><span class="w">    </span><span class="nx">mailuSecretKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu-secrets&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// Secret with &#39;secret-key&#39; field</span>
+</span><span data-line="38"><span class="w">    </span><span class="nx">initialAdminPassword</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu-secrets&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// Secret with &#39;password&#39; field</span>
+</span><span data-line="39"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="40">
+</span><span data-line="41"><span class="w">  </span><span class="c1">// Optional: Enable/disable components</span>
+</span><span data-line="42"><span class="w">  </span><span class="nx">components</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="43"><span class="w">    </span><span class="nx">webmail</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w">   </span><span class="c1">// Roundcube webmail (enabled by default)</span>
+</span><span data-line="44"><span class="w">    </span><span class="nx">clamav</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w">   </span><span class="c1">// Antivirus (disabled, requires ~1GB RAM)</span>
+</span><span data-line="45"><span class="w">    </span><span class="nx">fetchmail</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w">  </span><span class="c1">// External account fetching</span>
+</span><span data-line="46"><span class="w">    </span><span class="nx">webdav</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w">   </span><span class="c1">// CalDAV/CardDAV</span>
+</span><span data-line="47"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="48">
+</span><span data-line="49"><span class="w">  </span><span class="c1">// Optional: Customize storage</span>
+</span><span data-line="50"><span class="w">  </span><span class="nx">storage</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="51"><span class="w">    </span><span class="nx">storageClass</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;longhorn&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// Your storage class</span>
+</span><span data-line="52"><span class="w">    </span><span class="nx">dovecot</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="53"><span class="w">      </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;50Gi&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// Mailbox storage (adjust based on users)</span>
+</span><span data-line="54"><span class="w">    </span><span class="p">},</span>
+</span><span data-line="55"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="56"><span class="p">});</span>
+</span><span data-line="57">
+</span><span data-line="58"><span class="nx">app</span><span class="p">.</span><span class="nx">synth</span><span class="p">();</span>
+</span></pre></div>
+</div>
+<p><strong>What this configuration does:</strong></p>
+<ul class="simple">
+<li><p>Sets up Mailu for <code class="docutils literal notranslate"><span class="pre">example.com</span></code> domain</p></li>
+<li><p>Uses PostgreSQL for database (more reliable than SQLite)</p></li>
+<li><p>Connects to Redis for caching</p></li>
+<li><p>Enables webmail (Roundcube)</p></li>
+<li><p>Disables optional heavy components (ClamAV, etc.)</p></li>
+<li><p>Allocates 50Gi for mailbox storage</p></li>
+</ul>
+</section>
+<section id="step-4-synthesize-manifests">
+<h2>Step 4: Synthesize manifests<a class="headerlink" href="#step-4-synthesize-manifests" title="Link to this heading">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">npm<span class="w"> </span>run<span class="w"> </span>synth
+</span></pre></div>
+</div>
+<p>This generates Kubernetes manifests in the <code class="docutils literal notranslate"><span class="pre">dist/</span></code> directory.</p>
+</section>
+<section id="step-5-deploy-to-kubernetes">
+<h2>Step 5: Deploy to Kubernetes<a class="headerlink" href="#step-5-deploy-to-kubernetes" title="Link to this heading">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>dist/
+</span></pre></div>
+</div>
+</section>
+<section id="step-6-verify-deployment">
+<h2>Step 6: Verify deployment<a class="headerlink" href="#step-6-verify-deployment" title="Link to this heading">¶</a></h2>
+<p>Check that all pods are running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>mailu
+</span></pre></div>
+</div>
+</section>
+<section id="what-s-next">
+<h2>What’s next?<a class="headerlink" href="#what-s-next" title="Link to this heading">¶</a></h2>
+<p><strong>Configuration &amp; Customization:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../how-to/scale-resources.html"><span class="std std-doc">Scale Resources</span></a> - Adjust CPU and memory for your workload</p></li>
+<li><p><a class="reference internal" href="../how-to/customize-storage.html"><span class="std std-doc">Customize Storage</span></a> - Increase mailbox storage</p></li>
+<li><p><a class="reference internal" href="../how-to/enable-optional-components.html"><span class="std std-doc">Enable Optional Components</span></a> - Add webmail, antivirus, CalDAV</p></li>
+<li><p><a class="reference internal" href="../how-to/configure-tls.html"><span class="std std-doc">Configure TLS</span></a> - Set up Traefik ingress with Let’s Encrypt</p></li>
+</ul>
+<p><strong>Operations:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../how-to/backup-restore.html"><span class="std std-doc">Backup and Restore</span></a> - Protect your mail data</p></li>
+<li><p><a class="reference internal" href="../how-to/upgrade-mailu.html"><span class="std std-doc">Upgrade Mailu</span></a> - Update to newer versions</p></li>
+</ul>
+<p><strong>Understanding:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../explanation/architecture.html"><span class="std std-doc">Architecture Overview</span></a> - How components work together</p></li>
+<li><p><a class="reference internal" href="../explanation/dovecot-submission.html"><span class="std std-doc">Dovecot Submission Service</span></a> - Webmail email sending</p></li>
+</ul>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">¶</a></h2>
+<p><strong>Pods not starting?</strong></p>
+<ul class="simple">
+<li><p>Check secrets exist: <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">secrets</span> <span class="pre">-n</span> <span class="pre">mailu</span></code></p></li>
+<li><p>Verify PostgreSQL is accessible: <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">svc</span> <span class="pre">postgres-rw</span></code></p></li>
+<li><p>Check pod logs: <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">-n</span> <span class="pre">mailu</span> <span class="pre">-l</span> <span class="pre">app.kubernetes.io/part-of=mailu</span></code></p></li>
+</ul>
+<p><strong>Storage issues?</strong></p>
+<ul class="simple">
+<li><p>Verify storage class exists: <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">storageclass</span></code></p></li>
+<li><p>Check PVC status: <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">pvc</span> <span class="pre">-n</span> <span class="pre">mailu</span></code></p></li>
+</ul>
+<p><strong>Service discovery issues?</strong></p>
+<ul class="simple">
+<li><p>Check ConfigMap: <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">configmap</span> <span class="pre">-n</span> <span class="pre">mailu</span> <span class="pre">-o</span> <span class="pre">yaml</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">ADDRESS</span></code></p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="index.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Tutorials</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="../how-to/index.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">How-To Guides</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

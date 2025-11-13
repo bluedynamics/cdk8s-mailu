@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>CDK8S Patterns - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="prev" title="Egress Gateway Considerations for Mail Delivery" href="egress-gateway-considerations.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/explanation/cdk8s-patterns.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/explanation/cdk8s-patterns.html"/>
+  <meta property="og:title" content="CDK8S Patterns"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/index.html">How-To Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Explanation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#core-concepts">Core Concepts</a><ul>
+<li><a class="reference internal" href="#constructs">Constructs</a></li>
+<li><a class="reference internal" href="#charts">Charts</a></li>
+<li><a class="reference internal" href="#apps">Apps</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#design-patterns">Design Patterns</a><ul>
+<li><a class="reference internal" href="#configuration-object-pattern">1. Configuration Object Pattern</a></li>
+<li><a class="reference internal" href="#shared-configuration-pattern">2. Shared Configuration Pattern</a></li>
+<li><a class="reference internal" href="#conditional-resource-creation">3. Conditional Resource Creation</a></li>
+<li><a class="reference internal" href="#resource-requirements-pattern">4. Resource Requirements Pattern</a></li>
+<li><a class="reference internal" href="#secret-reference-pattern">5. Secret Reference Pattern</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#testing-patterns">Testing Patterns</a><ul>
+<li><a class="reference internal" href="#snapshot-testing">1. Snapshot Testing</a></li>
+<li><a class="reference internal" href="#resource-count-testing">2. Resource Count Testing</a></li>
+<li><a class="reference internal" href="#configuration-validation-testing">3. Configuration Validation Testing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#best-practices">Best Practices</a><ul>
+<li><a class="reference internal" href="#type-everything">1. Type Everything</a></li>
+<li><a class="reference internal" href="#validate-early">2. Validate Early</a></li>
+<li><a class="reference internal" href="#provide-defaults">3. Provide Defaults</a></li>
+<li><a class="reference internal" href="#document-decisions">4. Document Decisions</a></li>
+<li><a class="reference internal" href="#keep-constructs-focused">5. Keep Constructs Focused</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Explanation</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">CDK8S Patterns</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="cdk8s-patterns">
+<h1>CDK8S Patterns<a class="headerlink" href="#cdk8s-patterns" title="Link to this heading">¶</a></h1>
+<p><strong>Understanding construct patterns and best practices in cdk8s-mailu.</strong></p>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
+<p>CDK8S (Cloud Development Kit for Kubernetes) allows you to define Kubernetes applications using familiar programming languages. cdk8s-mailu leverages CDK8S patterns to provide a type-safe, testable, and maintainable way to deploy Mailu.</p>
+</section>
+<section id="core-concepts">
+<h2>Core Concepts<a class="headerlink" href="#core-concepts" title="Link to this heading">¶</a></h2>
+<section id="constructs">
+<h3>Constructs<a class="headerlink" href="#constructs" title="Link to this heading">¶</a></h3>
+<p><strong>What is a Construct?</strong></p>
+<p>A construct is a composable building block that encapsulates one or more Kubernetes resources. In cdk8s-mailu, each Mailu component is implemented as a construct.</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">export</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">AdminConstruct</span><span class="w"> </span><span class="k">extends</span><span class="w"> </span><span class="nx">Construct</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">scope</span><span class="o">:</span><span class="w"> </span><span class="kt">Construct</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="o">:</span><span class="w"> </span><span class="kt">AdminConfig</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">    </span><span class="k">super</span><span class="p">(</span><span class="nx">scope</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="p">);</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="w">    </span><span class="c1">// Create Deployment</span>
+</span><span data-line="6"><span class="w">    </span><span class="ow">new</span><span class="w"> </span><span class="nx">Deployment</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;deployment&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">});</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="w">    </span><span class="c1">// Create Service</span>
+</span><span data-line="9"><span class="w">    </span><span class="ow">new</span><span class="w"> </span><span class="nx">Service</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;service&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">});</span>
+</span><span data-line="10"><span class="w">  </span><span class="p">}</span>
+</span><span data-line="11"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p><strong>Benefits:</strong></p>
+<ul class="simple">
+<li><p><strong>Encapsulation</strong> - Hide complex resource definitions</p></li>
+<li><p><strong>Reusability</strong> - Use the same construct in multiple charts</p></li>
+<li><p><strong>Testability</strong> - Unit test each construct independently</p></li>
+<li><p><strong>Composability</strong> - Combine constructs to build applications</p></li>
+</ul>
+</section>
+<section id="charts">
+<h3>Charts<a class="headerlink" href="#charts" title="Link to this heading">¶</a></h3>
+<p><strong>What is a Chart?</strong></p>
+<p>A chart is a top-level construct that represents a complete Kubernetes application. It contains all the constructs and resources needed for deployment.</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">export</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">MailuChart</span><span class="w"> </span><span class="k">extends</span><span class="w"> </span><span class="nx">Chart</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">scope</span><span class="o">:</span><span class="w"> </span><span class="kt">Construct</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">props</span><span class="o">:</span><span class="w"> </span><span class="kt">MailuChartProps</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">    </span><span class="k">super</span><span class="p">(</span><span class="nx">scope</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">props</span><span class="p">);</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="w">    </span><span class="c1">// Create namespace</span>
+</span><span data-line="6"><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">ns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Namespace</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;namespace&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">});</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="w">    </span><span class="c1">// Create constructs</span>
+</span><span data-line="9"><span class="w">    </span><span class="ow">new</span><span class="w"> </span><span class="nx">FrontConstruct</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;front&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="p">);</span>
+</span><span data-line="10"><span class="w">    </span><span class="ow">new</span><span class="w"> </span><span class="nx">AdminConstruct</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;admin&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="p">);</span>
+</span><span data-line="11"><span class="w">    </span><span class="c1">// ...</span>
+</span><span data-line="12"><span class="w">  </span><span class="p">}</span>
+</span><span data-line="13"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p><strong>Characteristics:</strong></p>
+<ul class="simple">
+<li><p>Extends <code class="docutils literal notranslate"><span class="pre">Chart</span></code> from cdk8s</p></li>
+<li><p>Entry point for synthesis</p></li>
+<li><p>Manages shared resources (namespace, configmaps)</p></li>
+<li><p>Coordinates multiple constructs</p></li>
+</ul>
+</section>
+<section id="apps">
+<h3>Apps<a class="headerlink" href="#apps" title="Link to this heading">¶</a></h3>
+<p><strong>What is an App?</strong></p>
+<p>An app is the root of your CDK8S application. It contains one or more charts and is responsible for synthesizing Kubernetes manifests.</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">App</span><span class="p">();</span>
+</span><span data-line="2"><span class="ow">new</span><span class="w"> </span><span class="nx">MailuChart</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">});</span>
+</span><span data-line="3"><span class="nx">app</span><span class="p">.</span><span class="nx">synth</span><span class="p">();</span><span class="w">  </span><span class="c1">// Generate YAML files</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="design-patterns">
+<h2>Design Patterns<a class="headerlink" href="#design-patterns" title="Link to this heading">¶</a></h2>
+<section id="configuration-object-pattern">
+<h3>1. Configuration Object Pattern<a class="headerlink" href="#configuration-object-pattern" title="Link to this heading">¶</a></h3>
+<p><strong>Pattern:</strong> Pass a single configuration object instead of many parameters</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1">// Good: Single configuration object</span>
+</span><span data-line="2"><span class="ow">new</span><span class="w"> </span><span class="nx">AdminConstruct</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;admin&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">namespace</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">resources</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">requests</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;100m&#39;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">image</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">repository</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;mailu/admin&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">tag</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;2.0&#39;</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="6"><span class="p">});</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1">// Avoid: Many individual parameters</span>
+</span><span data-line="9"><span class="ow">new</span><span class="w"> </span><span class="nx">AdminConstruct</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;admin&#39;</span><span class="p">,</span>
+</span><span data-line="10"><span class="w">  </span><span class="s1">&#39;mailu&#39;</span><span class="p">,</span>
+</span><span data-line="11"><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;100m&#39;</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="12"><span class="w">  </span><span class="s1">&#39;mailu/admin&#39;</span><span class="p">,</span>
+</span><span data-line="13"><span class="w">  </span><span class="s1">&#39;2.0&#39;</span>
+</span><span data-line="14"><span class="p">);</span>
+</span></pre></div>
+</div>
+<p><strong>Benefits:</strong></p>
+<ul class="simple">
+<li><p>Type-safe with TypeScript interfaces</p></li>
+<li><p>Easy to add optional parameters</p></li>
+<li><p>Clear parameter names</p></li>
+<li><p>IDE autocomplete support</p></li>
+</ul>
+</section>
+<section id="shared-configuration-pattern">
+<h3>2. Shared Configuration Pattern<a class="headerlink" href="#shared-configuration-pattern" title="Link to this heading">¶</a></h3>
+<p><strong>Pattern:</strong> Extract common configuration to shared objects</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1">// Shared environment ConfigMap</span>
+</span><span data-line="2"><span class="kd">const</span><span class="w"> </span><span class="nx">sharedConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ConfigMap</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;shared-config&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">metadata</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">namespace</span><span class="o">:</span><span class="w"> </span><span class="kt">config.namespace</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="5"><span class="w">    </span><span class="nx">DOMAIN</span><span class="o">:</span><span class="w"> </span><span class="kt">config.domain</span><span class="p">,</span>
+</span><span data-line="6"><span class="w">    </span><span class="nx">HOSTNAMES</span><span class="o">:</span><span class="w"> </span><span class="kt">config.hostnames.join</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">),</span>
+</span><span data-line="7"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="8"><span class="p">});</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="c1">// Reference in multiple constructs</span>
+</span><span data-line="11"><span class="ow">new</span><span class="w"> </span><span class="nx">AdminConstruct</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;admin&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="12"><span class="w">  </span><span class="p">...</span><span class="nx">config</span><span class="p">,</span>
+</span><span data-line="13"><span class="w">  </span><span class="nx">sharedConfigMap</span><span class="o">:</span><span class="w"> </span><span class="kt">sharedConfig</span><span class="p">,</span>
+</span><span data-line="14"><span class="p">});</span>
+</span></pre></div>
+</div>
+<p><strong>Benefits:</strong></p>
+<ul class="simple">
+<li><p>Avoid duplication</p></li>
+<li><p>Single source of truth</p></li>
+<li><p>Easier to maintain</p></li>
+<li><p>Consistent across components</p></li>
+</ul>
+</section>
+<section id="conditional-resource-creation">
+<h3>3. Conditional Resource Creation<a class="headerlink" href="#conditional-resource-creation" title="Link to this heading">¶</a></h3>
+<p><strong>Pattern:</strong> Create resources based on configuration flags</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">export</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">MailuChart</span><span class="w"> </span><span class="k">extends</span><span class="w"> </span><span class="nx">Chart</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">scope</span><span class="o">:</span><span class="w"> </span><span class="kt">Construct</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="o">:</span><span class="w"> </span><span class="kt">MailuConfig</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">    </span><span class="k">super</span><span class="p">(</span><span class="nx">scope</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="p">);</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="w">    </span><span class="c1">// Always create core components</span>
+</span><span data-line="6"><span class="w">    </span><span class="ow">new</span><span class="w"> </span><span class="nx">FrontConstruct</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;front&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="p">);</span>
+</span><span data-line="7"><span class="w">    </span><span class="ow">new</span><span class="w"> </span><span class="nx">AdminConstruct</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;admin&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="p">);</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="w">    </span><span class="c1">// Conditionally create optional components</span>
+</span><span data-line="10"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">components</span><span class="p">.</span><span class="nx">clamav</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="11"><span class="w">      </span><span class="ow">new</span><span class="w"> </span><span class="nx">ClamAVConstruct</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;clamav&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="p">);</span>
+</span><span data-line="12"><span class="w">    </span><span class="p">}</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">components</span><span class="p">.</span><span class="nx">webdav</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="15"><span class="w">      </span><span class="ow">new</span><span class="w"> </span><span class="nx">WebdavConstruct</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;webdav&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="p">);</span>
+</span><span data-line="16"><span class="w">    </span><span class="p">}</span>
+</span><span data-line="17"><span class="w">  </span><span class="p">}</span>
+</span><span data-line="18"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p><strong>Benefits:</strong></p>
+<ul class="simple">
+<li><p>Flexible deployments</p></li>
+<li><p>Only create what’s needed</p></li>
+<li><p>Clear intent in code</p></li>
+<li><p>Reduces resource usage</p></li>
+</ul>
+</section>
+<section id="resource-requirements-pattern">
+<h3>4. Resource Requirements Pattern<a class="headerlink" href="#resource-requirements-pattern" title="Link to this heading">¶</a></h3>
+<p><strong>Pattern:</strong> Provide sensible defaults with override capability</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kd">interface</span><span class="w"> </span><span class="nx">ComponentConfig</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">resources</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">    </span><span class="nx">requests</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">memory</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">};</span>
+</span><span data-line="4"><span class="w">    </span><span class="nx">limits</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">memory</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">};</span>
+</span><span data-line="5"><span class="w">  </span><span class="p">};</span>
+</span><span data-line="6"><span class="p">}</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1">// In construct</span>
+</span><span data-line="9"><span class="kd">const</span><span class="w"> </span><span class="nx">resources</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">config</span><span class="p">.</span><span class="nx">resources</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="10"><span class="w">  </span><span class="nx">requests</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;100m&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">memory</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;256Mi&#39;</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="11"><span class="w">  </span><span class="nx">limits</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">cpu</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;300m&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">memory</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;512Mi&#39;</span><span class="w"> </span><span class="p">},</span>
+</span><span data-line="12"><span class="p">};</span>
+</span></pre></div>
+</div>
+<p><strong>Benefits:</strong></p>
+<ul class="simple">
+<li><p>Works out of the box</p></li>
+<li><p>Production-ready defaults</p></li>
+<li><p>Easy to customize</p></li>
+<li><p>Explicit resource management</p></li>
+</ul>
+</section>
+<section id="secret-reference-pattern">
+<h3>5. Secret Reference Pattern<a class="headerlink" href="#secret-reference-pattern" title="Link to this heading">¶</a></h3>
+<p><strong>Pattern:</strong> Reference existing secrets instead of inline values</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kd">interface</span><span class="w"> </span><span class="nx">SecretReference</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">  </span><span class="c1">// Secret name</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">   </span><span class="c1">// Key within secret</span>
+</span><span data-line="4"><span class="p">}</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="c1">// Usage</span>
+</span><span data-line="7"><span class="nx">database</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="8"><span class="w">  </span><span class="nx">password</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="9"><span class="w">    </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;postgres-credentials&#39;</span><span class="p">,</span>
+</span><span data-line="10"><span class="w">    </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;password&#39;</span><span class="p">,</span>
+</span><span data-line="11"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="12"><span class="p">}</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="c1">// In construct</span>
+</span><span data-line="15"><span class="kd">const</span><span class="w"> </span><span class="nx">passwordEnv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">EnvValue</span><span class="p">.</span><span class="nx">fromSecretValue</span><span class="p">({</span>
+</span><span data-line="16"><span class="w">  </span><span class="nx">secret</span><span class="o">:</span><span class="w"> </span><span class="kt">Secret.fromSecretName</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;db-secret&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="p">.</span><span class="nx">password</span><span class="p">.</span><span class="nx">name</span><span class="p">),</span>
+</span><span data-line="17"><span class="w">  </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="kt">config.password.key</span><span class="p">,</span>
+</span><span data-line="18"><span class="p">});</span>
+</span></pre></div>
+</div>
+<p><strong>Benefits:</strong></p>
+<ul class="simple">
+<li><p>Never expose secrets in code</p></li>
+<li><p>Integrate with secret management tools</p></li>
+<li><p>Type-safe secret references</p></li>
+<li><p>Clear intent</p></li>
+</ul>
+</section>
+</section>
+<section id="testing-patterns">
+<h2>Testing Patterns<a class="headerlink" href="#testing-patterns" title="Link to this heading">¶</a></h2>
+<section id="snapshot-testing">
+<h3>1. Snapshot Testing<a class="headerlink" href="#snapshot-testing" title="Link to this heading">¶</a></h3>
+<p><strong>Pattern:</strong> Verify generated manifests haven’t changed unexpectedly</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">test</span><span class="p">(</span><span class="s1">&#39;generates expected manifests&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Testing</span><span class="p">.</span><span class="nx">app</span><span class="p">();</span>
+</span><span data-line="3"><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">MailuChart</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;test&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">});</span>
+</span><span data-line="4"><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Testing</span><span class="p">.</span><span class="nx">synth</span><span class="p">(</span><span class="nx">chart</span><span class="p">);</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">results</span><span class="p">).</span><span class="nx">toMatchSnapshot</span><span class="p">();</span>
+</span><span data-line="6"><span class="p">});</span>
+</span></pre></div>
+</div>
+<p><strong>Benefits:</strong></p>
+<ul class="simple">
+<li><p>Catch unintended changes</p></li>
+<li><p>Document expected output</p></li>
+<li><p>Fast regression testing</p></li>
+</ul>
+</section>
+<section id="resource-count-testing">
+<h3>2. Resource Count Testing<a class="headerlink" href="#resource-count-testing" title="Link to this heading">¶</a></h3>
+<p><strong>Pattern:</strong> Verify expected number of resources</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">test</span><span class="p">(</span><span class="s1">&#39;creates correct number of resources&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Testing</span><span class="p">.</span><span class="nx">app</span><span class="p">();</span>
+</span><span data-line="3"><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">MailuChart</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;test&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">});</span>
+</span><span data-line="4"><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Testing</span><span class="p">.</span><span class="nx">synth</span><span class="p">(</span><span class="nx">chart</span><span class="p">);</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">kind</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;Deployment&#39;</span><span class="p">)).</span><span class="nx">toHaveLength</span><span class="p">(</span><span class="mf">5</span><span class="p">);</span>
+</span><span data-line="7"><span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">kind</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;Service&#39;</span><span class="p">)).</span><span class="nx">toHaveLength</span><span class="p">(</span><span class="mf">5</span><span class="p">);</span>
+</span><span data-line="8"><span class="p">});</span>
+</span></pre></div>
+</div>
+<p><strong>Benefits:</strong></p>
+<ul class="simple">
+<li><p>Verify resource creation</p></li>
+<li><p>Catch missing/extra resources</p></li>
+<li><p>Quick validation</p></li>
+</ul>
+</section>
+<section id="configuration-validation-testing">
+<h3>3. Configuration Validation Testing<a class="headerlink" href="#configuration-validation-testing" title="Link to this heading">¶</a></h3>
+<p><strong>Pattern:</strong> Test that invalid configurations are rejected</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nx">test</span><span class="p">(</span><span class="s1">&#39;rejects invalid domain&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Testing</span><span class="p">.</span><span class="nx">app</span><span class="p">();</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">expect</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="4"><span class="w">    </span><span class="ow">new</span><span class="w"> </span><span class="nx">MailuChart</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;test&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="5"><span class="w">      </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;invalid domain with spaces&#39;</span><span class="p">,</span>
+</span><span data-line="6"><span class="w">    </span><span class="p">});</span>
+</span><span data-line="7"><span class="w">  </span><span class="p">}).</span><span class="nx">toThrow</span><span class="p">(</span><span class="s1">&#39;Invalid domain format&#39;</span><span class="p">);</span>
+</span><span data-line="8"><span class="p">});</span>
+</span></pre></div>
+</div>
+<p><strong>Benefits:</strong></p>
+<ul class="simple">
+<li><p>Fail fast on bad config</p></li>
+<li><p>Clear error messages</p></li>
+<li><p>Prevent invalid deployments</p></li>
+</ul>
+</section>
+</section>
+<section id="best-practices">
+<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">¶</a></h2>
+<section id="type-everything">
+<h3>1. Type Everything<a class="headerlink" href="#type-everything" title="Link to this heading">¶</a></h3>
+<p>Use TypeScript interfaces for all configuration:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kd">interface</span><span class="w"> </span><span class="nx">MailuConfig</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+</span><span data-line="3"><span class="w">  </span><span class="nx">namespace</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">components</span><span class="o">:</span><span class="w"> </span><span class="kt">ComponentToggles</span><span class="p">;</span>
+</span><span data-line="5"><span class="w">  </span><span class="c1">// ... all fields typed</span>
+</span><span data-line="6"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+<section id="validate-early">
+<h3>2. Validate Early<a class="headerlink" href="#validate-early" title="Link to this heading">¶</a></h3>
+<p>Validate configuration in construct constructors:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">isValidDomain</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">domain</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="sb">`Invalid domain: </span><span class="si">${</span><span class="nx">config</span><span class="p">.</span><span class="nx">domain</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+</span><span data-line="3"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+<section id="provide-defaults">
+<h3>3. Provide Defaults<a class="headerlink" href="#provide-defaults" title="Link to this heading">¶</a></h3>
+<p>Make common configurations work with minimal input:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kd">const</span><span class="w"> </span><span class="nx">resources</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">config</span><span class="p">.</span><span class="nx">resources</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="nx">DEFAULT_RESOURCES</span><span class="p">;</span>
+</span><span data-line="2"><span class="kd">const</span><span class="w"> </span><span class="nx">image</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">config</span><span class="p">.</span><span class="nx">image</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="nx">DEFAULT_IMAGE</span><span class="p">;</span>
+</span></pre></div>
+</div>
+</section>
+<section id="document-decisions">
+<h3>4. Document Decisions<a class="headerlink" href="#document-decisions" title="Link to this heading">¶</a></h3>
+<p>Use JSDoc comments to explain choices:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="cm">/**</span>
+</span><span data-line="2"><span class="cm"> * Creates Front component with Nginx reverse proxy.</span>
+</span><span data-line="3"><span class="cm"> *</span>
+</span><span data-line="4"><span class="cm"> * Note: When using Traefik TLS termination, the nginx-patch-configmap</span>
+</span><span data-line="5"><span class="cm"> * is automatically applied to wrap backend connections properly.</span>
+</span><span data-line="6"><span class="cm"> */</span>
+</span><span data-line="7"><span class="k">export</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">FrontConstruct</span><span class="w"> </span><span class="k">extends</span><span class="w"> </span><span class="nx">Construct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+<section id="keep-constructs-focused">
+<h3>5. Keep Constructs Focused<a class="headerlink" href="#keep-constructs-focused" title="Link to this heading">¶</a></h3>
+<p>Each construct should have a single responsibility:</p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1">// Good: Single component</span>
+</span><span data-line="2"><span class="kd">class</span><span class="w"> </span><span class="nx">AdminConstruct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</span><span data-line="3"><span class="kd">class</span><span class="w"> </span><span class="nx">FrontConstruct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1">// Avoid: Multiple components in one construct</span>
+</span><span data-line="6"><span class="kd">class</span><span class="w"> </span><span class="nx">AllMailuComponents</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="architecture.html"><span class="std std-doc">Architecture Overview</span></a> - Overall system design</p></li>
+<li><p><a class="reference internal" href="../reference/configuration-options.html"><span class="std std-doc">Configuration Reference</span></a> - Complete API docs</p></li>
+<li><p><a class="reference internal" href="../tutorials/01-quick-start.html"><span class="std std-doc">Quick Start Tutorial</span></a> - Hands-on learning</p></li>
+</ul>
+<hr class="docutils" />
+<p><em>This is a placeholder explanation. Content will be expanded by the docwriter with:</em></p>
+<ul class="simple">
+<li><p>More advanced patterns</p></li>
+<li><p>Anti-patterns to avoid</p></li>
+<li><p>Real-world examples</p></li>
+<li><p>Performance considerations</p></li>
+<li><p>Debugging techniques</p></li>
+<li><p>Migration patterns</p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="egress-gateway-considerations.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Egress Gateway Considerations for Mail Delivery</div></div>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>

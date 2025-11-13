@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Architecture Overview - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Authentication Flows" href="authentication-flows.html" /><link rel="prev" title="Explanation" href="index.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/explanation/architecture.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/explanation/architecture.html"/>
+  <meta property="og:title" content="Architecture Overview"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/index.html">How-To Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Explanation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx-configuration-patches.html">Nginx Configuration Patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdk8s-patterns.html">CDK8S Patterns</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#component-architecture">Component Architecture</a><ul>
+<li><a class="reference internal" href="#core-components">Core Components</a></li>
+<li><a class="reference internal" href="#optional-components">Optional Components</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mail-delivery-flow-details">Mail Delivery Flow Details</a><ul>
+<li><a class="reference internal" href="#inbound-mail-internet-mailbox">Inbound Mail (Internet &#8594; Mailbox)</a></li>
+<li><a class="reference internal" href="#webmail-sending-user-internet-via-webmail">Webmail Sending (User &#8594; Internet via Webmail)</a></li>
+<li><a class="reference internal" href="#authenticated-smtp-imap-mail-client-server">Authenticated SMTP/IMAP (Mail Client &#8594; Server)</a></li>
+<li><a class="reference internal" href="#service-discovery-and-front-address">Service Discovery and FRONT_ADDRESS</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cdk8s-design-patterns">CDK8S Design Patterns</a><ul>
+<li><a class="reference internal" href="#construct-hierarchy">Construct Hierarchy</a></li>
+<li><a class="reference internal" href="#configuration-flow">Configuration Flow</a></li>
+<li><a class="reference internal" href="#resource-management-philosophy">Resource Management Philosophy</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#storage-architecture">Storage Architecture</a><ul>
+<li><a class="reference internal" href="#persistent-volumes">Persistent Volumes</a></li>
+<li><a class="reference internal" href="#database-options">Database Options</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#network-architecture">Network Architecture</a><ul>
+<li><a class="reference internal" href="#service-discovery">Service Discovery</a></li>
+<li><a class="reference internal" href="#ingress-tls-configuration">Ingress/TLS Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#design-decisions">Design Decisions</a><ul>
+<li><a class="reference internal" href="#why-cdk8s">Why CDK8S?</a></li>
+<li><a class="reference internal" href="#why-modular-constructs">Why Modular Constructs?</a></li>
+<li><a class="reference internal" href="#why-production-defaults">Why Production Defaults?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Explanation</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Architecture Overview</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue dark-code" role="main">
+          <section id="architecture-overview">
+<h1>Architecture Overview<a class="headerlink" href="#architecture-overview" title="Link to this heading">¶</a></h1>
+<p><strong>Understanding the design and structure of cdk8s-mailu deployments.</strong></p>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
+<p>cdk8s-mailu is designed around the principle of <strong>composable constructs</strong> - small, reusable building blocks that can be combined to create complex deployments. This architecture provides flexibility while maintaining production-grade defaults.</p>
+</section>
+<section id="component-architecture">
+<h2>Component Architecture<a class="headerlink" href="#component-architecture" title="Link to this heading">¶</a></h2>
+<p>Mailu is a modular mail server composed of multiple services working together:</p>
+<pre  class="mermaid">
+        graph TB
+    Ingress[Traefik&lt;br/&gt;TLS Termination] --&gt;|Plaintext: 587, 465, 993, 995| FrontNginx[Front Nginx&lt;br/&gt;Auth Proxy]
+    Ingress --&gt;|HTTP:80| Admin[Admin:8080&lt;br/&gt;Web UI + SSO]
+    Ingress --&gt;|HTTP:80| Webmail[Webmail:80&lt;br/&gt;Roundcube]
+    Ingress -.MX:25.-&gt; Postfix[Postfix:25&lt;br/&gt;SMTP]
+    FrontNginx --&gt;|auth_http:8080/internal/auth/email| Admin
+    FrontNginx --&gt;|Relay SMTP:25| Postfix
+    FrontNginx --&gt;|Relay IMAP:143&lt;br/&gt;POP3:110| Dovecot[Dovecot&lt;br/&gt;IMAP/POP3]
+
+    Webmail -.SMTP:10025.-&gt; DovecotSub[Dovecot&lt;br/&gt;Submission:10025]
+    DovecotSub -.Relay:25.-&gt; Postfix
+
+    Postfix --&gt;|Milter:11332| Rspamd[Rspamd&lt;br/&gt;Spam Filter]
+    Postfix -.Scan:3310.-&gt; ClamAV[ClamAV&lt;br/&gt;Antivirus]
+    Postfix --&gt;|LMTP:2525| Dovecot
+
+    style DovecotSub fill:#e1f5fe
+    style Webmail fill:#fff3e0
+    style Postfix fill:#c8e6c9
+    </pre><section id="core-components">
+<h3>Core Components<a class="headerlink" href="#core-components" title="Link to this heading">¶</a></h3>
+<p><strong>Ingress (Traefik)</strong></p>
+<ul class="simple">
+<li><p>TLS termination for all protocols (HTTPS, SMTPS, IMAPS, POP3S)</p></li>
+<li><p>Routes HTTP/HTTPS (80/443) directly to Admin and Webmail</p></li>
+<li><p>Routes mail protocols (587, 465, 993, 995) to Front (Nginx)</p></li>
+<li><p>Routes MX mail (port 25) directly to Postfix</p></li>
+<li><p>LoadBalancer service with public IP</p></li>
+</ul>
+<p><strong>Front (Nginx)</strong></p>
+<ul class="simple">
+<li><p>Protocol routing for authenticated mail protocols (SMTP submission 587/465, IMAP 993, POP3 995)</p></li>
+<li><p>Authentication proxy using Admin’s auth_http endpoint</p></li>
+<li><p>Receives plain TCP from Traefik after TLS termination</p></li>
+<li><p>Proxies to backend Kubernetes Services (Postfix, Dovecot)</p></li>
+<li><p><strong>Note</strong>: nginx proxies to Services, not directly to pods; if multiple backend replicas exist, the Service handles load balancing</p></li>
+<li><p><strong>Note</strong>: Port 25 (MX mail reception) and HTTP/HTTPS bypass Front entirely</p></li>
+<li><p>Always required for authenticated mail protocols</p></li>
+</ul>
+<p><strong>Admin</strong></p>
+<ul class="simple">
+<li><p>Web-based administration interface (accessed via Ingress at port 80 internally)</p></li>
+<li><p>User and domain management</p></li>
+<li><p>Configuration interface</p></li>
+<li><p><strong>Authentication backend</strong>: Provides auth_http endpoint for Front (Nginx)</p></li>
+<li><p><strong>SSO service</strong>: Single sign-on for webmail and admin interface</p></li>
+<li><p><strong>Shared database</strong>: PostgreSQL database shared with Webmail</p></li>
+<li><p>Always enabled by default</p></li>
+</ul>
+<p><strong>Webmail (Roundcube)</strong></p>
+<ul class="simple">
+<li><p>Browser-based email client (accessed via Ingress at port 80 internally)</p></li>
+<li><p>Contact and calendar management</p></li>
+<li><p>Uses Dovecot Submission service for sending mail</p></li>
+<li><p><strong>Shared database</strong>: Uses same PostgreSQL database as Admin</p></li>
+<li><p><strong>SSO integration</strong>: Authenticates via Admin’s SSO service</p></li>
+<li><p>Enabled by default, can be disabled</p></li>
+</ul>
+<p><strong>Postfix</strong></p>
+<ul class="simple">
+<li><p>SMTP server for sending/receiving mail</p></li>
+<li><p>Mail routing and relay</p></li>
+<li><p>Spam/virus scanning integration</p></li>
+<li><p><strong>Mail delivery</strong>: Uses LMTP to deliver mail to Dovecot</p></li>
+<li><p><strong>Port 25 (MX)</strong>: Receives direct routing from Traefik (bypasses Front/nginx)</p>
+<ul>
+<li><p>Traefik InFlightConn middleware: Limits simultaneous connections per IP (15 default)</p></li>
+<li><p>Postfix anvil rate limiting: Limits connections/min (60), messages/min (100), recipients/min (300)</p></li>
+</ul>
+</li>
+<li><p><strong>Port 10025</strong>: Internal submission relay from Dovecot submission service</p></li>
+<li><p>Always required</p></li>
+</ul>
+<p><strong>Dovecot</strong></p>
+<ul class="simple">
+<li><p>IMAP and POP3 server</p></li>
+<li><p>Mail storage and retrieval</p></li>
+<li><p><strong>Mail reception</strong>: Receives mail from Postfix via LMTP</p></li>
+<li><p>Authentication backend</p></li>
+<li><p>Always required</p></li>
+</ul>
+<p><strong>Rspamd</strong></p>
+<ul class="simple">
+<li><p>Spam filtering</p></li>
+<li><p>DKIM signing/verification</p></li>
+<li><p>Header manipulation</p></li>
+<li><p>Always required</p></li>
+</ul>
+<p><strong>Dovecot Submission Service</strong></p>
+<ul class="simple">
+<li><p>Dedicated service for webmail email sending</p></li>
+<li><p>Uses official <code class="docutils literal notranslate"><span class="pre">dovecot/dovecot:2.3-latest</span></code> image</p></li>
+<li><p>Listens on port 10025 for token authentication</p></li>
+<li><p>Relays to Postfix:25 using <code class="docutils literal notranslate"><span class="pre">submission_relay_host</span></code></p></li>
+<li><p>Solves configuration issues with bundled dovecot in front container</p></li>
+<li><p>Always deployed (required for webmail functionality)</p></li>
+</ul>
+</section>
+<section id="optional-components">
+<h3>Optional Components<a class="headerlink" href="#optional-components" title="Link to this heading">¶</a></h3>
+<p><strong>ClamAV</strong></p>
+<ul class="simple">
+<li><p>Antivirus scanning for attachments</p></li>
+<li><p>Virus definition updates</p></li>
+<li><p>Resource-intensive (requires ~1GB RAM)</p></li>
+<li><p>Disabled by default</p></li>
+</ul>
+<p><strong>Webdav (Radicale)</strong></p>
+<ul class="simple">
+<li><p>CalDAV and CardDAV server</p></li>
+<li><p>Calendar and contact synchronization</p></li>
+<li><p>Disabled by default</p></li>
+</ul>
+<p><strong>Fetchmail</strong></p>
+<ul class="simple">
+<li><p>Fetch email from external POP3/IMAP servers</p></li>
+<li><p>Consolidate multiple accounts</p></li>
+<li><p>Disabled by default</p></li>
+</ul>
+</section>
+</section>
+<section id="mail-delivery-flow-details">
+<h2>Mail Delivery Flow Details<a class="headerlink" href="#mail-delivery-flow-details" title="Link to this heading">¶</a></h2>
+<p>Understanding how mail flows through the system is crucial for troubleshooting and configuration.</p>
+<section id="inbound-mail-internet-mailbox">
+<h3>Inbound Mail (Internet → Mailbox)<a class="headerlink" href="#inbound-mail-internet-mailbox" title="Link to this heading">¶</a></h3>
+<p><strong>Complete flow from external sender to user mailbox:</strong></p>
+<ol class="arabic simple">
+<li><p><strong>External MTA → Traefik:25</strong> - Internet mail server sends to your MX record</p></li>
+<li><p><strong>Traefik → Postfix:25</strong> - Traefik routes directly to Postfix (bypasses Front/Nginx)</p></li>
+<li><p><strong>Postfix → Rspamd:11332</strong> - Postfix calls Rspamd via milter protocol for spam scanning</p></li>
+<li><p><strong>Rspamd → Postfix</strong> - Rspamd returns scan results (accept/reject/add headers)</p></li>
+<li><p><strong>Postfix → Dovecot:2525</strong> - Postfix delivers mail to Dovecot via LMTP protocol</p></li>
+<li><p><strong>Dovecot stores</strong> - Mail written to <code class="docutils literal notranslate"><span class="pre">/mail</span></code> PVC in Maildir format</p></li>
+</ol>
+<p><strong>Key Points</strong>:</p>
+<ul class="simple">
+<li><p>Rspamd scanning is <strong>inline</strong> (mail passes through), not parallel</p></li>
+<li><p>Port 25 (MX) requires no authentication (standard SMTP behavior)</p></li>
+<li><p>ClamAV scanning happens during Rspamd step if enabled</p></li>
+<li><p>LMTP delivery ensures reliable handoff from Postfix to Dovecot</p></li>
+</ul>
+<p><strong>Rate Limiting</strong>:</p>
+<ul class="simple">
+<li><p>Traefik InFlightConn middleware: Limits simultaneous connections per IP</p></li>
+<li><p>Postfix anvil: Connection rate (60/min), message rate (100/min), recipient rate (300/min)</p></li>
+</ul>
+</section>
+<section id="webmail-sending-user-internet-via-webmail">
+<h3>Webmail Sending (User → Internet via Webmail)<a class="headerlink" href="#webmail-sending-user-internet-via-webmail" title="Link to this heading">¶</a></h3>
+<p><strong>Complete flow when user sends email via webmail:</strong></p>
+<ol class="arabic simple">
+<li><p><strong>User → Browser → Webmail:80</strong> - User composes email in Roundcube</p></li>
+<li><p><strong>Webmail authenticates</strong> - User already authenticated via Admin SSO</p></li>
+<li><p><strong>Webmail → Dovecot-Submission:10025</strong> - Webmail sends via dedicated submission service</p></li>
+<li><p><strong>Dovecot-Submission accepts</strong> - Uses <code class="docutils literal notranslate"><span class="pre">nopassword=y</span></code> trust model (network isolation)</p></li>
+<li><p><strong>Dovecot-Submission → Postfix:25</strong> - Relays to Postfix without authentication</p></li>
+<li><p><strong>Postfix → Internet</strong> - Delivers to recipient’s MX server</p></li>
+</ol>
+<p><strong>Key Points</strong>:</p>
+<ul class="simple">
+<li><p>“Token authentication” means webmail session trust, not actual token validation</p></li>
+<li><p>Trust based on <strong>network isolation</strong> (only webmail pod can reach dovecot-submission:10025)</p></li>
+<li><p>Dovecot-submission is a relay-only service (no mailbox access)</p></li>
+<li><p>Bypasses Front/Nginx entirely for direct backend communication</p></li>
+</ul>
+<p><strong>Why separate submission service?</strong></p>
+<ul class="simple">
+<li><p>Webmail needs to send mail without user entering password again</p></li>
+<li><p>Session-based trust is more secure than storing passwords</p></li>
+<li><p>Isolates webmail submission from regular SMTP submission</p></li>
+</ul>
+</section>
+<section id="authenticated-smtp-imap-mail-client-server">
+<h3>Authenticated SMTP/IMAP (Mail Client → Server)<a class="headerlink" href="#authenticated-smtp-imap-mail-client-server" title="Link to this heading">¶</a></h3>
+<p><strong>Complete flow for authenticated mail client access:</strong></p>
+<ol class="arabic simple">
+<li><p><strong>Mail client → Traefik:587/993/995</strong> - Client connects (Thunderbird, Outlook, etc.)</p></li>
+<li><p><strong>Traefik TLS termination</strong> - Traefik decrypts TLS, forwards plaintext</p></li>
+<li><p><strong>Traefik → Front:587/993/995</strong> - Nginx receives plaintext connection</p></li>
+<li><p><strong>Front → Admin:8080/internal/auth/email</strong> - Nginx auth_http check</p></li>
+<li><p><strong>Admin validates</strong> - Queries PostgreSQL for user credentials</p></li>
+<li><p><strong>Admin → Front</strong> - Returns HTTP 200 (success) or 403 (failure) with backend address</p></li>
+<li><p><strong>If authenticated</strong>:</p>
+<ul class="simple">
+<li><p>SMTP (587/465): Front → Postfix:25</p></li>
+<li><p>IMAP (993/143): Front → Dovecot:143</p></li>
+<li><p>POP3 (995/110): Front → Dovecot:110</p></li>
+</ul>
+</li>
+</ol>
+<p><strong>Key Points</strong>:</p>
+<ul class="simple">
+<li><p>All TLS ports receive <strong>plaintext</strong> traffic (TLS_FLAVOR=notls, Traefik handles TLS)</p></li>
+<li><p>Nginx auth_http protocol validates every connection</p></li>
+<li><p>Front acts as authentication proxy, not just protocol router</p></li>
+<li><p>Port 25 (MX) bypasses authentication (accepts from any sender)</p></li>
+</ul>
+</section>
+<section id="service-discovery-and-front-address">
+<h3>Service Discovery and FRONT_ADDRESS<a class="headerlink" href="#service-discovery-and-front-address" title="Link to this heading">¶</a></h3>
+<blockquote>
+<div><p><strong>⚠️ IMPORTANT: FRONT_ADDRESS Naming Quirk</strong></p>
+<p>The environment variable <code class="docutils literal notranslate"><span class="pre">FRONT_ADDRESS</span></code> is <strong>misleading</strong> - despite its name, it points to the <strong>Dovecot service</strong>, NOT the Front (Nginx) service.</p>
+<p><strong>Why?</strong> This is a Mailu upstream naming convention. Mailu historically used the “front” container for LMTP delivery, so the variable is named <code class="docutils literal notranslate"><span class="pre">FRONT_ADDRESS</span></code>. In cdk8s-mailu architecture with Traefik TLS termination, we point this variable to Dovecot directly for LMTP delivery from Postfix.</p>
+<p><strong>Code reference</strong>: <code class="docutils literal notranslate"><span class="pre">src/mailu-chart.ts:384-388</span></code></p>
+<div class="highlight-typescript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1">// FRONT_ADDRESS is used for LMTP delivery (postfix -&gt; dovecot:2525)</span>
+</span><span data-line="2"><span class="c1">// Despite the name, it should point to dovecot, not the nginx front service</span>
+</span><span data-line="3"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">dovecotConstruct</span><span class="o">?</span><span class="p">.</span><span class="nx">service</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="4"><span class="w">  </span><span class="k">this</span><span class="p">.</span><span class="nx">sharedConfigMap</span><span class="p">.</span><span class="nx">addData</span><span class="p">(</span><span class="s1">&#39;FRONT_ADDRESS&#39;</span><span class="p">,</span>
+</span><span data-line="5"><span class="w">    </span><span class="sb">`</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">dovecotConstruct</span><span class="p">.</span><span class="nx">service</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="sb">.</span><span class="si">${</span><span class="nx">namespace</span><span class="si">}</span><span class="sb">.svc.cluster.local`</span><span class="p">);</span>
+</span><span data-line="6"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p><strong>Impact</strong>: When debugging, remember that <code class="docutils literal notranslate"><span class="pre">FRONT_ADDRESS</span></code> = Dovecot service DNS name, not Front service.</p>
+</div></blockquote>
+</section>
+</section>
+<section id="cdk8s-design-patterns">
+<h2>CDK8S Design Patterns<a class="headerlink" href="#cdk8s-design-patterns" title="Link to this heading">¶</a></h2>
+<section id="construct-hierarchy">
+<h3>Construct Hierarchy<a class="headerlink" href="#construct-hierarchy" title="Link to this heading">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">MailuChart (extends Chart)
+</span><span data-line="2">  ├── Namespace
+</span><span data-line="3">  ├── SharedConfigMap (service discovery)
+</span><span data-line="4">  ├── NginxPatchConfigMap (TLS_FLAVOR=notls wrapper)
+</span><span data-line="5">  ├── WebmailPatchConfigMap (backend connection patches)
+</span><span data-line="6">  ├── FrontConstruct
+</span><span data-line="7">  │   ├── Deployment (nginx with wrapper script)
+</span><span data-line="8">  │   └── Service (HTTP, SMTP, IMAP, POP3 ports)
+</span><span data-line="9">  ├── AdminConstruct
+</span><span data-line="10">  │   ├── Deployment
+</span><span data-line="11">  │   ├── Service
+</span><span data-line="12">  │   └── PersistentVolumeClaim (5Gi)
+</span><span data-line="13">  ├── PostfixConstruct
+</span><span data-line="14">  │   ├── Deployment
+</span><span data-line="15">  │   ├── Service (port 25, 10025)
+</span><span data-line="16">  │   └── PersistentVolumeClaim (5Gi)
+</span><span data-line="17">  ├── DovecotConstruct
+</span><span data-line="18">  │   ├── Deployment
+</span><span data-line="19">  │   ├── Service
+</span><span data-line="20">  │   └── PersistentVolumeClaim (mailbox storage)
+</span><span data-line="21">  ├── DovecotSubmissionConstruct
+</span><span data-line="22">  │   ├── Deployment (AMD64 nodeSelector)
+</span><span data-line="23">  │   ├── Service (port 10025)
+</span><span data-line="24">  │   └── ConfigMap (dovecot.conf, entrypoint.sh)
+</span><span data-line="25">  ├── RspamdConstruct
+</span><span data-line="26">  │   ├── Deployment
+</span><span data-line="27">  │   ├── Service
+</span><span data-line="28">  │   └── PersistentVolumeClaim (5Gi)
+</span><span data-line="29">  └── Optional:
+</span><span data-line="30">      ├── WebmailConstruct
+</span><span data-line="31">      ├── ClamavConstruct
+</span><span data-line="32">      ├── FetchmailConstruct
+</span><span data-line="33">      └── WebdavConstruct
+</span></pre></div>
+</div>
+<p>Each construct is <strong>self-contained</strong> and manages:</p>
+<ul class="simple">
+<li><p>Kubernetes resources (Deployment, Service, ConfigMap, etc.)</p></li>
+<li><p>Resource requirements (CPU, memory)</p></li>
+<li><p>Volume mounts and storage</p></li>
+<li><p>Environment variables</p></li>
+<li><p>Service discovery configuration</p></li>
+</ul>
+</section>
+<section id="configuration-flow">
+<h3>Configuration Flow<a class="headerlink" href="#configuration-flow" title="Link to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p><strong>User provides MailuConfig</strong> - Type-safe configuration object</p></li>
+<li><p><strong>MailuChart validates config</strong> - Ensures required fields present</p></li>
+<li><p><strong>Shared resources created</strong> - Namespace, shared ConfigMap</p></li>
+<li><p><strong>Constructs instantiated conditionally</strong> - Based on component toggles</p></li>
+<li><p><strong>Resources synthesized</strong> - CDK8S generates Kubernetes YAML</p></li>
+</ol>
+</section>
+<section id="resource-management-philosophy">
+<h3>Resource Management Philosophy<a class="headerlink" href="#resource-management-philosophy" title="Link to this heading">¶</a></h3>
+<p><strong>Defaults optimized for production:</strong></p>
+<ul class="simple">
+<li><p>Conservative resource requests (pods scheduled reliably)</p></li>
+<li><p>Higher limits (allow bursting for traffic spikes)</p></li>
+<li><p>Based on real-world usage patterns</p></li>
+<li><p>Can be overridden per-component</p></li>
+</ul>
+<p><strong>Example:</strong> Admin component</p>
+<ul class="simple">
+<li><p>Request: 100m CPU, 256Mi memory (guaranteed minimum)</p></li>
+<li><p>Limit: 300m CPU, 512Mi memory (burstable maximum)</p></li>
+</ul>
+</section>
+</section>
+<section id="storage-architecture">
+<h2>Storage Architecture<a class="headerlink" href="#storage-architecture" title="Link to this heading">¶</a></h2>
+<section id="persistent-volumes">
+<h3>Persistent Volumes<a class="headerlink" href="#persistent-volumes" title="Link to this heading">¶</a></h3>
+<p><strong>Data Volume</strong> (<code class="docutils literal notranslate"><span class="pre">/data</span></code>)</p>
+<ul class="simple">
+<li><p>Application data, SQLite database (if used)</p></li>
+<li><p>Configuration files</p></li>
+<li><p>Default: 10Gi</p></li>
+</ul>
+<p><strong>Mail Volume</strong> (<code class="docutils literal notranslate"><span class="pre">/mail</span></code>)</p>
+<ul class="simple">
+<li><p>User mailboxes and messages</p></li>
+<li><p>Largest storage requirement</p></li>
+<li><p>Default: 50Gi, adjust based on users</p></li>
+</ul>
+</section>
+<section id="database-options">
+<h3>Database Options<a class="headerlink" href="#database-options" title="Link to this heading">¶</a></h3>
+<p><strong>SQLite (Default)</strong></p>
+<ul class="simple">
+<li><p>Simple, zero-configuration</p></li>
+<li><p>Suitable for small deployments (&lt;100 users)</p></li>
+<li><p>Stored in <code class="docutils literal notranslate"><span class="pre">/data</span></code> volume</p></li>
+</ul>
+<p><strong>PostgreSQL (Recommended for Production)</strong></p>
+<ul class="simple">
+<li><p>Better performance and reliability</p></li>
+<li><p>Required for high-availability setups</p></li>
+<li><p>Managed separately (CNPG, cloud database, etc.)</p></li>
+</ul>
+</section>
+</section>
+<section id="network-architecture">
+<h2>Network Architecture<a class="headerlink" href="#network-architecture" title="Link to this heading">¶</a></h2>
+<section id="service-discovery">
+<h3>Service Discovery<a class="headerlink" href="#service-discovery" title="Link to this heading">¶</a></h3>
+<p>All components communicate via Kubernetes services:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">{component-name}-service</span></code> - Standard naming pattern</p></li>
+<li><p>Internal DNS resolution</p></li>
+<li><p>No external dependencies for inter-component communication</p></li>
+</ul>
+</section>
+<section id="ingress-tls-configuration">
+<h3>Ingress/TLS Configuration<a class="headerlink" href="#ingress-tls-configuration" title="Link to this heading">¶</a></h3>
+<p><strong>Traefik TLS Termination (Supported &amp; Tested)</strong></p>
+<ul class="simple">
+<li><p>Traefik handles TLS for all protocols (SMTP/IMAP/HTTP/HTTPS)</p></li>
+<li><p>Nginx wrapper patches Front component for plaintext backend communication</p></li>
+<li><p>Automatic certificate management via cert-manager</p></li>
+<li><p>This is the <strong>only tested and supported configuration</strong> in cdk8s-mailu</p></li>
+</ul>
+<p><strong>Alternative Ingress Solutions</strong></p>
+<ul class="simple">
+<li><p>Theoretically, other ingress controllers could be used (e.g., nginx-ingress, HAProxy)</p></li>
+<li><p>Would require custom configuration and testing</p></li>
+<li><p><strong>Not tested or documented</strong> - use at your own risk</p></li>
+</ul>
+<p><strong>Front Direct TLS (Not Recommended)</strong></p>
+<ul class="simple">
+<li><p>Mailu’s Front component can handle TLS directly (TLS_FLAVOR=cert, letsencrypt, mail, etc.)</p></li>
+<li><p><strong>This configuration is untested in cdk8s-mailu</strong> and likely requires significant modifications</p></li>
+<li><p>Manual certificate management, no nginx patching applied</p></li>
+<li><p>Not recommended: use Traefik termination instead</p></li>
+</ul>
+</section>
+</section>
+<section id="design-decisions">
+<h2>Design Decisions<a class="headerlink" href="#design-decisions" title="Link to this heading">¶</a></h2>
+<section id="why-cdk8s">
+<h3>Why CDK8S?<a class="headerlink" href="#why-cdk8s" title="Link to this heading">¶</a></h3>
+<p>CDK8S was chosen over traditional YAML/Helm for cdk8s-mailu because it provides <strong>infrastructure as code</strong> benefits that are crucial for maintaining a complex, multi-component mail server deployment.</p>
+<p><strong>Type Safety Prevents Configuration Errors</strong></p>
+<ul class="simple">
+<li><p>Catch mistakes at compile time, not deploy time</p></li>
+<li><p>IDE shows available options with autocomplete</p></li>
+<li><p>Impossible to reference non-existent fields</p></li>
+<li><p>Refactoring is safe and reliable</p></li>
+</ul>
+<p><strong>Real Example</strong>: When the dovecot submission service was added, TypeScript’s type system immediately caught everywhere that needed updates (service discovery, ConfigMap, construct exports). With YAML, these would have been runtime failures.</p>
+<p><strong>Programmatic Logic Simplifies Complex Configurations</strong></p>
+<ul class="simple">
+<li><p>Conditional resource creation based on config flags</p></li>
+<li><p>Dynamic service name generation with hashing</p></li>
+<li><p>Environment variable construction from multiple sources</p></li>
+<li><p>Resource calculation (e.g., convert “256Mi” to bytes)</p></li>
+</ul>
+<p><strong>Testability Ensures Reliability</strong></p>
+<ul class="simple">
+<li><p>Unit tests for individual constructs</p></li>
+<li><p>Integration tests for complete deployments</p></li>
+<li><p>Test coverage &gt;90% achieved</p></li>
+<li><p>Snapshot testing for manifest stability</p></li>
+</ul>
+<p>Advantages:</p>
+<ul class="simple">
+<li><p>Type-safe configuration with compile-time validation</p></li>
+<li><p>IDE autocomplete and inline documentation</p></li>
+<li><p>Programmatic manifest generation with logic</p></li>
+<li><p>Testable infrastructure code (&gt;90% coverage)</p></li>
+<li><p>Reusable constructs across projects</p></li>
+</ul>
+</section>
+<section id="why-modular-constructs">
+<h3>Why Modular Constructs?<a class="headerlink" href="#why-modular-constructs" title="Link to this heading">¶</a></h3>
+<p>Each Mailu component is implemented as a separate construct class (AdminConstruct, PostfixConstruct, etc.) rather than one monolithic MailuChart. This modular approach was essential for managing complexity.</p>
+<p><strong>Independent Testing and Development</strong></p>
+<ul class="simple">
+<li><p>Each construct has its own test file</p></li>
+<li><p>Can develop and test components in isolation</p></li>
+<li><p>Easier to debug when issues arise</p></li>
+<li><p>Regression testing catches component-specific breaks</p></li>
+</ul>
+<p><strong>Flexible Configuration</strong></p>
+<ul class="simple">
+<li><p>Enable/disable components with simple flags</p></li>
+<li><p>Override resources per-component</p></li>
+<li><p>Customize storage per-service</p></li>
+<li><p>Different image tags per component possible</p></li>
+</ul>
+<p><strong>Real Example</strong>: The dovecot submission service was added as a new DovecotSubmissionConstruct without touching existing constructs. If it had been one big class, the change would have affected every test and increased risk.</p>
+<p><strong>Clear Ownership and Documentation</strong></p>
+<ul class="simple">
+<li><p>Each construct file is self-documenting</p></li>
+<li><p>Props interface shows required configuration</p></li>
+<li><p>Construct methods are single-purpose</p></li>
+<li><p>Easy to understand data flow</p></li>
+</ul>
+<p>Benefits:</p>
+<ul class="simple">
+<li><p>Component-level customization (resources, storage, images)</p></li>
+<li><p>Easier testing (unit test each construct independently)</p></li>
+<li><p>Clear separation of concerns (one construct = one service)</p></li>
+<li><p>Maintainability (changes isolated to specific constructs)</p></li>
+<li><p>Parallel development possible</p></li>
+</ul>
+</section>
+<section id="why-production-defaults">
+<h3>Why Production Defaults?<a class="headerlink" href="#why-production-defaults" title="Link to this heading">¶</a></h3>
+<p>cdk8s-mailu is designed with <strong>opinionated production-grade defaults</strong> rather than minimal examples that require extensive configuration. This reduces the “time to working deployment” and prevents common misconfigurations.</p>
+<p><strong>Resource Requests and Limits</strong></p>
+<ul class="simple">
+<li><p>All components have sensible CPU/memory defaults</p></li>
+<li><p>Requests ensure reliable scheduling</p></li>
+<li><p>Limits prevent resource exhaustion</p></li>
+<li><p>Based on real production metrics</p></li>
+</ul>
+<p><strong>Example Defaults</strong>:</p>
+<ul class="simple">
+<li><p>Admin: 100m CPU / 256Mi RAM (adequate for &lt;1000 users)</p></li>
+<li><p>Postfix: 100m CPU / 512Mi RAM (handles typical mail volume)</p></li>
+<li><p>Dovecot: 200m CPU / 1Gi RAM (IMAP is memory-intensive)</p></li>
+</ul>
+<p><strong>Storage Sizes</strong></p>
+<ul class="simple">
+<li><p>Admin PVC: 5Gi (configuration and SQLite if used)</p></li>
+<li><p>Postfix PVC: 5Gi (mail queue)</p></li>
+<li><p>Dovecot PVC: 50Gi default (adjust based on users)</p></li>
+<li><p>Rspamd PVC: 5Gi (spam filter data)</p></li>
+</ul>
+<p><strong>Security and Reliability</strong></p>
+<ul class="simple">
+<li><p>Non-root filesystem disabled where needed (mail services require privileges)</p></li>
+<li><p>Health probes configured automatically</p></li>
+<li><p>Service discovery via environment variables</p></li>
+<li><p>PVC retention policies appropriate for mail data</p></li>
+</ul>
+<p><strong>Real-World Validation</strong></p>
+<ul class="simple">
+<li><p>Defaults tested on production clusters</p></li>
+<li><p>Successfully deployed with AMD64/ARM64 mixed nodes</p></li>
+<li><p>Handles real email traffic and webmail usage</p></li>
+<li><p>Proven to work with Traefik TLS termination</p></li>
+</ul>
+<p>Philosophy:</p>
+<ul class="simple">
+<li><p>“Works out of the box” for most use cases (minimal configuration required)</p></li>
+<li><p>Override only what you need (but you can customize everything)</p></li>
+<li><p>Based on real-world production deployments</p></li>
+<li><p>Fail-safe rather than fail-fast (conservative resources, not minimal)</p></li>
+</ul>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="dovecot-submission.html"><span class="std std-doc">Dovecot Submission Service</span></a> - Detailed explanation of webmail email sending</p></li>
+<li><p><a class="reference internal" href="cdk8s-patterns.html"><span class="std std-doc">CDK8S Patterns</span></a> - Construct design patterns</p></li>
+<li><p><a class="reference internal" href="../reference/configuration-options.html"><span class="std std-doc">Configuration Options</span></a> - Complete API reference</p></li>
+<li><p><a class="reference internal" href="../tutorials/01-quick-start.html"><span class="std std-doc">Quick Start Tutorial</span></a> - Deploy your first instance</p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="index.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Explanation</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="authentication-flows.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Authentication Flows</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+window.addEventListener("load", () => mermaid.run());
+</script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js"></script></body>
+</html>
