@@ -545,25 +545,27 @@ tbody tr:hover {
    LOGO & HEADER ENHANCEMENTS
    ========================================================================== */
 
-/* Add package name next to logo */
-.sy-h-logo a::after {
-  content: 'cdk8s-mailu';
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 700;
-  font-size: 1.5rem;
-  color: var(--brand-cyan);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-left: 1rem;
-  vertical-align: middle;
-  display: inline-block;
+/* Force display of package name text in logo (Shibuya hides it by default) */
+.sy-head-brand strong {
+  display: inline-block !important;
+  font-family: 'Orbitron', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1.5rem !important;
+  color: var(--brand-cyan) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+  margin-left: 1rem !important;
+  vertical-align: middle !important;
 }
 
-/* Ensure logo link is flexbox for proper alignment */
-.sy-h-logo a {
-  display: flex !important;
-  align-items: center;
-  gap: 1rem;
+/* Ensure logo link is flexbox for proper alignment - multiple selectors */
+.sy-h-logo a,
+header a[href="/"],
+nav a[href="/"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  flex-direction: row !important;
 }
 
 /* ==========================================================================

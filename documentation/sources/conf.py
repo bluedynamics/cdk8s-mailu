@@ -24,6 +24,9 @@ author = "Blue Dynamics Alliance Contributors"
 # The full version, including alpha/beta/rc tags
 release = "0.0.0"
 
+# Site title - displayed alongside logo
+html_title = "cdk8s-mailu"
+
 
 # -- General configuration ---------------------------------------------------
 
@@ -101,4 +104,5 @@ html_css_files = [
 # Custom JavaScript files
 html_js_files = [
     "logo-fix.js",  # Fix logo link for path prefix deployment
+    "logo-text.js",  # Add package name text next to logo
 ]

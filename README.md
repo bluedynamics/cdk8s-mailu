@@ -13,7 +13,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-📚 **[Full Documentation](documentation/)** | [Quick Start](#quick-start) | [Architecture](documentation/sources/explanation/architecture.md)
+📚 **[Full Documentation](https://bluedynamics.github.io/cdk8s-mailu/)** | [Quick Start](#quick-start) | [Architecture](https://bluedynamics.github.io/cdk8s-mailu/explanation/architecture.html)
 
 ## Overview
 
@@ -28,7 +28,7 @@
 - **Well-Documented** - Comprehensive documentation following Diátaxis framework
 - **Battle-Tested** - Production deployment at kup6s.com with AMD64/ARM64 mixed nodes
 
-**[See Complete Architecture →](documentation/sources/explanation/architecture.md)**
+**[See Complete Architecture →](https://bluedynamics.github.io/cdk8s-mailu/explanation/architecture.html)**
 
 ## Installation
 
@@ -40,7 +40,7 @@ yarn add cdk8s-mailu
 
 **Prerequisites**: Kubernetes 1.28+, PostgreSQL, Redis, Node.js 18+
 
-**[Full Prerequisites →](documentation/sources/tutorials/01-quick-start.md#prerequisites)**
+**[Full Prerequisites →](https://bluedynamics.github.io/cdk8s-mailu/tutorials/01-quick-start.html#prerequisites)**
 
 ## Quick Start
 
@@ -115,26 +115,26 @@ npx ts-node mailu.ts
 kubectl apply -f dist/mailu.k8s.yaml
 ```
 
-**[Complete Tutorial with Secrets & DNS →](documentation/sources/tutorials/01-quick-start.md)**
+**[Complete Tutorial with Secrets & DNS →](https://bluedynamics.github.io/cdk8s-mailu/tutorials/01-quick-start.html)**
 
 ## Documentation
 
 Comprehensive documentation following the [Diátaxis](https://diataxis.fr/) framework:
 
-### **[📘 Tutorials](documentation/sources/tutorials/)** - Learn by doing
-- [Quick Start: Deploy Your First Instance](documentation/sources/tutorials/01-quick-start.md)
+### **[📘 Tutorials](https://bluedynamics.github.io/cdk8s-mailu/tutorials/)** - Learn by doing
+- [Quick Start: Deploy Your First Instance](https://bluedynamics.github.io/cdk8s-mailu/tutorials/01-quick-start.html)
 
-### **[🔧 How-To Guides](documentation/sources/how-to/)** - Practical solutions
+### **[🔧 How-To Guides](https://bluedynamics.github.io/cdk8s-mailu/how-to/)** - Practical solutions
 - Configure components
 - Customize resources
 - Set up TLS termination
 
-### **[💡 Explanation](documentation/sources/explanation/)** - Understanding the design
-- [Architecture Overview](documentation/sources/explanation/architecture.md) - Component relationships and CDK8S patterns
-- [Dovecot Submission Service](documentation/sources/explanation/dovecot-submission.md) - How webmail email sending works
-- [CDK8S Patterns](documentation/sources/explanation/cdk8s-patterns.md) - Construct design patterns
+### **[💡 Explanation](https://bluedynamics.github.io/cdk8s-mailu/explanation/)** - Understanding the design
+- [Architecture Overview](https://bluedynamics.github.io/cdk8s-mailu/explanation/architecture.html) - Component relationships and CDK8S patterns
+- [Dovecot Submission Service](https://bluedynamics.github.io/cdk8s-mailu/explanation/dovecot-submission.html) - How webmail email sending works
+- [CDK8S Patterns](https://bluedynamics.github.io/cdk8s-mailu/explanation/cdk8s-patterns.html) - Construct design patterns
 
-### **[📚 Reference](documentation/sources/reference/)** - Technical specifications
+### **[📚 Reference](https://bluedynamics.github.io/cdk8s-mailu/reference/)** - Technical specifications
 - Configuration API reference
 - Component options
 - Resource defaults
@@ -162,4 +162,4 @@ Apache License 2.0 - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**[📚 Full Documentation](documentation/) | [🚀 Quick Start](documentation/sources/tutorials/01-quick-start.md) | [🏗️ Architecture](documentation/sources/explanation/architecture.md)**
+**[📚 Full Documentation](https://bluedynamics.github.io/cdk8s-mailu/) | [🚀 Quick Start](https://bluedynamics.github.io/cdk8s-mailu/tutorials/01-quick-start.html) | [🏗️ Architecture](https://bluedynamics.github.io/cdk8s-mailu/explanation/architecture.html)**
