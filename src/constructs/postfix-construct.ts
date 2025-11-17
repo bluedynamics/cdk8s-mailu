@@ -164,6 +164,18 @@ export class PostfixConstruct extends Construct {
     // Mount PVC for mail queue
     container.mount('/queue', kplus.Volume.fromPersistentVolumeClaim(this, 'queue-volume', this.pvc));
 
+    // Mount override ConfigMap for PROXY protocol master.cf configuration
+    // This adds smtpd_upstream_proxy_protocol support to the smtp service
+    const overrideConfigMap = kplus.ConfigMap.fromConfigMapName(
+      this,
+      'postfix-override-cm',
+      'postfix-master-override',
+    );
+    container.mount(
+      '/overrides',
+      kplus.Volume.fromConfigMap(this, 'override-volume', overrideConfigMap),
+    );
+
     // Create Service
     this.service = new kplus.Service(this, 'service', {
       metadata: {
