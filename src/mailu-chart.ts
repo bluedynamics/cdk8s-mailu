@@ -248,6 +248,23 @@ export class MailuChart extends Chart {
       envVars.LOG_LEVEL = this.config.mailu.logLevel;
     }
 
+    // Security: Relay and rate limiting configuration
+    // RELAYNETS: Networks allowed to relay without authentication (empty = no external relaying)
+    // Only authenticated users via SASL can send mail (ports 465/587)
+    envVars.RELAYNETS = '';
+
+    // Rate limiting configuration
+    // MESSAGE_RATELIMIT: Maximum messages per user per day
+    envVars.MESSAGE_RATELIMIT = '200/day';
+
+    // AUTH_RATELIMIT_IP: Maximum authentication attempts per IP per hour
+    // Protects against brute force attacks
+    envVars.AUTH_RATELIMIT_IP = '60/hour';
+
+    // AUTH_RATELIMIT_USER: Maximum authentication attempts per user per day
+    // Protects against credential stuffing
+    envVars.AUTH_RATELIMIT_USER = '100/day';
+
     return new kplus.ConfigMap(this, 'env-config', {
       metadata: {
         namespace: this.mailuNamespace.name,
