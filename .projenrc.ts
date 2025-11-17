@@ -9,8 +9,10 @@ const project = new cdk8s.Cdk8sTypeScriptApp({
   cdk8sVersion: '2.70.26',
 
   // Import Traefik CRDs for ingress support from local CRD file
+  // Import Prometheus Operator CRDs for monitoring support
   cdk8sImports: [
     'crds/traefik-crds.yaml',
+    'crds/prometheus-servicemonitor-crd.yaml',
   ],
 
   // Dependencies

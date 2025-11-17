@@ -164,14 +164,16 @@ describe('PostfixConstruct', () => {
     const deployment = manifests.find(m => m.kind === 'Deployment');
     const container = deployment?.spec.template.spec.containers[0];
 
-    // Check volume mount
-    expect(container.volumeMounts).toHaveLength(1);
-    expect(container.volumeMounts[0].mountPath).toBe('/queue');
+    // Check volume mounts (queue PVC, override ConfigMap, spool emptyDir)
+    expect(container.volumeMounts).toHaveLength(3);
+    expect(container.volumeMounts.find((v: any) => v.mountPath === '/queue')).toBeDefined();
+    expect(container.volumeMounts.find((v: any) => v.mountPath === '/overrides')).toBeDefined();
+    expect(container.volumeMounts.find((v: any) => v.mountPath === '/var/spool/postfix')).toBeDefined();
 
     // Check volume definition
     const volumes = deployment?.spec.template.spec.volumes;
-    expect(volumes).toHaveLength(1);
-    expect(volumes[0].persistentVolumeClaim).toBeDefined();
+    expect(volumes).toHaveLength(3);
+    expect(volumes.find((v: any) => v.persistentVolumeClaim)).toBeDefined();
   });
 
   test('configures resource requests and limits', () => {

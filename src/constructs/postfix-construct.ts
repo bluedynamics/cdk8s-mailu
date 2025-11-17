@@ -176,6 +176,41 @@ export class PostfixConstruct extends Construct {
       kplus.Volume.fromConfigMap(this, 'override-volume', overrideConfigMap),
     );
 
+    // Create shared volume for Postfix spool directory (for exporter access to showq socket)
+    const spoolVolume = kplus.Volume.fromEmptyDir(this, 'spool-volume', 'postfix-spool', {
+      sizeLimit: parseMemorySize('100Mi'),
+    });
+    container.mount('/var/spool/postfix', spoolVolume);
+
+    // Add Postfix exporter sidecar for Prometheus metrics
+    // Exposes queue size and other Postfix metrics on port 9154
+    const exporterContainer = this.deployment.addContainer({
+      name: 'postfix-exporter',
+      image: 'kumina/postfix-exporter:latest',
+      imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
+      portNumber: 9154,
+      securityContext: {
+        ensureNonRoot: false, // Needs access to Postfix spool directory
+        readOnlyRootFilesystem: true,
+      },
+      resources: {
+        cpu: {
+          request: parseCpuMillis('10m'),
+          limit: parseCpuMillis('50m'),
+        },
+        memory: {
+          request: parseMemorySize('32Mi'),
+          limit: parseMemorySize('64Mi'),
+        },
+      },
+    });
+
+    // Mount shared spool volume for access to showq socket
+    exporterContainer.mount('/var/spool/postfix', spoolVolume);
+
+    // Configure exporter to read from Postfix showq socket
+    exporterContainer.env.addVariable('POSTFIX_SHOWQ_PATH', kplus.EnvValue.fromValue('/var/spool/postfix/public/showq'));
+
     // Create Service
     this.service = new kplus.Service(this, 'service', {
       metadata: {
@@ -198,6 +233,12 @@ export class PostfixConstruct extends Construct {
           name: 'submission',
           port: 10025,
           targetPort: 10025,
+          protocol: kplus.Protocol.TCP,
+        },
+        {
+          name: 'metrics',
+          port: 9154,
+          targetPort: 9154,
           protocol: kplus.Protocol.TCP,
         },
       ],

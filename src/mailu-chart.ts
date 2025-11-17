@@ -10,6 +10,7 @@ import { FetchmailConstruct } from './constructs/fetchmail-construct';
 import { FrontConstruct } from './constructs/front-construct';
 import { NginxPatchConfigMap } from './constructs/nginx-patch-configmap';
 import { PostfixConstruct } from './constructs/postfix-construct';
+import { PostfixServiceMonitorConstruct } from './constructs/postfix-servicemonitor-construct';
 import { RspamdConstruct } from './constructs/rspamd-construct';
 import { TraefikIngressConstruct } from './constructs/traefik-ingress-construct';
 import { WebdavConstruct } from './constructs/webdav-construct';
@@ -188,6 +189,9 @@ export class MailuChart extends Chart {
     if (config.ingress?.enabled && config.ingress?.type === 'traefik') {
       this.createTraefikIngress();
     }
+
+    // Create monitoring resources (ServiceMonitor for Prometheus)
+    this.createMonitoringResources();
   }
 
   /**
@@ -421,6 +425,22 @@ export class MailuChart extends Chart {
       enableTcp: traefikConfig.enableTcp ?? true,
       smtpConnectionLimit: traefikConfig.smtpConnectionLimit ?? 15,
       enableSmtp: traefikConfig.enableSmtp ?? false, // Default false for security
+    });
+  }
+
+  /**
+   * Creates monitoring resources (ServiceMonitor for Prometheus)
+   */
+  private createMonitoringResources(): void {
+    // Only create ServiceMonitor if Postfix component is enabled
+    if (this.config.components?.postfix === false || !this.postfixConstruct) {
+      return;
+    }
+
+    // Create ServiceMonitor for Postfix metrics
+    new PostfixServiceMonitorConstruct(this, 'postfix-monitoring', {
+      namespace: this.mailuNamespace.name,
+      service: this.postfixConstruct.service,
     });
   }
 
