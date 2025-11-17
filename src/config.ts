@@ -357,6 +357,14 @@ export interface TraefikIngressConfig {
    * @default 15
    */
   readonly smtpConnectionLimit?: number;
+
+  /**
+   * Enable SMTP port 25 for receiving mail from external servers
+   * WARNING: Disable this if you don't need to receive mail from external MTAs
+   * Port 25 should only be enabled if Postfix relay restrictions are properly configured
+   * @default false (security best practice - keep port 25 disabled)
+   */
+  readonly enableSmtp?: boolean;
 }
 
 /**

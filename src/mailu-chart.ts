@@ -420,6 +420,7 @@ export class MailuChart extends Chart {
       postfixService: this.postfixConstruct.service,
       enableTcp: traefikConfig.enableTcp ?? true,
       smtpConnectionLimit: traefikConfig.smtpConnectionLimit ?? 15,
+      enableSmtp: traefikConfig.enableSmtp ?? false, // Default false for security
     });
   }
 

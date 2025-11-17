@@ -48,6 +48,12 @@ export interface TraefikIngressConstructProps {
    * @default 15
    */
   smtpConnectionLimit?: number;
+
+  /**
+   * Enable SMTP port 25 for receiving mail from external servers
+   * @default false
+   */
+  enableSmtp?: boolean;
 }
 
 export class TraefikIngressConstruct extends Construct {
@@ -60,6 +66,7 @@ export class TraefikIngressConstruct extends Construct {
     const certIssuer = props.certIssuer ?? 'letsencrypt-cluster-issuer';
     const enableTcp = props.enableTcp ?? true;
     const smtpConnectionLimit = props.smtpConnectionLimit ?? 15;
+    const enableSmtp = props.enableSmtp ?? false; // Default false for security
 
     this.tcpRoutes = [];
 
@@ -130,50 +137,55 @@ export class TraefikIngressConstruct extends Construct {
 
     // TCP routes for mail protocols (SMTP, IMAP, etc)
     if (enableTcp) {
-      // SMTP Rate Limiting Middleware
-      // Limits simultaneous connections to protect against connection flooding
-      new traefik.MiddlewareTcp(this, 'smtp-connection-limit', {
-        metadata: {
-          name: 'smtp-connection-limit',
-          namespace: props.namespace,
-        },
-        spec: {
-          inFlightConn: {
-            amount: smtpConnectionLimit, // Max simultaneous connections per source IP
+      // SMTP (port 25) - Only create if explicitly enabled
+      // WARNING: Port 25 should only be enabled if you need to receive mail from external MTAs
+      // and Postfix relay restrictions are properly configured with RELAYNETS=""
+      if (enableSmtp) {
+        // SMTP Rate Limiting Middleware
+        // Limits simultaneous connections to protect against connection flooding
+        new traefik.MiddlewareTcp(this, 'smtp-connection-limit', {
+          metadata: {
+            name: 'smtp-connection-limit',
+            namespace: props.namespace,
           },
-        },
-      });
-
-      // SMTP (port 25)
-      // Routes directly to Postfix (bypassing Front/nginx) with rate limiting
-      // Port 25 never requires authentication (MX delivery standard)
-      // Postfix handles spam filtering, DNSBL checks, and message rate limiting
-      const smtpRoute = new traefik.IngressRouteTcp(this, 'smtp', {
-        metadata: {
-          name: 'mailu-smtp',
-          namespace: props.namespace,
-        },
-        spec: {
-          entryPoints: ['smtp'],
-          routes: [
-            {
-              match: 'HostSNI(`*`)',
-              middlewares: [
-                {
-                  name: 'smtp-connection-limit',
-                },
-              ],
-              services: [
-                {
-                  name: props.postfixService.name, // Direct to Postfix (bypass nginx)
-                  port: k8s.IntOrString.fromNumber(25),
-                },
-              ],
+          spec: {
+            inFlightConn: {
+              amount: smtpConnectionLimit, // Max simultaneous connections per source IP
             },
-          ],
-        },
-      });
-      this.tcpRoutes.push(smtpRoute);
+          },
+        });
+
+        // SMTP (port 25)
+        // Routes directly to Postfix (bypassing Front/nginx) with rate limiting
+        // Port 25 never requires authentication (MX delivery standard)
+        // Postfix handles spam filtering, DNSBL checks, and message rate limiting
+        const smtpRoute = new traefik.IngressRouteTcp(this, 'smtp', {
+          metadata: {
+            name: 'mailu-smtp',
+            namespace: props.namespace,
+          },
+          spec: {
+            entryPoints: ['smtp'],
+            routes: [
+              {
+                match: 'HostSNI(`*`)',
+                middlewares: [
+                  {
+                    name: 'smtp-connection-limit',
+                  },
+                ],
+                services: [
+                  {
+                    name: props.postfixService.name, // Direct to Postfix (bypass nginx)
+                    port: k8s.IntOrString.fromNumber(25),
+                  },
+                ],
+              },
+            ],
+          },
+        });
+        this.tcpRoutes.push(smtpRoute);
+      }
 
       // SMTPS (port 465) - SMTP over SSL
       // Traefik terminates TLS using mailu-tls certificate and mail TLS options
