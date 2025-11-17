@@ -178,6 +178,11 @@ export class TraefikIngressConstruct extends Construct {
                   {
                     name: props.postfixService.name, // Direct to Postfix (bypass nginx)
                     port: k8s.IntOrString.fromNumber(25),
+                    // Enable PROXY protocol v2 to preserve real client IP
+                    // This is critical for relay restrictions to work correctly
+                    proxyProtocol: {
+                      version: 2,
+                    },
                   },
                 ],
               },

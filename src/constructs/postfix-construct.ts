@@ -156,6 +156,11 @@ export class PostfixConstruct extends Construct {
     container.env.addVariable('POSTFIX_smtpd_client_recipient_rate_limit', kplus.EnvValue.fromValue('300')); // 300 recipients per minute per IP
     container.env.addVariable('POSTFIX_anvil_rate_time_unit', kplus.EnvValue.fromValue('60s')); // Time unit for rate calculations
 
+    // Enable PROXY protocol support for port 25 (SMTP) connections from Traefik
+    // This allows Postfix to see the real client IP instead of the Traefik pod IP
+    // Critical for relay restrictions to work correctly (mynetworks check uses real IP)
+    container.env.addVariable('POSTFIX_smtpd_upstream_proxy_protocol', kplus.EnvValue.fromValue('haproxy')); // HAProxy PROXY protocol (v1/v2 compatible)
+
     // Mount PVC for mail queue
     container.mount('/queue', kplus.Volume.fromPersistentVolumeClaim(this, 'queue-volume', this.pvc));
 
