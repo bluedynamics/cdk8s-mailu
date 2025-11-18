@@ -203,11 +203,12 @@ service stats {
     container.mount('/mail', kplus.Volume.fromPersistentVolumeClaim(this, 'mail-volume', this.pvc));
 
     // Mount metrics configuration to enable Dovecot native OpenMetrics support
-    // Dovecot automatically includes files from /etc/dovecot/conf.d/
+    // Mailu's dovecot.conf includes /overrides/dovecot.conf via !include_try directive
+    // We mount our metrics config there so Dovecot loads it on startup
     // Metrics are exposed on port 9900 at /metrics endpoint
     // No sidecar exporter needed - Dovecot 2.3+ has built-in Prometheus support
     container.mount(
-      '/etc/dovecot/conf.d/10-metrics.conf',
+      '/overrides/dovecot.conf',
       kplus.Volume.fromConfigMap(this, 'metrics-config-volume', this.metricsConfigMap),
       {
         subPath: '10-metrics.conf',

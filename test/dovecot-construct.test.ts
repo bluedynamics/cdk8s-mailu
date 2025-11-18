@@ -171,7 +171,7 @@ describe('DovecotConstruct', () => {
     const mailMount = container.volumeMounts.find((m: any) => m.mountPath === '/mail');
     expect(mailMount).toBeDefined();
 
-    const metricsMount = container.volumeMounts.find((m: any) => m.mountPath === '/etc/dovecot/conf.d/10-metrics.conf');
+    const metricsMount = container.volumeMounts.find((m: any) => m.mountPath === '/overrides/dovecot.conf');
     expect(metricsMount).toBeDefined();
     expect(metricsMount.subPath).toBe('10-metrics.conf');
     expect(metricsMount.readOnly).toBe(true);
