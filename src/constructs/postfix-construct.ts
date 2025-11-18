@@ -189,6 +189,10 @@ export class PostfixConstruct extends Construct {
       image: 'ghcr.io/hsn723/postfix_exporter:0.17.0',
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
       portNumber: 9154,
+      args: [
+        '--log.unsupported', // Disable log file parsing (not available in containers)
+        '--postfix.showq_path=/var/spool/postfix/public/showq', // Use showq socket for metrics
+      ],
       securityContext: {
         ensureNonRoot: false, // Needs access to Postfix spool directory
         readOnlyRootFilesystem: true,
