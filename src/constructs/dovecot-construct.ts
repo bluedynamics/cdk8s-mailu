@@ -150,6 +150,41 @@ export class DovecotConstruct extends Construct {
     // Mount PVC for mailboxes
     container.mount('/mail', kplus.Volume.fromPersistentVolumeClaim(this, 'mail-volume', this.pvc));
 
+    // Create shared volume for Dovecot stats socket (for exporter access)
+    const dovecotRunVolume = kplus.Volume.fromEmptyDir(this, 'dovecot-run-volume', 'dovecot-run', {
+      sizeLimit: parseMemorySize('10Mi'),
+    });
+    container.mount('/var/run/dovecot', dovecotRunVolume);
+
+    // Add Dovecot exporter sidecar for Prometheus metrics
+    // Exposes auth, connection, and mailbox metrics on port 9166
+    const exporterContainer = this.deployment.addContainer({
+      name: 'dovecot-exporter',
+      image: 'ghcr.io/kumina/dovecot-exporter:latest',
+      imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
+      portNumber: 9166,
+      args: [
+        '--dovecot.socket-path=/var/run/dovecot/stats-reader',
+      ],
+      securityContext: {
+        ensureNonRoot: false, // Needs access to Dovecot stats socket
+        readOnlyRootFilesystem: true,
+      },
+      resources: {
+        cpu: {
+          request: parseCpuMillis('10m'),
+          limit: parseCpuMillis('50m'),
+        },
+        memory: {
+          request: parseMemorySize('32Mi'),
+          limit: parseMemorySize('64Mi'),
+        },
+      },
+    });
+
+    // Mount shared dovecot-run volume for access to stats socket
+    exporterContainer.mount('/var/run/dovecot', dovecotRunVolume, { readOnly: true });
+
     // Create Service exposing IMAP and POP3 ports
     this.service = new kplus.Service(this, 'service', {
       metadata: {
@@ -190,6 +225,12 @@ export class DovecotConstruct extends Construct {
           name: 'pop3s',
           port: 995,
           targetPort: 995,
+          protocol: kplus.Protocol.TCP,
+        },
+        {
+          name: 'metrics',
+          port: 9166,
+          targetPort: 9166,
           protocol: kplus.Protocol.TCP,
         },
       ],

@@ -94,9 +94,9 @@ describe('DovecotConstruct', () => {
     const manifests = Testing.synth(chart);
     const service = manifests.find(m => m.kind === 'Service');
 
-    // Check all expected ports are defined (including LMTP for mail delivery)
+    // Check all expected ports are defined (including LMTP for mail delivery and metrics for exporter)
     const portNames = service?.spec.ports.map((p: any) => p.name).sort();
-    expect(portNames).toEqual(['imap', 'imaps', 'lmtp', 'pop3', 'pop3s']);
+    expect(portNames).toEqual(['imap', 'imaps', 'lmtp', 'metrics', 'pop3', 'pop3s']);
 
     // Verify specific port configurations
     const ports = service?.spec.ports;
@@ -165,14 +165,24 @@ describe('DovecotConstruct', () => {
     const deployment = manifests.find(m => m.kind === 'Deployment');
     const container = deployment?.spec.template.spec.containers[0];
 
-    // Check volume mount
-    expect(container.volumeMounts).toHaveLength(1);
-    expect(container.volumeMounts[0].mountPath).toBe('/mail');
+    // Check volume mounts (mail PVC + dovecot-run emptyDir for exporter)
+    expect(container.volumeMounts).toHaveLength(2);
 
-    // Check volume definition
+    const mailMount = container.volumeMounts.find((m: any) => m.mountPath === '/mail');
+    expect(mailMount).toBeDefined();
+
+    const dovecotRunMount = container.volumeMounts.find((m: any) => m.mountPath === '/var/run/dovecot');
+    expect(dovecotRunMount).toBeDefined();
+
+    // Check volume definitions (PVC + emptyDir)
     const volumes = deployment?.spec.template.spec.volumes;
-    expect(volumes).toHaveLength(1);
-    expect(volumes[0].persistentVolumeClaim).toBeDefined();
+    expect(volumes).toHaveLength(2);
+
+    const pvcVolume = volumes.find((v: any) => v.persistentVolumeClaim);
+    expect(pvcVolume).toBeDefined();
+
+    const emptyDirVolume = volumes.find((v: any) => v.emptyDir);
+    expect(emptyDirVolume).toBeDefined();
   });
 
   test('uses auto-generated names for resources', () => {

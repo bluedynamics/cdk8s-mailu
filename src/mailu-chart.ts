@@ -5,6 +5,7 @@ import { MailuChartConfig } from './config';
 import { AdminConstruct } from './constructs/admin-construct';
 import { ClamavConstruct } from './constructs/clamav-construct';
 import { DovecotConstruct } from './constructs/dovecot-construct';
+import { DovecotServiceMonitorConstruct } from './constructs/dovecot-servicemonitor-construct';
 import { DovecotSubmissionConstruct } from './constructs/dovecot-submission-construct';
 import { FetchmailConstruct } from './constructs/fetchmail-construct';
 import { FrontConstruct } from './constructs/front-construct';
@@ -12,6 +13,7 @@ import { NginxPatchConfigMap } from './constructs/nginx-patch-configmap';
 import { PostfixConstruct } from './constructs/postfix-construct';
 import { PostfixServiceMonitorConstruct } from './constructs/postfix-servicemonitor-construct';
 import { RspamdConstruct } from './constructs/rspamd-construct';
+import { RspamdServiceMonitorConstruct } from './constructs/rspamd-servicemonitor-construct';
 import { TraefikIngressConstruct } from './constructs/traefik-ingress-construct';
 import { WebdavConstruct } from './constructs/webdav-construct';
 import { WebmailConstruct } from './constructs/webmail-construct';
@@ -442,6 +444,22 @@ export class MailuChart extends Chart {
       namespace: this.mailuNamespace.name,
       service: this.postfixConstruct.service,
     });
+
+    // Create ServiceMonitor for Rspamd metrics
+    if (this.rspamdConstruct) {
+      new RspamdServiceMonitorConstruct(this, 'rspamd-monitoring', {
+        namespace: this.mailuNamespace.name,
+        service: this.rspamdConstruct.service,
+      });
+    }
+
+    // Create ServiceMonitor for Dovecot metrics
+    if (this.dovecotConstruct) {
+      new DovecotServiceMonitorConstruct(this, 'dovecot-monitoring', {
+        namespace: this.mailuNamespace.name,
+        service: this.dovecotConstruct.service,
+      });
+    }
   }
 
   /**
