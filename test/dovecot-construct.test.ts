@@ -154,7 +154,7 @@ describe('DovecotConstruct', () => {
     expect(container.readinessProbe.initialDelaySeconds).toBe(10);
   });
 
-  test('mounts PVC for mailboxes', () => {
+  test('mounts PVC for mailboxes and ConfigMap for metrics', () => {
     new DovecotConstruct(chart, 'dovecot', {
       config,
       namespace,
@@ -165,24 +165,45 @@ describe('DovecotConstruct', () => {
     const deployment = manifests.find(m => m.kind === 'Deployment');
     const container = deployment?.spec.template.spec.containers[0];
 
-    // Check volume mounts (mail PVC + dovecot-run emptyDir for exporter)
+    // Check volume mounts (mail PVC + metrics ConfigMap)
     expect(container.volumeMounts).toHaveLength(2);
 
     const mailMount = container.volumeMounts.find((m: any) => m.mountPath === '/mail');
     expect(mailMount).toBeDefined();
 
-    const dovecotRunMount = container.volumeMounts.find((m: any) => m.mountPath === '/var/run/dovecot');
-    expect(dovecotRunMount).toBeDefined();
+    const metricsMount = container.volumeMounts.find((m: any) => m.mountPath === '/etc/dovecot/conf.d/10-metrics.conf');
+    expect(metricsMount).toBeDefined();
+    expect(metricsMount.subPath).toBe('10-metrics.conf');
+    expect(metricsMount.readOnly).toBe(true);
 
-    // Check volume definitions (PVC + emptyDir)
+    // Check volume definitions (PVC + ConfigMap)
     const volumes = deployment?.spec.template.spec.volumes;
     expect(volumes).toHaveLength(2);
 
     const pvcVolume = volumes.find((v: any) => v.persistentVolumeClaim);
     expect(pvcVolume).toBeDefined();
 
-    const emptyDirVolume = volumes.find((v: any) => v.emptyDir);
-    expect(emptyDirVolume).toBeDefined();
+    const configMapVolume = volumes.find((v: any) => v.configMap);
+    expect(configMapVolume).toBeDefined();
+  });
+
+  test('creates ConfigMap for native OpenMetrics configuration', () => {
+    new DovecotConstruct(chart, 'dovecot', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const configMap = manifests.find(m => m.kind === 'ConfigMap' && m.metadata.name.includes('metrics-config'));
+
+    expect(configMap).toBeDefined();
+    expect(configMap?.data['10-metrics.conf']).toBeDefined();
+    expect(configMap?.data['10-metrics.conf']).toContain('metric auth_success');
+    expect(configMap?.data['10-metrics.conf']).toContain('metric auth_failures');
+    expect(configMap?.data['10-metrics.conf']).toContain('metric imap_command');
+    expect(configMap?.data['10-metrics.conf']).toContain('service stats');
+    expect(configMap?.data['10-metrics.conf']).toContain('port = 9900');
   });
 
   test('uses auto-generated names for resources', () => {

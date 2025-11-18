@@ -11,20 +11,19 @@ export interface DovecotServiceMonitorConstructProps {
  * ServiceMonitor Construct for Dovecot metrics
  *
  * Creates a Prometheus Operator ServiceMonitor that tells Prometheus
- * to scrape metrics from the Dovecot exporter sidecar.
+ * to scrape metrics from Dovecot's native OpenMetrics endpoint.
  *
- * The Dovecot exporter reads from Dovecot's stats-reader socket and exposes
- * Prometheus metrics on port 9166.
+ * Dovecot 2.3+ has built-in Prometheus support via the stats process.
+ * Metrics are exposed on port 9900 at /metrics endpoint.
  *
- * Metrics exposed:
- * - dovecot_up: Exporter health
- * - dovecot_auth_success_total: Successful authentications
- * - dovecot_auth_failures_total: Failed login attempts (brute force detection)
- * - dovecot_active_connections{protocol="imap|pop3"}: Active connections by protocol
- * - dovecot_mailbox_messages: Message counts per mailbox
- * - dovecot_mailbox_size_bytes: Mailbox sizes per user
- * - dovecot_disk_quota_bytes, dovecot_disk_used_bytes: Disk usage stats
- * - ~25 metrics total
+ * Metrics exposed (configured via 10-metrics.conf):
+ * - imap_command_*: IMAP operation counts and duration
+ * - auth_success_total: Successful authentications
+ * - auth_failures_total: Failed login attempts (brute force detection)
+ * - mail_delivery_*: Message delivery events and duration
+ * - Additional custom metrics can be configured via event filters
+ *
+ * Reference: https://doc.dovecot.org/configuration_manual/stats/openmetrics/
  */
 export class DovecotServiceMonitorConstruct extends Construct {
   public readonly serviceMonitor: monitoring.ServiceMonitor;
@@ -35,7 +34,7 @@ export class DovecotServiceMonitorConstruct extends Construct {
     const { namespace } = props;
 
     // Create ServiceMonitor for Dovecot metrics
-    // This tells Prometheus Operator to scrape metrics from the Dovecot exporter sidecar
+    // This tells Prometheus Operator to scrape metrics from Dovecot's native OpenMetrics endpoint
     this.serviceMonitor = new monitoring.ServiceMonitor(this, 'servicemonitor', {
       metadata: {
         name: 'mailu-dovecot',
@@ -55,7 +54,7 @@ export class DovecotServiceMonitorConstruct extends Construct {
         },
         endpoints: [
           {
-            port: 'metrics', // Port 9166 from Dovecot service
+            port: 'metrics', // Port 9900 from Dovecot service (native OpenMetrics)
             interval: '30s',
             path: '/metrics',
           },

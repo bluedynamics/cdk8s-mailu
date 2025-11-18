@@ -29,11 +29,63 @@ export class DovecotConstruct extends Construct {
   public readonly deployment: kplus.Deployment;
   public readonly service: kplus.Service;
   public readonly pvc: kplus.PersistentVolumeClaim;
+  public readonly metricsConfigMap: kplus.ConfigMap;
 
   constructor(scope: Construct, id: string, props: DovecotConstructProps) {
     super(scope, id);
 
     const { config, namespace, sharedConfigMap } = props;
+
+    // Create ConfigMap for Dovecot metrics configuration
+    // This enables native OpenMetrics/Prometheus support (Dovecot 2.3+)
+    this.metricsConfigMap = new kplus.ConfigMap(this, 'metrics-config', {
+      metadata: {
+        namespace: namespace.name,
+        labels: {
+          'app.kubernetes.io/name': 'mailu-dovecot',
+          'app.kubernetes.io/component': 'dovecot',
+        },
+      },
+      data: {
+        '10-metrics.conf': `##
+## Statistics and metrics
+##
+
+metric auth_success {
+  filter = event=auth_request_finished AND success=yes
+}
+
+metric auth_failures {
+  filter = event=auth_request_finished AND NOT success=yes
+}
+
+metric imap_command {
+  filter = event=imap_command_finished
+  group_by = cmd_name tagged_reply_state
+}
+
+metric smtp_command {
+  filter = event=smtp_server_command_finished
+  group_by = cmd_name status_code duration:exponential:1:5:10
+}
+
+metric mail_delivery {
+  filter = event=mail_delivery_finished
+  group_by = duration:exponential:1:5:10
+}
+
+##
+## Prometheus
+##
+
+service stats {
+  inet_listener http {
+    port = 9900
+  }
+}
+`,
+      },
+    });
 
     // Create PersistentVolumeClaim for mailboxes (largest volume)
     this.pvc = new kplus.PersistentVolumeClaim(this, 'pvc', {
@@ -150,40 +202,18 @@ export class DovecotConstruct extends Construct {
     // Mount PVC for mailboxes
     container.mount('/mail', kplus.Volume.fromPersistentVolumeClaim(this, 'mail-volume', this.pvc));
 
-    // Create shared volume for Dovecot stats socket (for exporter access)
-    const dovecotRunVolume = kplus.Volume.fromEmptyDir(this, 'dovecot-run-volume', 'dovecot-run', {
-      sizeLimit: parseMemorySize('10Mi'),
-    });
-    container.mount('/var/run/dovecot', dovecotRunVolume);
-
-    // Add Dovecot exporter sidecar for Prometheus metrics
-    // Exposes auth, connection, and mailbox metrics on port 9166
-    const exporterContainer = this.deployment.addContainer({
-      name: 'dovecot-exporter',
-      image: 'ghcr.io/kumina/dovecot-exporter:latest',
-      imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
-      portNumber: 9166,
-      args: [
-        '--dovecot.socket-path=/var/run/dovecot/stats-reader',
-      ],
-      securityContext: {
-        ensureNonRoot: false, // Needs access to Dovecot stats socket
-        readOnlyRootFilesystem: true,
+    // Mount metrics configuration to enable Dovecot native OpenMetrics support
+    // Dovecot automatically includes files from /etc/dovecot/conf.d/
+    // Metrics are exposed on port 9900 at /metrics endpoint
+    // No sidecar exporter needed - Dovecot 2.3+ has built-in Prometheus support
+    container.mount(
+      '/etc/dovecot/conf.d/10-metrics.conf',
+      kplus.Volume.fromConfigMap(this, 'metrics-config-volume', this.metricsConfigMap),
+      {
+        subPath: '10-metrics.conf',
+        readOnly: true,
       },
-      resources: {
-        cpu: {
-          request: parseCpuMillis('10m'),
-          limit: parseCpuMillis('50m'),
-        },
-        memory: {
-          request: parseMemorySize('32Mi'),
-          limit: parseMemorySize('64Mi'),
-        },
-      },
-    });
-
-    // Mount shared dovecot-run volume for access to stats socket
-    exporterContainer.mount('/var/run/dovecot', dovecotRunVolume, { readOnly: true });
+    );
 
     // Create Service exposing IMAP and POP3 ports
     this.service = new kplus.Service(this, 'service', {
@@ -229,8 +259,8 @@ export class DovecotConstruct extends Construct {
         },
         {
           name: 'metrics',
-          port: 9166,
-          targetPort: 9166,
+          port: 9900,
+          targetPort: 9900,
           protocol: kplus.Protocol.TCP,
         },
       ],
