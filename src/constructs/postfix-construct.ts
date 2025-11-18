@@ -186,7 +186,7 @@ export class PostfixConstruct extends Construct {
     // Exposes queue size and other Postfix metrics on port 9154
     const exporterContainer = this.deployment.addContainer({
       name: 'postfix-exporter',
-      image: 'ghcr.io/hsn723/postfix_exporter:v0.17.0',
+      image: 'ghcr.io/hsn723/postfix_exporter:0.17.0',
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
       portNumber: 9154,
       securityContext: {
