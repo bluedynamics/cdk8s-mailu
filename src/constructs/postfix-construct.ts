@@ -191,7 +191,7 @@ export class PostfixConstruct extends Construct {
       portNumber: 9154,
       command: [
         '/postfix_exporter',
-        '--postfix.logfile_must_exist=false', // Make log file optional (containers log to stdout)
+        '--no-postfix.logfile_must_exist', // Make log file optional (containers log to stdout)
         '--postfix.showq_path=/var/spool/postfix/public/showq', // Use showq socket for metrics
       ],
       securityContext: {
