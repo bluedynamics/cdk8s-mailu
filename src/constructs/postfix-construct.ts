@@ -190,7 +190,7 @@ export class PostfixConstruct extends Construct {
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
       portNumber: 9154,
       command: [
-        '/bin/postfix_exporter',
+        '/postfix_exporter',
         '--log.unsupported', // Disable log file parsing (not available in containers)
         '--postfix.showq_path=/var/spool/postfix/public/showq', // Use showq socket for metrics
       ],
