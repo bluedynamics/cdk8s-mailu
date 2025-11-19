@@ -5,7 +5,8 @@ import { MailuChartConfig } from './config';
 import { AdminConstruct } from './constructs/admin-construct';
 import { ClamavConstruct } from './constructs/clamav-construct';
 import { DovecotConstruct } from './constructs/dovecot-construct';
-import { DovecotServiceMonitorConstruct } from './constructs/dovecot-servicemonitor-construct';
+// UNUSED: Dovecot native metrics not working with Mailu - see dovecot-servicemonitor-construct.ts
+// import { DovecotServiceMonitorConstruct } from './constructs/dovecot-servicemonitor-construct';
 import { DovecotSubmissionConstruct } from './constructs/dovecot-submission-construct';
 import { FetchmailConstruct } from './constructs/fetchmail-construct';
 import { FrontConstruct } from './constructs/front-construct';
@@ -453,13 +454,15 @@ export class MailuChart extends Chart {
       });
     }
 
-    // Create ServiceMonitor for Dovecot metrics
-    if (this.dovecotConstruct) {
-      new DovecotServiceMonitorConstruct(this, 'dovecot-monitoring', {
-        namespace: this.mailuNamespace.name,
-        service: this.dovecotConstruct.service,
-      });
-    }
+    // UNUSED: Dovecot native metrics not working with Mailu
+    // Alternative monitoring: Use Postfix metrics, Rspamd metrics, and Loki log queries
+    // See dovecot-servicemonitor-construct.ts for details
+    // if (this.dovecotConstruct) {
+    //   new DovecotServiceMonitorConstruct(this, 'dovecot-monitoring', {
+    //     namespace: this.mailuNamespace.name,
+    //     service: this.dovecotConstruct.service,
+    //   });
+    // }
   }
 
   /**

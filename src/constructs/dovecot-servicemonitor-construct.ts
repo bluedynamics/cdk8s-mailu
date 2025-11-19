@@ -1,3 +1,19 @@
+/**
+ * CURRENTLY UNUSED - Dovecot Native Metrics Not Working with Mailu
+ *
+ * Mailu's Dovecot image does not start the stats service even with proper configuration.
+ * This construct is kept for future reference if Mailu adds stats support or if we
+ * switch to official Dovecot image.
+ *
+ * Alternative monitoring approach:
+ * - Use Postfix metrics for mail flow
+ * - Use Rspamd metrics for spam filtering
+ * - Use Loki log queries for IMAP/POP3 auth failures and connections
+ * - Use Redis metrics for caching
+ *
+ * See: docs/plan/mailu-monitoring-dashboard.md for details
+ */
+
 import * as kplus from 'cdk8s-plus-33';
 import { Construct } from 'constructs';
 import * as monitoring from '../imports/monitoring.coreos.com';
@@ -8,7 +24,7 @@ export interface DovecotServiceMonitorConstructProps {
 }
 
 /**
- * ServiceMonitor Construct for Dovecot metrics
+ * ServiceMonitor Construct for Dovecot metrics (UNUSED - see file header)
  *
  * Creates a Prometheus Operator ServiceMonitor that tells Prometheus
  * to scrape metrics from Dovecot's native OpenMetrics endpoint.

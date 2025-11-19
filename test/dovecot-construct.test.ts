@@ -94,9 +94,9 @@ describe('DovecotConstruct', () => {
     const manifests = Testing.synth(chart);
     const service = manifests.find(m => m.kind === 'Service');
 
-    // Check all expected ports are defined (including LMTP for mail delivery and metrics for exporter)
+    // Check all expected ports are defined (including LMTP for mail delivery)
     const portNames = service?.spec.ports.map((p: any) => p.name).sort();
-    expect(portNames).toEqual(['imap', 'imaps', 'lmtp', 'metrics', 'pop3', 'pop3s']);
+    expect(portNames).toEqual(['imap', 'imaps', 'lmtp', 'pop3', 'pop3s']);
 
     // Verify specific port configurations
     const ports = service?.spec.ports;
@@ -154,7 +154,7 @@ describe('DovecotConstruct', () => {
     expect(container.readinessProbe.initialDelaySeconds).toBe(10);
   });
 
-  test('mounts PVC for mailboxes and ConfigMap for metrics', () => {
+  test('mounts PVC for mailboxes', () => {
     new DovecotConstruct(chart, 'dovecot', {
       config,
       namespace,
@@ -165,45 +165,18 @@ describe('DovecotConstruct', () => {
     const deployment = manifests.find(m => m.kind === 'Deployment');
     const container = deployment?.spec.template.spec.containers[0];
 
-    // Check volume mounts (mail PVC + metrics ConfigMap)
-    expect(container.volumeMounts).toHaveLength(2);
+    // Check volume mounts (mail PVC only)
+    expect(container.volumeMounts).toHaveLength(1);
 
     const mailMount = container.volumeMounts.find((m: any) => m.mountPath === '/mail');
     expect(mailMount).toBeDefined();
 
-    const metricsMount = container.volumeMounts.find((m: any) => m.mountPath === '/overrides/dovecot.conf');
-    expect(metricsMount).toBeDefined();
-    expect(metricsMount.subPath).toBe('10-metrics.conf');
-    expect(metricsMount.readOnly).toBe(true);
-
-    // Check volume definitions (PVC + ConfigMap)
+    // Check volume definitions (PVC only)
     const volumes = deployment?.spec.template.spec.volumes;
-    expect(volumes).toHaveLength(2);
+    expect(volumes).toHaveLength(1);
 
     const pvcVolume = volumes.find((v: any) => v.persistentVolumeClaim);
     expect(pvcVolume).toBeDefined();
-
-    const configMapVolume = volumes.find((v: any) => v.configMap);
-    expect(configMapVolume).toBeDefined();
-  });
-
-  test('creates ConfigMap for native OpenMetrics configuration', () => {
-    new DovecotConstruct(chart, 'dovecot', {
-      config,
-      namespace,
-      sharedConfigMap,
-    });
-
-    const manifests = Testing.synth(chart);
-    const configMap = manifests.find(m => m.kind === 'ConfigMap' && m.metadata.name.includes('metrics-config'));
-
-    expect(configMap).toBeDefined();
-    expect(configMap?.data['10-metrics.conf']).toBeDefined();
-    expect(configMap?.data['10-metrics.conf']).toContain('metric auth_success');
-    expect(configMap?.data['10-metrics.conf']).toContain('metric auth_failures');
-    expect(configMap?.data['10-metrics.conf']).toContain('metric imap_command');
-    expect(configMap?.data['10-metrics.conf']).toContain('service stats');
-    expect(configMap?.data['10-metrics.conf']).toContain('port = 9900');
   });
 
   test('uses auto-generated names for resources', () => {
