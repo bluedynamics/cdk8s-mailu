@@ -97,6 +97,13 @@ export class AdminConstruct extends Construct {
         }
         : undefined,
       // Add health checks
+      startup: kplus.Probe.fromTcpSocket({
+        port: 8080,
+        initialDelaySeconds: Duration.seconds(0),
+        periodSeconds: Duration.seconds(10),
+        timeoutSeconds: Duration.seconds(1),
+        failureThreshold: 12, // 120 seconds total (12 * 10s) for slow startups
+      }),
       liveness: kplus.Probe.fromHttpGet('/ping', {
         port: 8080, // Match gunicorn port
         initialDelaySeconds: Duration.seconds(30),
