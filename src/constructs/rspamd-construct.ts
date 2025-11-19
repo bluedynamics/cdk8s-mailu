@@ -29,11 +29,34 @@ export class RspamdConstruct extends Construct {
   public readonly deployment: kplus.Deployment;
   public readonly service: kplus.Service;
   public readonly pvc: kplus.PersistentVolumeClaim;
+  public readonly webUiConfigMap: kplus.ConfigMap;
 
   constructor(scope: Construct, id: string, props: RspamdConstructProps) {
     super(scope, id);
 
     const { config, namespace, sharedConfigMap } = props;
+
+    // Create ConfigMap for Rspamd web UI configuration override
+    // This disables password authentication for the web interface since we're already
+    // protecting the route with Traefik ForwardAuth middleware (admin authentication)
+    this.webUiConfigMap = new kplus.ConfigMap(this, 'webui-config', {
+      metadata: {
+        namespace: namespace.name,
+      },
+      data: {
+        // Override worker-controller.inc to allow all IPs (authentication handled by ForwardAuth)
+        'worker-controller.inc': `# Rspamd web UI configuration override
+# Authentication is handled by Traefik ForwardAuth middleware,
+# so we disable Rspamd's built-in password authentication
+type = "controller";
+bind_socket = "*:11334";
+# Allow all IPs since access is already protected by ForwardAuth
+secure_ip = "0.0.0.0/0";
+# Password is still defined but not required due to secure_ip
+password = "mailu";
+`,
+      },
+    });
 
     // Create PersistentVolumeClaim for learned spam data
     this.pvc = new kplus.PersistentVolumeClaim(this, 'pvc', {
@@ -126,6 +149,10 @@ export class RspamdConstruct extends Construct {
 
     // Mount PVC for learned data and configuration
     container.mount('/var/lib/rspamd', kplus.Volume.fromPersistentVolumeClaim(this, 'data-volume', this.pvc));
+
+    // Mount ConfigMap with web UI configuration override
+    // Mailu checks /overrides/rspamd/ for configuration files to merge with defaults
+    container.mount('/overrides/rspamd', kplus.Volume.fromConfigMap(this, 'webui-config-volume', this.webUiConfigMap));
 
     // Create Service
     this.service = new kplus.Service(this, 'service', {
