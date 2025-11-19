@@ -241,6 +241,20 @@ export class TraefikIngressConstruct extends Construct {
       },
     });
 
+    // Create StripPrefix Middleware to remove /admin/antispam before forwarding to Rspamd
+    // Rspamd's web interface is at the root path /, not /admin/antispam/
+    new traefik.Middleware(this, 'antispam-strip-prefix', {
+      metadata: {
+        name: 'mailu-antispam-strip-prefix',
+        namespace: props.namespace,
+      },
+      spec: {
+        stripPrefix: {
+          prefixes: ['/admin/antispam'],
+        },
+      },
+    });
+
     // Separate Ingress for Rspamd antispam web UI with ForwardAuth middleware
     // This proxies /admin/antispam/* to Rspamd's web interface on port 11334
     // and ensures only authenticated global admins can access it
@@ -251,8 +265,8 @@ export class TraefikIngressConstruct extends Construct {
         annotations: {
           // Use cert-manager to provision Let's Encrypt certificate
           'cert-manager.io/cluster-issuer': certIssuer,
-          // Apply ForwardAuth middleware to protect this route
-          'traefik.ingress.kubernetes.io/router.middlewares': `${props.namespace}-mailu-admin-auth@kubernetescrd`,
+          // Apply middlewares: ForwardAuth for authentication, StripPrefix for path rewriting
+          'traefik.ingress.kubernetes.io/router.middlewares': `${props.namespace}-mailu-admin-auth@kubernetescrd,${props.namespace}-mailu-antispam-strip-prefix@kubernetescrd`,
         },
       },
       spec: {
