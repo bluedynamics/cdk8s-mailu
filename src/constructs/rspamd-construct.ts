@@ -150,9 +150,13 @@ password = "mailu";
     // Mount PVC for learned data and configuration
     container.mount('/var/lib/rspamd', kplus.Volume.fromPersistentVolumeClaim(this, 'data-volume', this.pvc));
 
-    // Mount ConfigMap with web UI configuration override
-    // Mailu checks /overrides/rspamd/ for configuration files to merge with defaults
-    container.mount('/overrides/rspamd', kplus.Volume.fromConfigMap(this, 'webui-config-volume', this.webUiConfigMap));
+    // Mount ConfigMap with web UI configuration override directly to /conf/
+    // This bypasses Mailu's override processing and puts the config directly where Rspamd reads it
+    // We use subPath to mount only the worker-controller.inc file
+    const webUiConfigVolume = kplus.Volume.fromConfigMap(this, 'webui-config-volume', this.webUiConfigMap);
+    container.mount('/conf/worker-controller.inc', webUiConfigVolume, {
+      subPath: 'worker-controller.inc',
+    });
 
     // Create Service
     this.service = new kplus.Service(this, 'service', {
