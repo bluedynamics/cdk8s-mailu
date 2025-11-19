@@ -28,9 +28,19 @@ export interface TraefikIngressConstructProps {
   certIssuer?: string;
 
   /**
-   * Reference to the Mailu front service (nginx proxy)
+   * Reference to the Mailu front service (nginx proxy for mail protocols)
    */
   frontService: kplus.Service;
+
+  /**
+   * Reference to the Mailu admin service (admin UI and SSO)
+   */
+  adminService: kplus.Service;
+
+  /**
+   * Reference to the Mailu webmail service (webmail UI)
+   */
+  webmailService: kplus.Service;
 
   /**
    * Reference to the Mailu postfix service (for direct SMTP routing)
@@ -71,6 +81,15 @@ export class TraefikIngressConstruct extends Construct {
     this.tcpRoutes = [];
 
     // HTTP/HTTPS Ingress for webmail and admin (uses cert-manager)
+    // Routes different paths to appropriate services:
+    // - /admin, /sso, /static → admin service (admin UI, SSO login, static assets)
+    // - /webmail → webmail service (webmail UI)
+    // - /health → front service (health check only)
+    // - /internal → admin service (internal auth endpoints)
+    //
+    // NOTE: Front service does NOT serve general HTTP traffic - it only handles
+    // mail protocols (SMTP, IMAP, POP3) via IngressRouteTCP resources.
+    // The only HTTP endpoint on front service is /health for health checks.
     this.httpIngress = new k8s.KubeIngress(this, 'webmail-ingress', {
       metadata: {
         name: 'mailu-webmail',
@@ -93,9 +112,72 @@ export class TraefikIngressConstruct extends Construct {
             host: props.hostname,
             http: {
               paths: [
+                // Admin paths (most specific first)
                 {
-                  path: '/',
+                  path: '/admin',
                   pathType: 'Prefix',
+                  backend: {
+                    service: {
+                      name: props.adminService.name,
+                      port: {
+                        number: 8080,
+                      },
+                    },
+                  },
+                },
+                {
+                  path: '/sso',
+                  pathType: 'Prefix',
+                  backend: {
+                    service: {
+                      name: props.adminService.name,
+                      port: {
+                        number: 8080,
+                      },
+                    },
+                  },
+                },
+                {
+                  path: '/static',
+                  pathType: 'Prefix',
+                  backend: {
+                    service: {
+                      name: props.adminService.name,
+                      port: {
+                        number: 8080,
+                      },
+                    },
+                  },
+                },
+                {
+                  path: '/internal',
+                  pathType: 'Prefix',
+                  backend: {
+                    service: {
+                      name: props.adminService.name,
+                      port: {
+                        number: 8080,
+                      },
+                    },
+                  },
+                },
+                // Webmail path
+                {
+                  path: '/webmail',
+                  pathType: 'Prefix',
+                  backend: {
+                    service: {
+                      name: props.webmailService.name,
+                      port: {
+                        number: 80,
+                      },
+                    },
+                  },
+                },
+                // Health check endpoint on front service
+                {
+                  path: '/health',
+                  pathType: 'Exact',
                   backend: {
                     service: {
                       name: props.frontService.name,

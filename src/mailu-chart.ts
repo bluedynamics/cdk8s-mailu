@@ -418,12 +418,22 @@ export class MailuChart extends Chart {
 
     const traefikConfig = this.config.ingress.traefik;
 
+    // Ensure required services exist
+    if (!this.adminConstruct) {
+      throw new Error('Cannot create Traefik ingress: admin component is required for HTTP ingress');
+    }
+    if (!this.webmailConstruct) {
+      throw new Error('Cannot create Traefik ingress: webmail component is required for HTTP ingress');
+    }
+
     this.traefikIngressConstruct = new TraefikIngressConstruct(this, 'traefik-ingress', {
       namespace: this.mailuNamespace.name,
       domain: this.config.domain,
       hostname: traefikConfig.hostname,
       certIssuer: traefikConfig.certIssuer ?? 'letsencrypt-cluster-issuer',
       frontService: this.frontConstruct.service,
+      adminService: this.adminConstruct.service,
+      webmailService: this.webmailConstruct.service,
       postfixService: this.postfixConstruct.service,
       enableTcp: traefikConfig.enableTcp ?? true,
       smtpConnectionLimit: traefikConfig.smtpConnectionLimit ?? 15,
