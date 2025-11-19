@@ -425,6 +425,9 @@ export class MailuChart extends Chart {
     if (!this.webmailConstruct) {
       throw new Error('Cannot create Traefik ingress: webmail component is required for HTTP ingress');
     }
+    if (!this.rspamdConstruct) {
+      throw new Error('Cannot create Traefik ingress: rspamd component is required for antispam web UI');
+    }
 
     this.traefikIngressConstruct = new TraefikIngressConstruct(this, 'traefik-ingress', {
       namespace: this.mailuNamespace.name,
@@ -435,6 +438,7 @@ export class MailuChart extends Chart {
       adminService: this.adminConstruct.service,
       webmailService: this.webmailConstruct.service,
       postfixService: this.postfixConstruct.service,
+      rspamdService: this.rspamdConstruct.service,
       enableTcp: traefikConfig.enableTcp ?? true,
       smtpConnectionLimit: traefikConfig.smtpConnectionLimit ?? 15,
       enableSmtp: traefikConfig.enableSmtp ?? false, // Default false for security

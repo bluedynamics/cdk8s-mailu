@@ -48,6 +48,11 @@ export interface TraefikIngressConstructProps {
   postfixService: kplus.Service;
 
   /**
+   * Reference to the Mailu rspamd service (for antispam web UI)
+   */
+  rspamdService: kplus.Service;
+
+  /**
    * Enable TCP routes for mail protocols (SMTP, IMAP, POP3, etc.)
    * @default true
    */
@@ -68,6 +73,7 @@ export interface TraefikIngressConstructProps {
 
 export class TraefikIngressConstruct extends Construct {
   public readonly httpIngress: k8s.KubeIngress;
+  public readonly antispamIngress: k8s.KubeIngress;
   public readonly tcpRoutes: traefik.IngressRouteTcp[];
 
   constructor(scope: Construct, id: string, props: TraefikIngressConstructProps) {
@@ -214,6 +220,70 @@ export class TraefikIngressConstruct extends Construct {
         ],
         // Note: Client chooses cipher (matches Mailu's preferServerCipherSuites: off)
         // Traefik doesn't have preferServerCipherSuites option, defaults to client preference
+      },
+    });
+
+    // Create ForwardAuth Middleware for protecting admin-only routes
+    // This middleware delegates authentication to the admin service's /internal/auth/admin endpoint
+    // which verifies the user is logged in as a global admin before allowing access
+    new traefik.Middleware(this, 'admin-auth-middleware', {
+      metadata: {
+        name: 'mailu-admin-auth',
+        namespace: props.namespace,
+      },
+      spec: {
+        forwardAuth: {
+          // Point to admin service's internal auth endpoint
+          address: `http://${props.adminService.name}.${props.namespace}.svc.cluster.local:8080/internal/auth/admin`,
+          // Don't trust X-Forwarded-* headers from the authentication request
+          trustForwardHeader: false,
+        },
+      },
+    });
+
+    // Separate Ingress for Rspamd antispam web UI with ForwardAuth middleware
+    // This proxies /admin/antispam/* to Rspamd's web interface on port 11334
+    // and ensures only authenticated global admins can access it
+    this.antispamIngress = new k8s.KubeIngress(this, 'antispam-ingress', {
+      metadata: {
+        name: 'mailu-antispam',
+        namespace: props.namespace,
+        annotations: {
+          // Use cert-manager to provision Let's Encrypt certificate
+          'cert-manager.io/cluster-issuer': certIssuer,
+          // Apply ForwardAuth middleware to protect this route
+          'traefik.ingress.kubernetes.io/router.middlewares': `${props.namespace}-mailu-admin-auth@kubernetescrd`,
+        },
+      },
+      spec: {
+        ingressClassName: 'traefik',
+        tls: [
+          {
+            hosts: [props.hostname],
+            secretName: 'mailu-tls',
+          },
+        ],
+        rules: [
+          {
+            host: props.hostname,
+            http: {
+              paths: [
+                {
+                  path: '/admin/antispam',
+                  pathType: 'Prefix',
+                  backend: {
+                    service: {
+                      name: props.rspamdService.name,
+                      port: {
+                        number: 11334,
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        ],
       },
     });
 
