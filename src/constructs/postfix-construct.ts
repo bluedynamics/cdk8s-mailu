@@ -161,8 +161,10 @@ export class PostfixConstruct extends Construct {
     // Critical for relay restrictions to work correctly (mynetworks check uses real IP)
     container.env.addVariable('POSTFIX_smtpd_upstream_proxy_protocol', kplus.EnvValue.fromValue('haproxy')); // HAProxy PROXY protocol (v1/v2 compatible)
 
-    // Mount PVC for mail queue
-    container.mount('/queue', kplus.Volume.fromPersistentVolumeClaim(this, 'queue-volume', this.pvc));
+    // Mount PVC for mail queue - Mailu uses /queue as the Postfix spool directory
+    // This is where showq socket will be at /queue/public/showq
+    const queueVolume = kplus.Volume.fromPersistentVolumeClaim(this, 'queue-volume', this.pvc);
+    container.mount('/queue', queueVolume);
 
     // Mount override ConfigMap for PROXY protocol master.cf configuration
     // This adds smtpd_upstream_proxy_protocol support to the smtp service
@@ -176,12 +178,6 @@ export class PostfixConstruct extends Construct {
       kplus.Volume.fromConfigMap(this, 'override-volume', overrideConfigMap),
     );
 
-    // Create shared volume for Postfix spool directory (for exporter access to showq socket)
-    const spoolVolume = kplus.Volume.fromEmptyDir(this, 'spool-volume', 'postfix-spool', {
-      sizeLimit: parseMemorySize('100Mi'),
-    });
-    container.mount('/var/spool/postfix', spoolVolume);
-
     // Add Postfix exporter sidecar for Prometheus metrics
     // Exposes queue size and other Postfix metrics on port 9154
     const exporterContainer = this.deployment.addContainer({
@@ -192,7 +188,7 @@ export class PostfixConstruct extends Construct {
       command: [
         '/postfix_exporter',
         '--no-postfix.logfile_must_exist', // Make log file optional (containers log to stdout)
-        '--postfix.showq_path=/var/spool/postfix/public/showq', // Use showq socket for metrics
+        '--postfix.showq_path=/queue/public/showq', // Use showq socket from Mailu queue directory
       ],
       securityContext: {
         ensureNonRoot: false, // Needs access to Postfix spool directory
@@ -210,11 +206,12 @@ export class PostfixConstruct extends Construct {
       },
     });
 
-    // Mount shared spool volume for access to showq socket
-    exporterContainer.mount('/var/spool/postfix', spoolVolume);
+    // Mount the queue PVC in exporter for access to showq socket
+    // Mailu stores Postfix spool at /queue, so showq socket is at /queue/public/showq
+    exporterContainer.mount('/queue', queueVolume, { readOnly: true });
 
     // Configure exporter to read from Postfix showq socket
-    exporterContainer.env.addVariable('POSTFIX_SHOWQ_PATH', kplus.EnvValue.fromValue('/var/spool/postfix/public/showq'));
+    exporterContainer.env.addVariable('POSTFIX_SHOWQ_PATH', kplus.EnvValue.fromValue('/queue/public/showq'));
 
     // Create Service
     this.service = new kplus.Service(this, 'service', {
