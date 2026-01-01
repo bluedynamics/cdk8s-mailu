@@ -82,8 +82,11 @@ http {
 
         # Static assets bypass - no authentication required
         # These paths contain CSS, JS, images that must load for the login page to display
-        # Note: paths come in with /webmail prefix from ingress
-        location ~ ^/webmail/(skins|program/js|plugins)/.*\\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        # Note: paths come in with /webmail prefix from ingress, strip it when proxying
+        location ~ ^/webmail/(skins|program/js|plugins)/ {
+            # Rewrite to strip /webmail prefix - webmail serves assets at root paths
+            rewrite ^/webmail/(.*) /\\$1 break;
+
             proxy_pass http://webmail_backend;
             proxy_http_version 1.1;
             proxy_set_header Connection "";
