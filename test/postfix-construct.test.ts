@@ -164,15 +164,15 @@ describe('PostfixConstruct', () => {
     const deployment = manifests.find(m => m.kind === 'Deployment');
     const container = deployment?.spec.template.spec.containers[0];
 
-    // Check volume mounts (queue PVC, override ConfigMap, spool emptyDir)
-    expect(container.volumeMounts).toHaveLength(3);
+    // Check volume mounts (queue PVC, override ConfigMap)
+    // Note: Mailu uses /queue as the Postfix spool directory
+    expect(container.volumeMounts).toHaveLength(2);
     expect(container.volumeMounts.find((v: any) => v.mountPath === '/queue')).toBeDefined();
     expect(container.volumeMounts.find((v: any) => v.mountPath === '/overrides')).toBeDefined();
-    expect(container.volumeMounts.find((v: any) => v.mountPath === '/var/spool/postfix')).toBeDefined();
 
     // Check volume definition
     const volumes = deployment?.spec.template.spec.volumes;
-    expect(volumes).toHaveLength(3);
+    expect(volumes).toHaveLength(2);
     expect(volumes.find((v: any) => v.persistentVolumeClaim)).toBeDefined();
   });
 
