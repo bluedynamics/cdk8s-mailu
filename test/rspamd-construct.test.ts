@@ -167,14 +167,14 @@ describe('RspamdConstruct', () => {
 
     // Check volume mounts (PVC + ConfigMap for web UI config override)
     expect(container.volumeMounts).toHaveLength(2);
-    expect(container.volumeMounts.map(v => v.mountPath)).toContain('/var/lib/rspamd');
-    expect(container.volumeMounts.map(v => v.mountPath)).toContain('/overrides/rspamd');
+    expect(container.volumeMounts.map((v: any) => v.mountPath)).toContain('/var/lib/rspamd');
+    expect(container.volumeMounts.map((v: any) => v.mountPath)).toContain('/conf/worker-controller.inc');
 
     // Check volume definitions
     const volumes = deployment?.spec.template.spec.volumes;
     expect(volumes).toHaveLength(2);
-    expect(volumes.some(v => v.persistentVolumeClaim !== undefined)).toBe(true);
-    expect(volumes.some(v => v.configMap !== undefined)).toBe(true);
+    expect(volumes.some((v: any) => v.persistentVolumeClaim !== undefined)).toBe(true);
+    expect(volumes.some((v: any) => v.configMap !== undefined)).toBe(true);
   });
 
   test('uses auto-generated names for resources', () => {
