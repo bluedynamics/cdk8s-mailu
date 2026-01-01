@@ -17,10 +17,10 @@ import { RspamdConstruct } from './constructs/rspamd-construct';
 import { RspamdServiceMonitorConstruct } from './constructs/rspamd-servicemonitor-construct';
 import { TraefikIngressConstruct } from './constructs/traefik-ingress-construct';
 import { WebdavConstruct } from './constructs/webdav-construct';
-import { WebmailConstruct } from './constructs/webmail-construct';
-import { WebmailPatchConfigMap } from './constructs/webmail-patch-configmap';
 import { WebmailAuthProxyConfigMap } from './constructs/webmail-auth-proxy-configmap';
 import { WebmailAuthProxyConstruct } from './constructs/webmail-auth-proxy-construct';
+import { WebmailConstruct } from './constructs/webmail-construct';
+import { WebmailPatchConfigMap } from './constructs/webmail-patch-configmap';
 import { validateDomainFormat, validateCidrFormat } from './utils/validators';
 
 /**
