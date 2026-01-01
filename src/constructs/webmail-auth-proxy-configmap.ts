@@ -85,7 +85,7 @@ http {
         # Note: paths come in with /webmail prefix from ingress, strip it when proxying
         location ~ ^/webmail/(skins|program/js|plugins)/ {
             # Rewrite to strip /webmail prefix - webmail serves assets at root paths
-            rewrite ^/webmail/(.*) /\\$1 break;
+            rewrite ^/webmail/(.*) /$1 break;
 
             proxy_pass http://webmail_backend;
             proxy_http_version 1.1;
