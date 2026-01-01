@@ -80,6 +80,23 @@ http {
             proxy_set_header Cookie $http_cookie;
         }
 
+        # Static assets bypass - no authentication required
+        # These paths contain CSS, JS, images that must load for the login page to display
+        location ~ ^/(skins|program/js|plugins)/.*\\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            proxy_pass http://webmail_backend;
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+            proxy_set_header X-Forwarded-Host $http_x_forwarded_host;
+            proxy_set_header Host $http_host;
+
+            # Cache static assets
+            proxy_cache_valid 200 1d;
+            expires 1d;
+            add_header Cache-Control "public, immutable";
+        }
+
         # Main location for webmail proxy
         location / {
             # Perform auth check via subrequest
