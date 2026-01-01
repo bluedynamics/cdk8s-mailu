@@ -69,11 +69,20 @@ export interface TraefikIngressConstructProps {
    * @default false
    */
   enableSmtp?: boolean;
+
+  /**
+   * Reference to the webmail auth proxy service (handles auth + redirect)
+   * When provided, webmail ingress will route through this proxy instead of
+   * using ForwardAuth middleware, enabling proper redirect on auth failure.
+   */
+  webmailAuthProxyService?: kplus.Service;
 }
 
 export class TraefikIngressConstruct extends Construct {
   public readonly httpIngress: k8s.KubeIngress;
+  public readonly webmailIngress: k8s.KubeIngress;
   public readonly antispamIngress: k8s.KubeIngress;
+  public readonly ssoPhpIngress: k8s.KubeIngress;
   public readonly tcpRoutes: traefik.IngressRouteTcp[];
 
   constructor(scope: Construct, id: string, props: TraefikIngressConstructProps) {
@@ -131,6 +140,8 @@ export class TraefikIngressConstruct extends Construct {
                     },
                   },
                 },
+                // SSO path (handled by Flask at /sso/login)
+                // Note: /sso.php routes are handled by separate ssoPhpIngress with redirect middleware
                 {
                   path: '/sso',
                   pathType: 'Prefix',
@@ -167,19 +178,7 @@ export class TraefikIngressConstruct extends Construct {
                     },
                   },
                 },
-                // Webmail path
-                {
-                  path: '/webmail',
-                  pathType: 'Prefix',
-                  backend: {
-                    service: {
-                      name: props.webmailService.name,
-                      port: {
-                        number: 80,
-                      },
-                    },
-                  },
-                },
+                // NOTE: /webmail path is handled by separate webmailIngress with ForwardAuth middleware
                 // Health check endpoint on front service
                 {
                   path: '/health',
@@ -241,6 +240,41 @@ export class TraefikIngressConstruct extends Construct {
       },
     });
 
+    // Create ForwardAuth Middleware for webmail authentication
+    // This middleware checks if user is authenticated and passes user credentials to webmail
+    // The auth endpoint returns X-User and X-User-Token headers that Roundcube uses for authentication
+    new traefik.Middleware(this, 'webmail-auth-middleware', {
+      metadata: {
+        name: 'mailu-webmail-auth',
+        namespace: props.namespace,
+      },
+      spec: {
+        forwardAuth: {
+          // Point to user auth endpoint that verifies session and returns user info headers
+          address: `http://${props.adminService.name}.${props.namespace}.svc.cluster.local:8080/internal/auth/user`,
+          // Pass through X-User and X-User-Token headers from auth response to webmail
+          // The Roundcube plugin (patched) expects these headers for authentication
+          authResponseHeaders: ['X-User', 'X-User-Token'],
+          // Don't trust X-Forwarded-* headers from the authentication request
+          trustForwardHeader: false,
+        },
+      },
+    });
+
+    // Create StripPrefix Middleware to remove /webmail before forwarding to webmail service
+    // Webmail nginx expects requests at root /, but ingress sends /webmail/*
+    new traefik.Middleware(this, 'webmail-strip-prefix', {
+      metadata: {
+        name: 'mailu-webmail-strip-prefix',
+        namespace: props.namespace,
+      },
+      spec: {
+        stripPrefix: {
+          prefixes: ['/webmail'],
+        },
+      },
+    });
+
     // Create StripPrefix Middleware to remove /admin/antispam before forwarding to Rspamd
     // Rspamd's web interface is at the root path /, not /admin/antispam/
     new traefik.Middleware(this, 'antispam-strip-prefix', {
@@ -252,6 +286,140 @@ export class TraefikIngressConstruct extends Construct {
         stripPrefix: {
           prefixes: ['/admin/antispam'],
         },
+      },
+    });
+
+    // Create RedirectRegex Middleware to redirect sso.php to /sso/login
+    // Roundcube's mailu plugin expects sso.php but Flask serves /sso/login
+    new traefik.Middleware(this, 'sso-php-redirect', {
+      metadata: {
+        name: 'mailu-sso-php-redirect',
+        namespace: props.namespace,
+      },
+      spec: {
+        redirectRegex: {
+          regex: '^https?://([^/]+)(/webmail)?/sso\\.php(.*)$',
+          replacement: 'https://${1}/sso/login${3}',
+          permanent: false,
+        },
+      },
+    });
+
+    // Separate Ingress for sso.php redirect compatibility
+    // Roundcube's mailu plugin redirects to sso.php but Flask serves /sso/login
+    // This ingress catches sso.php requests and redirects to /sso/login
+    this.ssoPhpIngress = new k8s.KubeIngress(this, 'sso-php-ingress', {
+      metadata: {
+        name: 'mailu-sso-php',
+        namespace: props.namespace,
+        annotations: {
+          'cert-manager.io/cluster-issuer': certIssuer,
+          // Apply redirect middleware to rewrite sso.php to /sso/login
+          'traefik.ingress.kubernetes.io/router.middlewares': `${props.namespace}-mailu-sso-php-redirect@kubernetescrd`,
+          // Higher priority to ensure this ingress is checked before mailu-webmail ingress
+          'traefik.ingress.kubernetes.io/router.priority': '100',
+        },
+      },
+      spec: {
+        ingressClassName: 'traefik',
+        tls: [
+          {
+            hosts: [props.hostname],
+            secretName: 'mailu-tls',
+          },
+        ],
+        rules: [
+          {
+            host: props.hostname,
+            http: {
+              paths: [
+                {
+                  path: '/sso.php',
+                  pathType: 'Exact',
+                  backend: {
+                    service: {
+                      name: props.adminService.name,
+                      port: {
+                        number: 8080,
+                      },
+                    },
+                  },
+                },
+                {
+                  path: '/webmail/sso.php',
+                  pathType: 'Exact',
+                  backend: {
+                    service: {
+                      name: props.adminService.name,
+                      port: {
+                        number: 8080,
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+
+    // Separate Ingress for webmail with authentication
+    // When auth proxy is provided, route through it (handles auth + redirect on failure)
+    // Otherwise, use ForwardAuth middleware (returns 403 on auth failure - legacy behavior)
+    // NOTE: We do NOT strip /webmail prefix - the webmail nginx is configured (via WEB_WEBMAIL env)
+    // to handle requests at /webmail and generate correct asset paths
+    const useAuthProxy = !!props.webmailAuthProxyService;
+    const webmailBackendService = useAuthProxy
+      ? props.webmailAuthProxyService!
+      : props.webmailService;
+
+    // Build annotations - only include ForwardAuth when not using auth proxy
+    const webmailIngressAnnotations: Record<string, string> = {
+      // Use cert-manager to provision Let's Encrypt certificate
+      'cert-manager.io/cluster-issuer': certIssuer,
+    };
+    if (!useAuthProxy) {
+      // Apply ForwardAuth middleware when not using auth proxy (legacy behavior)
+      webmailIngressAnnotations['traefik.ingress.kubernetes.io/router.middlewares'] =
+        `${props.namespace}-mailu-webmail-auth@kubernetescrd`;
+    }
+
+    this.webmailIngress = new k8s.KubeIngress(this, 'webmail-auth-ingress', {
+      metadata: {
+        name: 'mailu-webmail-auth',
+        namespace: props.namespace,
+        annotations: webmailIngressAnnotations,
+      },
+      spec: {
+        ingressClassName: 'traefik',
+        tls: [
+          {
+            hosts: [props.hostname],
+            secretName: 'mailu-tls',
+          },
+        ],
+        rules: [
+          {
+            host: props.hostname,
+            http: {
+              paths: [
+                {
+                  path: '/webmail',
+                  pathType: 'Prefix',
+                  backend: {
+                    service: {
+                      name: webmailBackendService.name,
+                      port: {
+                        number: 80,
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        ],
       },
     });
 

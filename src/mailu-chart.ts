@@ -17,6 +17,8 @@ import { RspamdConstruct } from './constructs/rspamd-construct';
 import { RspamdServiceMonitorConstruct } from './constructs/rspamd-servicemonitor-construct';
 import { TraefikIngressConstruct } from './constructs/traefik-ingress-construct';
 import { WebdavConstruct } from './constructs/webdav-construct';
+import { WebmailAuthProxyConfigMap } from './constructs/webmail-auth-proxy-configmap';
+import { WebmailAuthProxyConstruct } from './constructs/webmail-auth-proxy-construct';
 import { WebmailConstruct } from './constructs/webmail-construct';
 import { WebmailPatchConfigMap } from './constructs/webmail-patch-configmap';
 import { validateDomainFormat, validateCidrFormat } from './utils/validators';
@@ -100,6 +102,7 @@ export class MailuChart extends Chart {
   public clamavConstruct?: ClamavConstruct;
   public fetchmailConstruct?: FetchmailConstruct;
   public webdavConstruct?: WebdavConstruct;
+  public webmailAuthProxyConstruct?: WebmailAuthProxyConstruct;
   public traefikIngressConstruct?: TraefikIngressConstruct;
 
   constructor(scope: Construct, id: string, config: MailuChartConfig, props?: ChartProps) {
@@ -429,6 +432,19 @@ export class MailuChart extends Chart {
       throw new Error('Cannot create Traefik ingress: rspamd component is required for antispam web UI');
     }
 
+    // Create webmail auth proxy for proper redirect on auth failure
+    // This replaces ForwardAuth middleware which returns 403 instead of redirecting to login
+    const authProxyConfigMapConstruct = new WebmailAuthProxyConfigMap(this, 'webmail-auth-proxy-config', {
+      namespace: this.mailuNamespace,
+    });
+
+    this.webmailAuthProxyConstruct = new WebmailAuthProxyConstruct(this, 'webmail-auth-proxy', {
+      namespace: this.mailuNamespace,
+      authProxyConfigMap: authProxyConfigMapConstruct.configMap,
+      webmailServiceName: `${this.webmailConstruct.service.name}.${this.config.namespace}.svc.cluster.local`,
+      adminServiceName: `${this.adminConstruct.service.name}.${this.config.namespace}.svc.cluster.local`,
+    });
+
     this.traefikIngressConstruct = new TraefikIngressConstruct(this, 'traefik-ingress', {
       namespace: this.mailuNamespace.name,
       domain: this.config.domain,
@@ -442,6 +458,7 @@ export class MailuChart extends Chart {
       enableTcp: traefikConfig.enableTcp ?? true,
       smtpConnectionLimit: traefikConfig.smtpConnectionLimit ?? 15,
       enableSmtp: traefikConfig.enableSmtp ?? false, // Default false for security
+      webmailAuthProxyService: this.webmailAuthProxyConstruct.service, // Use auth proxy for proper redirect
     });
   }
 

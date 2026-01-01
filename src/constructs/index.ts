@@ -17,6 +17,8 @@ export { WebdavConstruct, WebdavConstructProps } from './webdav-construct';
 
 // Supporting components
 export { DovecotSubmissionConstruct, DovecotSubmissionConstructProps } from './dovecot-submission-construct';
+export { WebmailAuthProxyConstruct, WebmailAuthProxyConstructProps } from './webmail-auth-proxy-construct';
+export { WebmailAuthProxyConfigMap, WebmailAuthProxyConfigMapProps } from './webmail-auth-proxy-configmap';
 
 // Ingress components (optional)
 export { TraefikIngressConstruct, TraefikIngressConstructProps } from './traefik-ingress-construct';
