@@ -61,6 +61,10 @@ http {
         listen 8080;
         server_name _;
 
+        # Prevent nginx from converting relative redirects to absolute URLs
+        # This ensures redirects use the original scheme/host from X-Forwarded headers
+        absolute_redirect off;
+
         # Internal location for auth subrequest
         # Calls admin service's /internal/auth/user endpoint
         location = /_auth {
