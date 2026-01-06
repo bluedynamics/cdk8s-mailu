@@ -16,7 +16,7 @@ export interface WebmailAuthProxyConfigMapProps {
  * 1. User requests /webmail
  * 2. Nginx auth_request checks /internal/auth/user on admin service
  * 3. If authenticated (200): proxy to webmail with X-User/X-User-Token headers
- * 4. If not authenticated (401/403): redirect to /sso/login?next={original_url}
+ * 4. If not authenticated (401/403): redirect to /sso/login?url={original_url}
  */
 export class WebmailAuthProxyConfigMap extends Construct {
   public readonly configMap: kplus.ConfigMap;
@@ -102,7 +102,8 @@ http {
         }
 
         # Main location for webmail proxy
-        location / {
+        # Match /webmail paths and strip prefix before proxying
+        location ~ ^/webmail(/.*)?$ {
             # Perform auth check via subrequest
             auth_request /_auth;
 
@@ -113,10 +114,19 @@ http {
             auth_request_set $auth_user $upstream_http_x_user;
             auth_request_set $auth_token $upstream_http_x_user_token;
 
+            # Strip /webmail prefix - Roundcube expects paths at /
+            # $1 captures everything after /webmail (including leading /)
+            # If empty (just /webmail), default to /
+            set $stripped_path $1;
+            if ($stripped_path = "") {
+                set $stripped_path "/";
+            }
+
             # Pass auth headers to webmail backend
-            # Roundcube's Mailu plugin uses these for SSO auto-login
-            proxy_set_header X-User $auth_user;
-            proxy_set_header X-User-Token $auth_token;
+            # Roundcube's Mailu plugin expects X-Remote-User and X-Remote-User-Token
+            # (PHP converts these to HTTP_X_REMOTE_USER and HTTP_X_REMOTE_USER_TOKEN)
+            proxy_set_header X-Remote-User $auth_user;
+            proxy_set_header X-Remote-User-Token $auth_token;
 
             # Forward standard headers
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -124,10 +134,14 @@ http {
             proxy_set_header X-Forwarded-Host $http_x_forwarded_host;
             proxy_set_header Host $http_host;
 
-            # Proxy to webmail backend
-            proxy_pass http://webmail_backend;
+            # Proxy to webmail backend with stripped path
+            proxy_pass http://webmail_backend$stripped_path$is_args$args;
             proxy_http_version 1.1;
             proxy_set_header Connection "";
+
+            # Rewrite Location headers from Roundcube to add /webmail prefix
+            # Roundcube generates redirects like /index.php, we need /webmail/index.php
+            proxy_redirect / /webmail/;
 
             # Timeouts for long-running requests
             proxy_connect_timeout 60s;
@@ -138,9 +152,9 @@ http {
         # Named location for login redirect
         # Redirects unauthenticated users to SSO login with return URL
         location @login_redirect {
-            # Build redirect URL with original path as 'next' parameter
+            # Build redirect URL with original path as 'url' parameter
             # User will be redirected back to their original URL after login
-            return 302 /sso/login?next=$request_uri;
+            return 302 /sso/login?url=$request_uri;
         }
 
         # Health check endpoint for Kubernetes probes
