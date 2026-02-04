@@ -141,6 +141,8 @@ http {
 
             # Rewrite Location headers from Roundcube to add /webmail prefix
             # Roundcube generates redirects like /index.php, we need /webmail/index.php
+            # But /sso/* paths must stay unchanged (they go to admin service)
+            proxy_redirect /sso/ /sso/;
             proxy_redirect / /webmail/;
 
             # Timeouts for long-running requests
