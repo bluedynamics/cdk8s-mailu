@@ -75,6 +75,11 @@ server:
     domain-insecure: "ix.dnsbl.manitu.net"
     domain-insecure: "b.barracudacentral.org"
 
+    # Kubernetes internal zones (not DNSSEC-signed by CoreDNS)
+    domain-insecure: "cluster.local."
+    domain-insecure: "in-addr.arpa."
+    domain-insecure: "ip6.arpa."
+
     # Lightweight sidecar profile
     num-threads: 1
     msg-cache-size: 4m
