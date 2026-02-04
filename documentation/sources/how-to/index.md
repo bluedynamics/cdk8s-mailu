@@ -36,6 +36,7 @@ customize-storage
 enable-optional-components
 configure-tls
 manage-secrets
+configure-spam-filtering
 ```
 
 ## Operations & Maintenance

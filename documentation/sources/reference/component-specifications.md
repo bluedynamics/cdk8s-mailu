@@ -249,6 +249,25 @@ Core components are always deployed and required for Mailu to function.
 **Environment Variables**:
 - Service discovery variables for redis, admin
 
+**Sidecar: Unbound DNS Resolver**:
+- **Image**: `mvance/unbound:1.22.0`
+- **Port**: `53/TCP+UDP` (localhost only)
+- **CPU**: 10m request / 50m limit
+- **Memory**: 32Mi request / 64Mi limit
+- **Purpose**: Recursive DNS for RBL lookups (Spamhaus, Barracuda, Spamcop)
+
+**Configuration Overrides** (mounted at `/overrides/`):
+
+| File | Purpose |
+|------|---------|
+| `actions.conf` | Scoring thresholds (reject=12, add_header=5, greylist=3) |
+| `classifier-bayes.conf` | Bayes auto-learning optimization |
+| `fuzzy_check.conf` | Remote rspamd.com fuzzy server |
+| `rbl.conf` | DNS-based blocklists (Spamhaus ZEN/DBL, Barracuda, Spamcop) |
+
+**DNS Override** (`/conf/options.inc`):
+- Points rspamd DNS to Unbound sidecar at `127.0.0.1:53`
+
 ---
 
 ## Optional Components
