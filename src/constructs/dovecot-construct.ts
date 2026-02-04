@@ -150,6 +150,27 @@ export class DovecotConstruct extends Construct {
     // Mount PVC for mailboxes
     container.mount('/mail', kplus.Volume.fromPersistentVolumeClaim(this, 'mail-volume', this.pvc));
 
+    // Mount Dovecot override config if namespace separator is customized
+    if (config.dovecot?.namespaceSeparator === '/') {
+      const overrideConfigMap = new kplus.ConfigMap(this, 'dovecot-override', {
+        metadata: { namespace: namespace.name },
+        data: {
+          'dovecot.conf': [
+            '# Apple Mail compatibility - use / as hierarchy separator',
+            'namespace inbox {',
+            '  separator = /',
+            '}',
+            '',
+          ].join('\n'),
+        },
+      });
+
+      container.mount(
+        '/overrides',
+        kplus.Volume.fromConfigMap(this, 'override-volume', overrideConfigMap),
+      );
+    }
+
     // Create Service exposing IMAP and POP3 ports
     this.service = new kplus.Service(this, 'service', {
       metadata: {
