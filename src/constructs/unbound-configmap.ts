@@ -86,9 +86,6 @@ server:
     use-syslog: no
     log-queries: no
 
-    root-hints: /etc/unbound/root.hints
-    auto-trust-anchor-file: /etc/unbound/root.key
-
 # Forward .cluster.local queries to kube-dns
 forward-zone:
     name: "cluster.local."

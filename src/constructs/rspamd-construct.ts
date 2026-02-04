@@ -275,7 +275,7 @@ dns {
     // Add Unbound DNS resolver sidecar for recursive RBL lookups
     const unboundContainer = this.deployment.addContainer({
       name: 'unbound',
-      image: `${config.dns?.unboundImage || 'mvance/unbound:1.22.0'}`,
+      image: `${config.dns?.unboundImage || 'crazymax/unbound:1.24.0'}`,
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
       portNumber: 53,
       securityContext: {
@@ -312,7 +312,7 @@ dns {
     const unboundConfigVolume = kplus.Volume.fromConfigMap(
       this, 'unbound-config-volume', unboundConfigMap.configMap,
     );
-    unboundContainer.mount('/etc/unbound/unbound.conf', unboundConfigVolume, {
+    unboundContainer.mount('/config/custom.conf', unboundConfigVolume, {
       subPath: 'unbound.conf',
     });
 

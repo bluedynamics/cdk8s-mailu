@@ -379,7 +379,7 @@ export interface DnsConfig {
 
   /**
    * Unbound container image
-   * @default "mvance/unbound:1.22.0"
+   * @default "crazymax/unbound:1.24.0"
    */
   readonly unboundImage?: string;
 }

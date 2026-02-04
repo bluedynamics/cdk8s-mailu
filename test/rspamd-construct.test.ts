@@ -424,6 +424,6 @@ describe('RspamdConstruct', () => {
     // Unbound config should be mounted
     expect(unboundContainer.volumeMounts).toBeDefined();
     const mountPaths = unboundContainer.volumeMounts.map((v: any) => v.mountPath);
-    expect(mountPaths).toContain('/etc/unbound/unbound.conf');
+    expect(mountPaths).toContain('/config/custom.conf');
   });
 });
