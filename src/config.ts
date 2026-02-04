@@ -368,6 +368,23 @@ export interface TraefikIngressConfig {
 }
 
 /**
+ * DNS resolver configuration for rspamd
+ */
+export interface DnsConfig {
+  /**
+   * Kube-DNS ClusterIP for forwarding .cluster.local queries from Unbound
+   * @default "10.43.0.10"
+   */
+  readonly kubeDnsIp?: string;
+
+  /**
+   * Unbound container image
+   * @default "mvance/unbound:1.22.0"
+   */
+  readonly unboundImage?: string;
+}
+
+/**
  * Ingress configuration
  */
 export interface IngressConfig {
@@ -483,4 +500,11 @@ export interface MailuChartConfig {
    * @default undefined (no ingress created)
    */
   readonly ingress?: IngressConfig;
+
+  /**
+   * DNS resolver configuration for rspamd RBL lookups
+   * Configures the Unbound DNS sidecar for recursive resolution
+   * @default undefined (uses default Unbound settings)
+   */
+  readonly dns?: DnsConfig;
 }

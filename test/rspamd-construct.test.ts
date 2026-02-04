@@ -165,16 +165,18 @@ describe('RspamdConstruct', () => {
     const deployment = manifests.find(m => m.kind === 'Deployment');
     const container = deployment?.spec.template.spec.containers[0];
 
-    // Check volume mounts (PVC + ConfigMap for web UI config override)
-    expect(container.volumeMounts).toHaveLength(2);
-    expect(container.volumeMounts.map((v: any) => v.mountPath)).toContain('/var/lib/rspamd');
-    expect(container.volumeMounts.map((v: any) => v.mountPath)).toContain('/conf/worker-controller.inc');
+    // Check rspamd container volume mounts
+    // PVC + worker-controller.inc + overrides + options.inc
+    const mountPaths = container.volumeMounts.map((v: any) => v.mountPath);
+    expect(mountPaths).toContain('/var/lib/rspamd');
+    expect(mountPaths).toContain('/conf/worker-controller.inc');
+    expect(mountPaths).toContain('/overrides');
+    expect(mountPaths).toContain('/conf/options.inc');
 
-    // Check volume definitions
+    // Check volume definitions (PVC + multiple ConfigMaps + Unbound config)
     const volumes = deployment?.spec.template.spec.volumes;
-    expect(volumes).toHaveLength(2);
     expect(volumes.some((v: any) => v.persistentVolumeClaim !== undefined)).toBe(true);
-    expect(volumes.some((v: any) => v.configMap !== undefined)).toBe(true);
+    expect(volumes.filter((v: any) => v.configMap !== undefined).length).toBeGreaterThanOrEqual(3);
   });
 
   test('uses auto-generated names for resources', () => {
@@ -200,5 +202,228 @@ describe('RspamdConstruct', () => {
     expect(pvc?.metadata.name).not.toBe('rspamd');
     expect(deployment?.metadata.name).not.toBe('rspamd');
     expect(service?.metadata.name).not.toBe('rspamd');
+  });
+
+  // --- Rspamd overrides ConfigMap tests ---
+
+  test('creates rspamd overrides ConfigMap with spam filter configuration', () => {
+    new RspamdConstruct(chart, 'rspamd', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const configMaps = manifests.filter((m: any) => m.kind === 'ConfigMap');
+
+    // Find the overrides ConfigMap (has actions.conf key)
+    const overridesCm = configMaps.find(
+      (cm: any) => cm.data?.['actions.conf'] !== undefined,
+    );
+    expect(overridesCm).toBeDefined();
+
+    // Should contain all override files
+    expect(overridesCm.data['actions.conf']).toBeDefined();
+    expect(overridesCm.data['classifier-bayes.conf']).toBeDefined();
+    expect(overridesCm.data['fuzzy_check.conf']).toBeDefined();
+    expect(overridesCm.data['rbl.conf']).toBeDefined();
+  });
+
+  test('overrides ConfigMap contains stricter thresholds', () => {
+    new RspamdConstruct(chart, 'rspamd', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const configMaps = manifests.filter((m: any) => m.kind === 'ConfigMap');
+    const overridesCm = configMaps.find(
+      (cm: any) => cm.data?.['actions.conf'] !== undefined,
+    );
+
+    // Stricter thresholds than defaults
+    expect(overridesCm.data['actions.conf']).toContain('reject = 12');
+    expect(overridesCm.data['actions.conf']).toContain('add_header = 5');
+    expect(overridesCm.data['actions.conf']).toContain('greylist = 3');
+  });
+
+  test('overrides ConfigMap contains remote fuzzy server configuration', () => {
+    new RspamdConstruct(chart, 'rspamd', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const configMaps = manifests.filter((m: any) => m.kind === 'ConfigMap');
+    const overridesCm = configMaps.find(
+      (cm: any) => cm.data?.['fuzzy_check.conf'] !== undefined,
+    );
+
+    // Remote rspamd.com fuzzy servers
+    expect(overridesCm.data['fuzzy_check.conf']).toContain('fuzzy1.rspamd.com');
+    expect(overridesCm.data['fuzzy_check.conf']).toContain('fuzzy2.rspamd.com');
+  });
+
+  test('overrides ConfigMap contains RBL configuration', () => {
+    new RspamdConstruct(chart, 'rspamd', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const configMaps = manifests.filter((m: any) => m.kind === 'ConfigMap');
+    const overridesCm = configMaps.find(
+      (cm: any) => cm.data?.['rbl.conf'] !== undefined,
+    );
+
+    // Spamhaus ZEN and DBL
+    expect(overridesCm.data['rbl.conf']).toContain('zen.spamhaus.org');
+    expect(overridesCm.data['rbl.conf']).toContain('dbl.spamhaus.org');
+    // Barracuda and Spamcop
+    expect(overridesCm.data['rbl.conf']).toContain('b.barracudacentral.org');
+    expect(overridesCm.data['rbl.conf']).toContain('bl.spamcop.net');
+  });
+
+  test('mounts overrides ConfigMap to rspamd container', () => {
+    new RspamdConstruct(chart, 'rspamd', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const deployment = manifests.find((m: any) => m.kind === 'Deployment');
+    const rspamdContainer = deployment?.spec.template.spec.containers.find(
+      (c: any) => c.name === 'rspamd',
+    );
+
+    // Overrides should be mounted
+    const mountPaths = rspamdContainer.volumeMounts.map((v: any) => v.mountPath);
+    expect(mountPaths).toContain('/overrides');
+  });
+
+  // --- Unbound DNS sidecar tests ---
+
+  test('adds Unbound DNS sidecar container', () => {
+    new RspamdConstruct(chart, 'rspamd', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const deployment = manifests.find((m: any) => m.kind === 'Deployment');
+    const containers = deployment?.spec.template.spec.containers;
+
+    // Should have 2 containers: rspamd + unbound
+    expect(containers).toHaveLength(2);
+
+    const unboundContainer = containers.find((c: any) => c.name === 'unbound');
+    expect(unboundContainer).toBeDefined();
+    expect(unboundContainer.image).toMatch(/unbound/);
+  });
+
+  test('Unbound sidecar has health probes', () => {
+    new RspamdConstruct(chart, 'rspamd', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const deployment = manifests.find((m: any) => m.kind === 'Deployment');
+    const unboundContainer = deployment?.spec.template.spec.containers.find(
+      (c: any) => c.name === 'unbound',
+    );
+
+    expect(unboundContainer.livenessProbe).toBeDefined();
+    expect(unboundContainer.readinessProbe).toBeDefined();
+  });
+
+  test('creates Unbound ConfigMap with correct DNS configuration', () => {
+    new RspamdConstruct(chart, 'rspamd', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const configMaps = manifests.filter((m: any) => m.kind === 'ConfigMap');
+
+    // Find the unbound ConfigMap
+    const unboundCm = configMaps.find(
+      (cm: any) => cm.data?.['unbound.conf'] !== undefined,
+    );
+    expect(unboundCm).toBeDefined();
+
+    // Must disable QNAME minimization for RBL compatibility
+    expect(unboundCm.data['unbound.conf']).toContain('qname-minimisation: no');
+
+    // Must allow private-domain responses from RBL providers
+    expect(unboundCm.data['unbound.conf']).toContain('private-domain: "zen.spamhaus.org"');
+    expect(unboundCm.data['unbound.conf']).toContain('private-domain: "dbl.spamhaus.org"');
+
+    // Must forward .cluster.local to kube-dns
+    expect(unboundCm.data['unbound.conf']).toContain('cluster.local');
+  });
+
+  test('configures rspamd DNS to use Unbound sidecar', () => {
+    new RspamdConstruct(chart, 'rspamd', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const configMaps = manifests.filter((m: any) => m.kind === 'ConfigMap');
+
+    // Find the DNS override ConfigMap for rspamd
+    const dnsOverrideCm = configMaps.find(
+      (cm: any) => cm.data?.['options.inc'] !== undefined,
+    );
+    expect(dnsOverrideCm).toBeDefined();
+
+    // Rspamd should be configured to use localhost (Unbound sidecar)
+    expect(dnsOverrideCm.data['options.inc']).toContain('127.0.0.1');
+  });
+
+  test('mounts DNS override options.inc to rspamd container', () => {
+    new RspamdConstruct(chart, 'rspamd', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const deployment = manifests.find((m: any) => m.kind === 'Deployment');
+    const rspamdContainer = deployment?.spec.template.spec.containers.find(
+      (c: any) => c.name === 'rspamd',
+    );
+
+    // DNS override options.inc should be mounted
+    const mountPaths = rspamdContainer.volumeMounts.map((v: any) => v.mountPath);
+    expect(mountPaths).toContain('/conf/options.inc');
+  });
+
+  test('mounts Unbound configuration to sidecar', () => {
+    new RspamdConstruct(chart, 'rspamd', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const deployment = manifests.find((m: any) => m.kind === 'Deployment');
+    const unboundContainer = deployment?.spec.template.spec.containers.find(
+      (c: any) => c.name === 'unbound',
+    );
+
+    // Unbound config should be mounted
+    expect(unboundContainer.volumeMounts).toBeDefined();
+    const mountPaths = unboundContainer.volumeMounts.map((v: any) => v.mountPath);
+    expect(mountPaths).toContain('/etc/unbound/unbound.conf');
   });
 });
