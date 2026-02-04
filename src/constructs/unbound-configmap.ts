@@ -35,13 +35,15 @@ export class UnboundConfigMap extends Construct {
     const unboundConf = `# Unbound DNS resolver for rspamd RBL lookups
 # Provides recursive DNS resolution so RBL providers accept our queries
 server:
-    interface: 127.0.0.1
+    interface: 0.0.0.0
     port: 53
     do-tcp: yes
     do-udp: yes
 
-    access-control: 127.0.0.0/8 allow
+    # Allow localhost (rspamd container) and pod network (kubelet health probes)
     access-control: 0.0.0.0/0 refuse
+    access-control: 127.0.0.0/8 allow
+    access-control: 10.42.0.0/16 allow
 
     # Disable QNAME minimization (recommended by Spamhaus)
     qname-minimisation: no
