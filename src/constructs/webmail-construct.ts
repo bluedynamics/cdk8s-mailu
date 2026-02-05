@@ -48,7 +48,7 @@ export class WebmailConstruct extends Construct {
       accessModes: [kplus.PersistentVolumeAccessMode.READ_WRITE_ONCE],
     });
 
-    // Create Deployment
+    // Recreate strategy required: RWO PVC cannot be mounted on two nodes simultaneously
     this.deployment = new kplus.Deployment(this, 'deployment', {
       metadata: {
         namespace: namespace.name,
@@ -59,6 +59,7 @@ export class WebmailConstruct extends Construct {
         },
       },
       replicas: 1,
+      strategy: kplus.DeploymentStrategy.recreate(),
       podMetadata: {
         labels: {
           'app.kubernetes.io/name': 'mailu-webmail',
@@ -74,7 +75,7 @@ export class WebmailConstruct extends Construct {
     // Prepare container configuration with optional command override
     const containerConfig: any = {
       name: 'webmail',
-      image: `${config.images?.registry || 'ghcr.io/mailu'}/webmail:${config.images?.tag || '2024.06'}`,
+      image: `${config.images?.registry || 'ghcr.io/mailu'}/webmail:${config.images?.tag || '2024.06.47'}`,
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
       securityContext: {
         ensureNonRoot: false,

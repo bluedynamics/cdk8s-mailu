@@ -45,7 +45,7 @@ export class PostfixConstruct extends Construct {
       storageClassName: config.storage?.postfix?.storageClass || config.storage?.storageClass,
     });
 
-    // Create Deployment
+    // Recreate strategy required: RWO PVC cannot be mounted on two nodes simultaneously
     this.deployment = new kplus.Deployment(this, 'deployment', {
       metadata: {
         namespace: namespace.name,
@@ -56,6 +56,7 @@ export class PostfixConstruct extends Construct {
         },
       },
       replicas: 1,
+      strategy: kplus.DeploymentStrategy.recreate(),
       podMetadata: {
         labels: {
           'app.kubernetes.io/name': 'mailu-postfix',
@@ -71,7 +72,7 @@ export class PostfixConstruct extends Construct {
     // Configure container
     const container = this.deployment.addContainer({
       name: 'postfix',
-      image: `${config.images?.registry || 'ghcr.io/mailu'}/postfix:${config.images?.tag || '2024.06'}`,
+      image: `${config.images?.registry || 'ghcr.io/mailu'}/postfix:${config.images?.tag || '2024.06.47'}`,
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
       portNumber: 25,
       securityContext: {
