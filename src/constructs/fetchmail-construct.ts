@@ -58,7 +58,7 @@ export class FetchmailConstruct extends Construct {
     // Configure container
     const container = this.deployment.addContainer({
       name: 'fetchmail',
-      image: `${config.images?.registry || 'ghcr.io/mailu'}/fetchmail:${config.images?.tag || '2024.06'}`,
+      image: `${config.images?.registry || 'ghcr.io/mailu'}/fetchmail:${config.images?.tag || '2024.06.47'}`,
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
       securityContext: {
         ensureNonRoot: false,

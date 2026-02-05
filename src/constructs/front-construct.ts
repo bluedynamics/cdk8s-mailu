@@ -63,7 +63,7 @@ export class FrontConstruct extends Construct {
     // Prepare container configuration with optional command override
     const containerConfig: any = {
       name: 'front',
-      image: `${config.images?.registry || 'ghcr.io/mailu'}/nginx:${config.images?.tag || '2024.06'}`,
+      image: `${config.images?.registry || 'ghcr.io/mailu'}/nginx:${config.images?.tag || '2024.06.47'}`,
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
       securityContext: {
         ensureNonRoot: false, // Nginx needs to bind to privileged ports

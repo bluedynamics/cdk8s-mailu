@@ -319,7 +319,7 @@ export interface ImageConfig {
 
   /**
    * Image tag (Mailu version)
-   * @default "2024.06"
+   * @default "2024.06.47"
    */
   readonly tag?: string;
 
