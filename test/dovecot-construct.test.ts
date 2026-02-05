@@ -204,6 +204,99 @@ describe('DovecotConstruct', () => {
     expect(service?.metadata.name).not.toBe('dovecot');
   });
 
+  describe('namespace separator override', () => {
+    test('does not create override ConfigMap when separator is default', () => {
+      new DovecotConstruct(chart, 'dovecot', {
+        config,
+        namespace,
+        sharedConfigMap,
+      });
+
+      const manifests = Testing.synth(chart);
+      const configMaps = manifests.filter(m => m.kind === 'ConfigMap');
+
+      // Should not have an override ConfigMap (only the shared one exists at chart level)
+      const overrideConfigMap = configMaps.find(
+        (m: any) => m.data?.['dovecot.conf'] !== undefined,
+      );
+      expect(overrideConfigMap).toBeUndefined();
+    });
+
+    test('does not create override ConfigMap when separator is explicitly "."', () => {
+      new DovecotConstruct(chart, 'dovecot', {
+        config: {
+          ...config,
+          dovecot: { namespaceSeparator: '.' },
+        },
+        namespace,
+        sharedConfigMap,
+      });
+
+      const manifests = Testing.synth(chart);
+      const configMaps = manifests.filter(m => m.kind === 'ConfigMap');
+
+      const overrideConfigMap = configMaps.find(
+        (m: any) => m.data?.['dovecot.conf'] !== undefined,
+      );
+      expect(overrideConfigMap).toBeUndefined();
+    });
+
+    test('creates override ConfigMap when separator is "/"', () => {
+      new DovecotConstruct(chart, 'dovecot', {
+        config: {
+          ...config,
+          dovecot: { namespaceSeparator: '/' },
+        },
+        namespace,
+        sharedConfigMap,
+      });
+
+      const manifests = Testing.synth(chart);
+      const configMaps = manifests.filter(m => m.kind === 'ConfigMap');
+
+      const overrideConfigMap = configMaps.find(
+        (m: any) => m.data?.['dovecot.conf'] !== undefined,
+      );
+      expect(overrideConfigMap).toBeDefined();
+      expect(overrideConfigMap?.data['dovecot.conf']).toContain('separator = /');
+    });
+
+    test('mounts override volume at /overrides when separator is "/"', () => {
+      new DovecotConstruct(chart, 'dovecot', {
+        config: {
+          ...config,
+          dovecot: { namespaceSeparator: '/' },
+        },
+        namespace,
+        sharedConfigMap,
+      });
+
+      const manifests = Testing.synth(chart);
+      const deployment = manifests.find(m => m.kind === 'Deployment');
+      const container = deployment?.spec.template.spec.containers[0];
+
+      const overrideMount = container.volumeMounts.find(
+        (m: any) => m.mountPath === '/overrides',
+      );
+      expect(overrideMount).toBeDefined();
+    });
+
+    test('has only mail volume mount when separator is default', () => {
+      new DovecotConstruct(chart, 'dovecot', {
+        config,
+        namespace,
+        sharedConfigMap,
+      });
+
+      const manifests = Testing.synth(chart);
+      const deployment = manifests.find(m => m.kind === 'Deployment');
+      const container = deployment?.spec.template.spec.containers[0];
+
+      expect(container.volumeMounts).toHaveLength(1);
+      expect(container.volumeMounts[0].mountPath).toBe('/mail');
+    });
+  });
+
   test('allows component-specific storage class override', () => {
     new DovecotConstruct(chart, 'dovecot', {
       config: {

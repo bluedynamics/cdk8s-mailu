@@ -155,6 +155,20 @@ The `MailuConfig` interface defines all configuration options for deploying Mail
 }
 ```
 
+### Dovecot Configuration
+
+#### dovecot
+- **Type:** `DovecotConfig`
+- **Description:** Dovecot-specific configuration overrides
+
+```typescript
+{
+  namespaceSeparator?: '.' | '/'  // Default: '.' (Mailu default)
+}
+```
+
+**`namespaceSeparator`**: IMAP namespace hierarchy separator. Set to `'/'` for Apple Mail compatibility. See [Configure Apple Mail Compatibility](../how-to/configure-apple-mail.md) for details and important warnings.
+
 ### Additional Configuration
 
 *[Content placeholder for docwriter]*

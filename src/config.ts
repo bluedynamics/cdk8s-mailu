@@ -368,6 +368,20 @@ export interface TraefikIngressConfig {
 }
 
 /**
+ * Dovecot-specific configuration overrides
+ */
+export interface DovecotConfig {
+  /**
+   * IMAP namespace hierarchy separator
+   * @default "." (Mailu default)
+   * Set to "/" for better Apple Mail compatibility
+   * WARNING: Changing this on existing installations may break folder names
+   * containing the new separator character
+   */
+  readonly namespaceSeparator?: '.' | '/';
+}
+
+/**
  * DNS resolver configuration for rspamd
  */
 export interface DnsConfig {
@@ -507,4 +521,10 @@ export interface MailuChartConfig {
    * @default undefined (uses default Unbound settings)
    */
   readonly dns?: DnsConfig;
+
+  /**
+   * Dovecot-specific configuration overrides
+   * @default undefined (uses Mailu defaults)
+   */
+  readonly dovecot?: DovecotConfig;
 }
