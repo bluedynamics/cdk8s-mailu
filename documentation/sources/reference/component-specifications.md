@@ -250,10 +250,11 @@ Core components are always deployed and required for Mailu to function.
 - Service discovery variables for redis, admin
 
 **Sidecar: Unbound DNS Resolver**:
-- **Image**: `mvance/unbound:1.22.0`
-- **Port**: `53/TCP+UDP` (localhost only)
+- **Image**: `crazymax/unbound:1.24.0` (multi-arch: AMD64, ARM64)
+- **Port**: `53/TCP+UDP` (bound to `0.0.0.0`, access restricted to localhost and pod network)
 - **CPU**: 10m request / 50m limit
 - **Memory**: 32Mi request / 64Mi limit
+- **Config Mount**: `/config/custom.conf` (via subPath from ConfigMap)
 - **Purpose**: Recursive DNS for RBL lookups (Spamhaus, Barracuda, Spamcop)
 
 **Configuration Overrides** (mounted at `/overrides/`):

@@ -198,7 +198,7 @@ dns {
     // Configure container
     const container = this.deployment.addContainer({
       name: 'rspamd',
-      image: `${config.images?.registry || 'ghcr.io/mailu'}/rspamd:${config.images?.tag || '2024.06'}`,
+      image: `${config.images?.registry || 'ghcr.io/mailu'}/rspamd:${config.images?.tag || '2024.06.47'}`,
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
       portNumber: 11334,
       securityContext: {
