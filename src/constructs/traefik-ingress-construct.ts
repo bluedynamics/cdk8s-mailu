@@ -208,6 +208,7 @@ export class TraefikIngressConstruct extends Construct {
       },
       spec: {
         minVersion: 'VersionTLS12', // Match Mailu's minimum (TLSv1.2)
+        alpnProtocols: ['h2', 'http/1.1', 'acme-tls/1', 'imap'], // iOS Mail.app requires 'imap' ALPN
         cipherSuites: [
           // Match Mailu's cipher suite order (TLS 1.2 only, TLS 1.3 not configurable)
           'TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256',
