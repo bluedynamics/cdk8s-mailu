@@ -102,7 +102,17 @@ describe('NginxPatchConfigMap', () => {
     // awk is used for the actual insertion because multi-line sed-append
     // through bash variables is brittle in Alpine BusyBox.
     expect(script).toContain('awk -v injf=');
-    expect(script).toContain('/^mail {/ { in_mail=1 }');
+    // Braces in awk regex MUST be escaped: BusyBox awk (and POSIX-strict
+    // awk) treat unescaped `{`/`}` as `{n,m}` repetition metacharacters
+    // and abort with "bad regex: Invalid contents of {}". This bit us in
+    // production: pods CrashLoopBackOff'd until the live ConfigMap was
+    // hot-patched. Keep both assertions — the escaped form must be there
+    // AND the unescaped form must NOT be there — so future edits don't
+    // silently regress.
+    expect(script).toContain('/^mail \\{/ { in_mail=1 }');
+    expect(script).toContain('in_mail && /^\\}/ { in_mail=0 }');
+    expect(script).not.toContain('/^mail {/');
+    expect(script).not.toContain('in_mail && /^}/');
     expect(script).toContain('/^    error_log \\/dev\\/stderr info;$/');
   });
 
