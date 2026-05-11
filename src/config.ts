@@ -365,6 +365,26 @@ export interface TraefikIngressConfig {
    * @default false (security best practice - keep port 25 disabled)
    */
   readonly enableSmtp?: boolean;
+
+  /**
+   * Forward PROXY protocol v2 from Traefik to the mailu-front service for
+   * SMTPS (465), Submission (587), IMAPS (993) and POP3S (995).
+   *
+   * When `false`, every TCP connection arrives at nginx with Traefik's pod IP
+   * as `$remote_addr`. Mailu's per-IP auth rate-limit (`AUTH_RATELIMIT_IP`)
+   * then collapses bots and legitimate users into one bucket, so brute-force
+   * traffic locks out real users.
+   *
+   * When `true`, Traefik prepends the PROXY v2 header and the wrapper script
+   * adds `proxy_protocol` to the matching nginx `listen` directives, so
+   * `$remote_addr` is the real client IP and per-IP rate-limit works.
+   *
+   * Port 25 already uses PROXY v2 unconditionally (postfix consumes it via
+   * `postscreen_upstream_proxy_protocol = haproxy`).
+   *
+   * @default false
+   */
+  readonly proxyProtocolToFront?: boolean;
 }
 
 /**

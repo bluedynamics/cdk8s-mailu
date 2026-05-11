@@ -71,6 +71,21 @@ export interface TraefikIngressConstructProps {
   enableSmtp?: boolean;
 
   /**
+   * Forward PROXY protocol v2 from Traefik to the mailu-front service for
+   * SMTPS (465), Submission (587), IMAPS (993) and POP3S (995), so the
+   * nginx mail{} listeners see the real client IP instead of Traefik's pod
+   * IP. Required for Mailu's per-IP auth rate-limit to work as intended.
+   *
+   * Must be paired with `proxyProtocolToFront: true` on
+   * {@link NginxPatchConfigMapProps} so nginx parses the PROXY header.
+   *
+   * Port 25 is unaffected; it always uses PROXY v2 to postfix.
+   *
+   * @default false
+   */
+  proxyProtocolToFront?: boolean;
+
+  /**
    * Reference to the webmail auth proxy service (handles auth + redirect)
    * When provided, webmail ingress will route through this proxy instead of
    * using ForwardAuth middleware, enabling proper redirect on auth failure.
@@ -92,6 +107,12 @@ export class TraefikIngressConstruct extends Construct {
     const enableTcp = props.enableTcp ?? true;
     const smtpConnectionLimit = props.smtpConnectionLimit ?? 15;
     const enableSmtp = props.enableSmtp ?? false; // Default false for security
+    // PROXY v2 forwarding to mailu-front. Default off: requires matching
+    // `proxyProtocolToFront` on NginxPatchConfigMap or the listeners hang.
+    const proxyProtocolToFront = props.proxyProtocolToFront ?? false;
+    const proxyProtocolV2 = proxyProtocolToFront
+      ? { proxyProtocol: { version: 2 } }
+      : {};
 
     this.tcpRoutes = [];
 
@@ -543,6 +564,7 @@ export class TraefikIngressConstruct extends Construct {
                 {
                   name: props.frontService.name,
                   port: k8s.IntOrString.fromNumber(465),
+                  ...proxyProtocolV2,
                 },
               ],
             },
@@ -573,6 +595,7 @@ export class TraefikIngressConstruct extends Construct {
                 {
                   name: props.frontService.name,
                   port: k8s.IntOrString.fromNumber(587),
+                  ...proxyProtocolV2,
                 },
               ],
             },
@@ -597,6 +620,7 @@ export class TraefikIngressConstruct extends Construct {
                 {
                   name: props.frontService.name,
                   port: k8s.IntOrString.fromNumber(993),
+                  ...proxyProtocolV2,
                 },
               ],
             },
@@ -628,6 +652,7 @@ export class TraefikIngressConstruct extends Construct {
                 {
                   name: props.frontService.name,
                   port: k8s.IntOrString.fromNumber(995),
+                  ...proxyProtocolV2,
                 },
               ],
             },

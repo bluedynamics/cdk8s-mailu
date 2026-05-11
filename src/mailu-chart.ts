@@ -136,8 +136,12 @@ export class MailuChart extends Chart {
     this.sharedConfigMap = this.createSharedConfigMap();
 
     // Create nginx patch ConfigMap for Traefik TLS termination
+    // Mirror the Traefik PROXY-v2 flag so the `listen` directives match what
+    // Traefik actually emits — divergence between the two hangs all mail
+    // submissions.
     const patchConfigMapConstruct = new NginxPatchConfigMap(this, 'nginx-patch', {
       namespace: this.mailuNamespace,
+      proxyProtocolToFront: config.ingress?.traefik?.proxyProtocolToFront ?? false,
     });
     this.nginxPatchConfigMap = patchConfigMapConstruct.configMap;
 
@@ -458,6 +462,7 @@ export class MailuChart extends Chart {
       enableTcp: traefikConfig.enableTcp ?? true,
       smtpConnectionLimit: traefikConfig.smtpConnectionLimit ?? 15,
       enableSmtp: traefikConfig.enableSmtp ?? false, // Default false for security
+      proxyProtocolToFront: traefikConfig.proxyProtocolToFront ?? false,
       webmailAuthProxyService: this.webmailAuthProxyConstruct.service, // Use auth proxy for proper redirect
     });
   }
