@@ -38,7 +38,7 @@
     "@typescript-eslint/eslint-plugin": "^8",
     "@typescript-eslint/parser": "^8",
     "cdk8s": "2.70.26",
-    "cdk8s-cli": "^2.204.9",
+    "cdk8s-cli": "^2.205.1",
     "cdk8s-plus-33": "2.4.0",
     "commit-and-tag-version": "^12",
     "constructs": "10.4.0",
@@ -47,7 +47,7 @@
     "eslint-plugin-import": "^2.32.0",
     "jest": "^30.3.0",
     "jest-junit": "^16",
-    "projen": "^0.99.19",
+    "projen": "^0.99.23",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
