@@ -38,6 +38,61 @@ export class NginxPatchConfigMap extends Construct {
       ? '# Submission (port 587) for Traefik TLS termination [proxy_protocol]'
       : '# Submission (port 587) for Traefik TLS termination';
 
+    // Patch 3 is emitted only when proxyProtocolToFront is on: it injects
+    // `set_real_ip_from <cidr>;` directives inside the mail{} context so
+    // ngx_mail_module replaces $remote_addr with the PROXY-parsed client IP.
+    // Without these directives, nginx accepts the PROXY header (because of
+    // `listen N proxy_protocol;`) but $remote_addr stays as the TCP peer,
+    // and the built-in Client-IP auth header sent to mailu-admin still
+    // carries the Traefik pod IP. Mailu's stock template emits exactly this
+    // pattern for port 25 (see Mailu nginx.conf.tmpl mail{} block); we
+    // extend it to our injected 465/587/993/995 listeners. CIDR list is
+    // expanded from $REAL_IP_FROM at wrapper runtime so updates flow
+    // through the env-config ConfigMap without re-baking this script.
+    const realIpInjection = props.proxyProtocolToFront ? `
+
+# Patch 3: inject set_real_ip_from in mail{} context
+# Required for ngx_mail_module to expose the PROXY-parsed client IP as
+# $remote_addr (and thus the Client-IP header sent to admin).
+echo "  - Adding set_real_ip_from in mail context (REAL_IP_FROM=\$REAL_IP_FROM)..."
+if [ -z "\$REAL_IP_FROM" ]; then
+  echo "ERROR: REAL_IP_FROM is empty; proxyProtocolToFront requires REAL_IP_FROM to be set"
+  exit 1
+fi
+REALIP_MARKER="    # set_real_ip_from for mail context (PROXY protocol) [proxy_protocol]"
+if ! grep -qF "\$REALIP_MARKER" "$NGINX_CONF"; then
+  REALIP_INJECT_FILE=\$(mktemp)
+  {
+    echo ""
+    echo "\$REALIP_MARKER"
+    OLD_IFS=\$IFS
+    IFS=','
+    for cidr in \$REAL_IP_FROM; do
+      echo "    set_real_ip_from \$(echo "\$cidr" | tr -d ' ');"
+    done
+    IFS=\$OLD_IFS
+  } > "\$REALIP_INJECT_FILE"
+  # awk-based insertion is safer than sed for multi-line content; anchors on
+  # the unique 'error_log /dev/stderr info;' line that lives at the top of
+  # the mail{} block.
+  awk -v injf="\$REALIP_INJECT_FILE" '
+    { print }
+    /^mail {/ { in_mail=1 }
+    in_mail && /^}/ { in_mail=0 }
+    in_mail && !injected && /^    error_log \\/dev\\/stderr info;$/ {
+      while ((getline line < injf) > 0) print line
+      close(injf)
+      injected=1
+    }
+  ' "$NGINX_CONF" > "$NGINX_CONF.new" && mv "$NGINX_CONF.new" "$NGINX_CONF"
+  rm -f "\$REALIP_INJECT_FILE"
+  if ! grep -qF "\$REALIP_MARKER" "$NGINX_CONF"; then
+    echo "ERROR: set_real_ip_from injection failed (marker not found post-awk)"
+    exit 1
+  fi
+fi
+` : '';
+
     // Wrapper script that runs config.py, patches nginx.conf, then starts nginx
     const wrapperScript = `#!/bin/sh
 # Mailu Front wrapper script with nginx configuration patch
@@ -132,8 +187,18 @@ if ! grep -qF "${patchMarker}" "$NGINX_CONF"; then
 fi
 
 echo "Patch verification: OK - All patches applied successfully"
+${realIpInjection}
+# Step 3: Validate final nginx configuration before exec
+# Cheap insurance against future patch bugs: if any sed/awk above produced
+# an invalid config (escaping mishap, anchor drift, etc.), fail loudly in
+# pod logs instead of starting nginx and silently dropping mail.
+echo "Validating final nginx configuration..."
+if ! /usr/sbin/nginx -t -c "$NGINX_CONF"; then
+  echo "ERROR: nginx config validation failed; refusing to start"
+  exit 1
+fi
 
-# Step 3: Start nginx (dovecot submission moved to separate service)
+# Step 4: Start nginx (dovecot submission moved to separate service)
 echo "Starting nginx..."
 exec /usr/sbin/nginx -g "daemon off;"
 `;
