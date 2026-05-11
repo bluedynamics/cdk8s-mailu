@@ -3,6 +3,15 @@ import { Construct } from 'constructs';
 
 export interface NginxPatchConfigMapProps {
   readonly namespace: kplus.Namespace;
+
+  /**
+   * Inject the `proxy_protocol` keyword on the `listen` directives for
+   * 465 / 587 / 993 / 995. Must be paired with `proxyProtocolToFront: true`
+   * on TraefikIngressConfig, otherwise nginx waits forever for a PROXY
+   * header that never arrives (or vice versa).
+   * @default false
+   */
+  readonly proxyProtocolToFront?: boolean;
 }
 
 /**
@@ -21,6 +30,13 @@ export class NginxPatchConfigMap extends Construct {
     super(scope, id);
 
     const { namespace } = props;
+    const listenSuffix = props.proxyProtocolToFront ? ' proxy_protocol' : '';
+    // Bake the flag into the verification marker so re-running the wrapper
+    // after toggling the flag forces a re-patch instead of accepting the
+    // previous (now-wrong) injection as already-applied.
+    const patchMarker = props.proxyProtocolToFront
+      ? '# Submission (port 587) for Traefik TLS termination [proxy_protocol]'
+      : '# Submission (port 587) for Traefik TLS termination';
 
     // Wrapper script that runs config.py, patches nginx.conf, then starts nginx
     const wrapperScript = `#!/bin/sh
@@ -63,9 +79,9 @@ echo "  - Adding mail protocol listeners (587, 465, 993, 995)..."
 sed -i '/auth_http_header Auth-Port 25;/,/^    }$/{
   /^    }$/a\\
 \\
-    # Submission (port 587) for Traefik TLS termination\\
+    ${patchMarker}\\
     server {\\
-      listen 587;\\
+      listen 587${listenSuffix};\\
       protocol smtp;\\
       smtp_auth plain;\\
       auth_http_header Auth-Port 587;\\
@@ -74,7 +90,7 @@ sed -i '/auth_http_header Auth-Port 25;/,/^    }$/{
 \\
     # SMTPS (port 465) for Traefik TLS termination\\
     server {\\
-      listen 465;\\
+      listen 465${listenSuffix};\\
       protocol smtp;\\
       smtp_auth plain;\\
       auth_http_header Auth-Port 465;\\
@@ -83,7 +99,7 @@ sed -i '/auth_http_header Auth-Port 25;/,/^    }$/{
 \\
     # IMAPS (port 993) for Traefik TLS termination\\
     server {\\
-      listen 993;\\
+      listen 993${listenSuffix};\\
       protocol imap;\\
       imap_auth plain;\\
       auth_http_header Auth-Port 993;\\
@@ -92,7 +108,7 @@ sed -i '/auth_http_header Auth-Port 25;/,/^    }$/{
 \\
     # POP3S (port 995) for Traefik TLS termination\\
     server {\\
-      listen 995;\\
+      listen 995${listenSuffix};\\
       protocol pop3;\\
       pop3_auth plain;\\
       auth_http_header Auth-Port 995;\\
@@ -107,7 +123,7 @@ fi
 
 # Verify patches were applied
 echo "Verifying patches..."
-if ! grep -q "# Submission (port 587) for Traefik TLS termination" "$NGINX_CONF"; then
+if ! grep -q "${patchMarker}" "$NGINX_CONF"; then
   echo "ERROR: Mail protocol patches not found in $NGINX_CONF"
   exit 1
 fi
