@@ -75,10 +75,13 @@ if ! grep -qF "\$REALIP_MARKER" "$NGINX_CONF"; then
   # awk-based insertion is safer than sed for multi-line content; anchors on
   # the unique 'error_log /dev/stderr info;' line that lives at the top of
   # the mail{} block.
+  # BusyBox awk (and POSIX-strict awk) reject literal '{' and '}' in regexes
+  # because they're metacharacters for {n,m} repetition counts. Escape both
+  # so the regex matches the literal braces in the nginx block-delimiter.
   awk -v injf="\$REALIP_INJECT_FILE" '
     { print }
-    /^mail {/ { in_mail=1 }
-    in_mail && /^}/ { in_mail=0 }
+    /^mail \\{/ { in_mail=1 }
+    in_mail && /^\\}/ { in_mail=0 }
     in_mail && !injected && /^    error_log \\/dev\\/stderr info;$/ {
       while ((getline line < injf) > 0) print line
       close(injf)
