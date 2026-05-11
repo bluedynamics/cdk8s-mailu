@@ -122,8 +122,11 @@ if [ $? -ne 0 ]; then
 fi
 
 # Verify patches were applied
+# Use -F (fixed-string) so the marker is matched literally — when the flag is
+# on, the marker contains '[proxy_protocol]' which is a regex character class
+# under default -E/basic grep and would not match the actual injected string.
 echo "Verifying patches..."
-if ! grep -q "${patchMarker}" "$NGINX_CONF"; then
+if ! grep -qF "${patchMarker}" "$NGINX_CONF"; then
   echo "ERROR: Mail protocol patches not found in $NGINX_CONF"
   exit 1
 fi
