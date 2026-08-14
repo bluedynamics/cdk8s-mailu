@@ -368,6 +368,13 @@ describe('RspamdConstruct', () => {
 
     // Must forward .cluster.local to kube-dns
     expect(unboundCm.data['unbound.conf']).toContain('cluster.local');
+
+    // Must exempt cluster.local from rebind protection: the base image sets
+    // private-address 10.0.0.0/8, which strips Service ClusterIPs from
+    // answers and breaks DKIM key lookup against the admin vault
+    expect(unboundCm.data['unbound.conf']).toContain(
+      'private-domain: "cluster.local."',
+    );
   });
 
   test('configures rspamd DNS to use Unbound sidecar', () => {

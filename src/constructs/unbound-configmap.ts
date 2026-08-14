@@ -80,6 +80,12 @@ server:
     domain-insecure: "in-addr.arpa."
     domain-insecure: "ip6.arpa."
 
+    # Exempt cluster.local from rebind protection: the base image sets
+    # private-address 10.0.0.0/8, which otherwise strips Service ClusterIPs
+    # from answers (empty NOERROR) and breaks e.g. rspamd's DKIM key lookup
+    # against the admin vault
+    private-domain: "cluster.local."
+
     # Lightweight sidecar profile
     num-threads: 1
     msg-cache-size: 4m
