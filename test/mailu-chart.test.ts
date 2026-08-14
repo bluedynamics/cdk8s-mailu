@@ -224,6 +224,12 @@ describe('MailuChart', () => {
       expect(configMap?.data).toHaveProperty('DOMAIN', 'example.com');
       expect(configMap?.data).toHaveProperty('HOSTNAMES', 'mail.example.com');
       expect(configMap?.data).toHaveProperty('SUBNET', '10.42.0.0/16');
+      // DKIM keys must live on the admin PVC (/data) — Mailu's default
+      // /dkim/... is ephemeral, keys would vanish on every pod restart
+      expect(configMap?.data).toHaveProperty(
+        'DKIM_PATH',
+        '/data/dkim/{domain}.{selector}.key',
+      );
     });
 
     it('creates deployments for core components', () => {

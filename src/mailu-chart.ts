@@ -239,6 +239,10 @@ export class MailuChart extends Chart {
       POSTMASTER: this.config.mailu?.initialAccount?.username || 'postmaster',
       MESSAGE_SIZE_LIMIT: String((this.config.mailu?.messageSizeLimit || 50) * 1024 * 1024),
 
+      // Store DKIM keys on the admin PVC — Mailu's default /dkim/... is
+      // ephemeral container storage, keys would vanish on every pod restart
+      DKIM_PATH: '/data/dkim/{domain}.{selector}.key',
+
       // Database configuration
       DB_FLAVOR: this.config.database.type === 'postgresql' ? 'postgresql' : 'sqlite',
     };
