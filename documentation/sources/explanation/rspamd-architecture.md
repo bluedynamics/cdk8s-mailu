@@ -90,6 +90,7 @@ Key Unbound configuration:
 - **Recursive resolution**: Queries go directly to authoritative DNS servers, not public resolvers
 - **Kubernetes integration**: `.cluster.local` queries forwarded to kube-dns for service discovery
 - **RBL compatibility**: `private-domain` settings allow 127.0.0.x responses from RBL zones
+- **Rebind exemption for cluster.local**: the base image's `private-address 10.0.0.0/8` rebind protection would strip Service ClusterIPs from answers; `private-domain: "cluster.local."` exempts them so rspamd can reach the admin DKIM vault
 - **QNAME minimization disabled**: Required by Spamhaus for correct query handling
 
 ## Storage Architecture
