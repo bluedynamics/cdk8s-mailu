@@ -1,0 +1,34 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(50, 50)">
+    <path d="M -35,-35 L -30,-35 L -30,-30" stroke="#00d4ff" stroke-width="2.5" fill="none"/>
+    <path d="M -35,35 L -30,35 L -30,30" stroke="#00d4ff" stroke-width="2.5" fill="none"/>
+    <path d="M 35,-35 L 30,-35 L 30,-30" stroke="#ff00ff" stroke-width="2.5" fill="none"/>
+    <path d="M 35,35 L 30,35 L 30,30" stroke="#ff00ff" stroke-width="2.5" fill="none"/>
+    
+    <line x1="-25" y1="-15" x2="25" y2="-15" stroke="#00d4ff" stroke-width="1" opacity="0.4"/>
+    <line x1="-25" y1="15" x2="25" y2="15" stroke="#ff00ff" stroke-width="1" opacity="0.4"/>
+    
+    <!-- How-to: Document with numbered steps/checklist -->
+    <rect x="-12" y="-16" width="24" height="32" fill="none" stroke="#00d4ff" stroke-width="2.5"/>
+    <path d="M 12,-16 L 12,-10 L 6,-10" fill="none" stroke="#ff00ff" stroke-width="2"/>
+    <path d="M 6,-10 L 12,-10 L 12,-16" fill="#ff00ff" opacity="0.3"/>
+    
+    <!-- Numbered steps -->
+    <circle cx="-7" cy="-6" r="2" fill="none" stroke="#ff00ff" stroke-width="1.5"/>
+    <text x="-7" y="-4" font-family="Arial" font-size="6" fill="#ff00ff" text-anchor="middle" font-weight="bold">1</text>
+    <line x1="-3" y1="-6" x2="8" y2="-6" stroke="#ff00ff" stroke-width="1.5" opacity="0.8"/>
+    
+    <circle cx="-7" cy="1" r="2" fill="none" stroke="#ff00ff" stroke-width="1.5"/>
+    <text x="-7" y="3" font-family="Arial" font-size="6" fill="#ff00ff" text-anchor="middle" font-weight="bold">2</text>
+    <line x1="-3" y1="1" x2="8" y2="1" stroke="#ff00ff" stroke-width="1.5" opacity="0.6"/>
+    
+    <circle cx="-7" cy="8" r="2" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
+    <text x="-7" y="10" font-family="Arial" font-size="6" fill="#00d4ff" text-anchor="middle" font-weight="bold">3</text>
+    <line x1="-3" y1="8" x2="6" y2="8" stroke="#00d4ff" stroke-width="1.5" opacity="0.4"/>
+    
+    <line x1="-12" y1="-10" x2="-12" y2="16" stroke="#ff00ff" stroke-width="3" opacity="0.4"/>
+    
+    <circle cx="-28" cy="0" r="2" fill="#00d4ff" opacity="0.8"/>
+    <circle cx="28" cy="0" r="2" fill="#ff00ff" opacity="0.8"/>
+  </g>
+</svg>
