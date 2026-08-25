@@ -179,6 +179,25 @@ export class PostfixConstruct extends Construct {
       kplus.Volume.fromConfigMap(this, 'override-volume', overrideConfigMap),
     );
 
+    // Mount TLS certificate so port 25 can offer STARTTLS — the direct
+    // Traefik→postfix PROXY-v2 route bypasses all TLS termination, and
+    // providers like Google refuse plaintext-only MX hosts
+    const starttlsSecretName = props.config.ingress?.traefik?.smtpStarttlsSecretName;
+    if (starttlsSecretName) {
+      const tlsSecret = kplus.Secret.fromSecretName(
+        this,
+        'smtp-starttls-secret',
+        starttlsSecretName,
+      );
+      container.mount(
+        '/certs',
+        kplus.Volume.fromSecret(this, 'smtp-starttls-volume', tlsSecret, {
+          defaultMode: 0o444,
+        }),
+        { readOnly: true },
+      );
+    }
+
     // Add Postfix exporter sidecar for Prometheus metrics
     // Exposes queue size and other Postfix metrics on port 9154
     const exporterContainer = this.deployment.addContainer({

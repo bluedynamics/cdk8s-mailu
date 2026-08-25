@@ -225,4 +225,60 @@ describe('PostfixConstruct', () => {
     expect(deployment?.metadata.name).not.toBe('postfix');
     expect(service?.metadata.name).not.toBe('postfix');
   });
+
+  test('mounts TLS secret at /certs when smtpStarttlsSecretName is set', () => {
+    new PostfixConstruct(chart, 'postfix', {
+      config: {
+        ...config,
+        ingress: {
+          enabled: true,
+          type: 'traefik',
+          traefik: {
+            hostname: 'mail.test.example.com',
+            certIssuer: 'test-issuer',
+            smtpStarttlsSecretName: 'mailu-tls',
+          },
+        },
+      },
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const deployment = manifests.find(m => m.kind === 'Deployment');
+    const podSpec = deployment.spec.template.spec;
+
+    const tlsVolume = podSpec.volumes.find(
+      (v: any) => v.secret?.secretName === 'mailu-tls',
+    );
+    expect(tlsVolume).toBeDefined();
+
+    const postfixContainer = podSpec.containers.find(
+      (c: any) => c.name === 'postfix',
+    );
+    const certsMount = postfixContainer.volumeMounts.find(
+      (m: any) => m.mountPath === '/certs',
+    );
+    expect(certsMount).toBeDefined();
+    expect(certsMount.name).toBe(tlsVolume.name);
+    expect(certsMount.readOnly).toBe(true);
+  });
+
+  test('does not mount /certs without smtpStarttlsSecretName', () => {
+    new PostfixConstruct(chart, 'postfix', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const deployment = manifests.find(m => m.kind === 'Deployment');
+    const postfixContainer = deployment.spec.template.spec.containers.find(
+      (c: any) => c.name === 'postfix',
+    );
+    const certsMount = postfixContainer.volumeMounts.find(
+      (m: any) => m.mountPath === '/certs',
+    );
+    expect(certsMount).toBeUndefined();
+  });
 });

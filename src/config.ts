@@ -367,6 +367,24 @@ export interface TraefikIngressConfig {
   readonly enableSmtp?: boolean;
 
   /**
+   * Kubernetes TLS secret (tls.crt/tls.key) mounted into the postfix
+   * container at /certs so port 25 can offer STARTTLS.
+   *
+   * Port 25 bypasses the front/Traefik TLS layer (direct PROXY-v2 route to
+   * postfix), so without this postfix speaks plaintext only — large
+   * providers (e.g. Google) refuse to deliver without STARTTLS and mail
+   * silently defers in their queues.
+   *
+   * Requires the matching master.cf overrides in the external
+   * `postfix-master-override` ConfigMap:
+   * `-o smtpd_tls_security_level=may -o smtpd_tls_cert_file=/certs/tls.crt
+   *  -o smtpd_tls_key_file=/certs/tls.key`
+   *
+   * @default undefined (no STARTTLS on port 25)
+   */
+  readonly smtpStarttlsSecretName?: string;
+
+  /**
    * Forward PROXY protocol v2 from Traefik to the mailu-front service for
    * SMTPS (465), Submission (587), IMAPS (993) and POP3S (995).
    *
