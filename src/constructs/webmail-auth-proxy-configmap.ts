@@ -82,6 +82,15 @@ http {
 
         # Static assets bypass - no authentication required
         # These paths contain CSS, JS, images that must load for the login page to display
+        # Bare /webmail must gain a trailing slash BEFORE hitting the proxy:
+        # Roundcube answers with relative Location headers (e.g. "index.php"),
+        # which the browser resolves against the current path — at /webmail
+        # that yields /index.php (unrouted, 404) and CSS-less pages.
+        # Exact-match location wins over the regex locations below.
+        location = /webmail {
+            return 301 /webmail/;
+        }
+
         # Note: paths come in with /webmail prefix from ingress, strip it when proxying
         location ~ ^/webmail/(skins|program/js|plugins)/ {
             # Rewrite to strip /webmail prefix - webmail serves assets at root paths
