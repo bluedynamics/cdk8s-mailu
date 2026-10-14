@@ -1,5 +1,7 @@
 # cdk8s-mailu
 
+[![npm](https://img.shields.io/npm/v/@bluedynamics/cdk8s-mailu)](https://www.npmjs.com/package/@bluedynamics/cdk8s-mailu)
+
 <table style="width: 100%; border: none;">
 <tr>
 <td style="border: none;">
