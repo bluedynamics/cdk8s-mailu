@@ -244,7 +244,7 @@ This document explains what each component stores, sizing recommendations, and s
 Storage is configured in the `MailuChartConfig.storage` section:
 
 ```typescript
-import { MailuChart } from '@example/cdk8s-mailu';
+import { MailuChart } from '@bluedynamics/cdk8s-mailu';
 
 new MailuChart(app, 'mailu', {
   // ... other config

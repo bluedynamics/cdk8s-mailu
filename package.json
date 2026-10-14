@@ -1,8 +1,8 @@
 {
-  "name": "cdk8s-mailu",
+  "name": "@bluedynamics/cdk8s-mailu",
   "repository": {
     "type": "git",
-    "url": "https://git.bluedynamics.eu/kup6s/workspace-kup6s.git"
+    "url": "https://github.com/bluedynamics/cdk8s-mailu.git"
   },
   "scripts": {
     "build": "npx projen build",

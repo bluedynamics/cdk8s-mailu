@@ -50,7 +50,7 @@ Before configuring TLS, ensure you have:
 
 ```typescript
 import { App } from 'cdk8s';
-import { MailuChart } from 'cdk8s-mailu';
+import { MailuChart } from '@bluedynamics/cdk8s-mailu';
 
 const app = new App();
 
@@ -82,7 +82,7 @@ Add the `ingress` configuration to your MailuChart:
 
 ```typescript
 import { App } from 'cdk8s';
-import { MailuChart } from 'cdk8s-mailu';
+import { MailuChart } from '@bluedynamics/cdk8s-mailu';
 
 const app = new App();
 

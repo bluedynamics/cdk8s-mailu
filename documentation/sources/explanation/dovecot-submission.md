@@ -224,7 +224,7 @@ This replaces the hardcoded `FRONT_ADDRESS:10025` reference with the dynamically
 
 ```typescript
 import { App } from 'cdk8s';
-import { MailuChart } from 'cdk8s-mailu';
+import { MailuChart } from '@bluedynamics/cdk8s-mailu';
 
 const app = new App();
 
