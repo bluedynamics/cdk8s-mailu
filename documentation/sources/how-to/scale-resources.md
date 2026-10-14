@@ -24,7 +24,7 @@ Adjust resources for a specific component (e.g., Dovecot for high IMAP load):
 
 ```typescript
 import { App } from 'cdk8s';
-import { MailuChart } from 'cdk8s-mailu';
+import { MailuChart } from '@bluedynamics/cdk8s-mailu';
 
 const app = new App();
 

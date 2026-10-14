@@ -1,16 +1,23 @@
 import { typescript, github } from 'projen';
+import { NpmAccess } from 'projen/lib/javascript';
 
 const project = new typescript.TypeScriptProject({
-  name: 'cdk8s-mailu',
+  name: '@bluedynamics/cdk8s-mailu',
   defaultReleaseBranch: 'main',
   projenrcTs: true,
 
   // Package metadata
-  packageName: 'cdk8s-mailu',
+  packageName: '@bluedynamics/cdk8s-mailu',
   authorName: 'KUP6S Team',
   authorEmail: 'team@kup6s.com',
-  repository: 'https://git.bluedynamics.eu/kup6s/workspace-kup6s.git',
+  repository: 'https://github.com/bluedynamics/cdk8s-mailu.git',
   license: 'Apache-2.0',
+
+  // Publish to npm via OIDC trusted publishing (same setup as @bluedynamics/cdk8s-monitoring)
+  npmAccess: NpmAccess.PUBLIC,
+  releaseToNpm: true,
+  npmProvenance: true,
+  npmTrustedPublishing: true,
 
   // CDK8S Dependencies
   peerDeps: [

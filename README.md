@@ -33,9 +33,9 @@
 ## Installation
 
 ```bash
-npm install cdk8s-mailu
+npm install @bluedynamics/cdk8s-mailu
 # or
-yarn add cdk8s-mailu
+yarn add @bluedynamics/cdk8s-mailu
 ```
 
 **Prerequisites**: Kubernetes 1.28+, PostgreSQL, Redis, Node.js 18+
@@ -48,7 +48,7 @@ Create `mailu.ts`:
 
 ```typescript
 import { App } from 'cdk8s';
-import { MailuChart } from 'cdk8s-mailu';
+import { MailuChart } from '@bluedynamics/cdk8s-mailu';
 
 const app = new App();
 

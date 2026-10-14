@@ -13,7 +13,7 @@ The MailuChart accepts a comprehensive configuration object that controls all as
 ## Basic Configuration
 
 ```typescript
-import { MailuChart } from 'cdk8s-mailu';
+import { MailuChart } from '@bluedynamics/cdk8s-mailu';
 
 new MailuChart(app, 'mailu', {
   namespace: 'mailu',

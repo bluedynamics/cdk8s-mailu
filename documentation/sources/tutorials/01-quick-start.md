@@ -39,7 +39,7 @@ cdk8s init typescript-app
 ## Step 2: Install cdk8s-mailu
 
 ```bash
-npm install cdk8s-mailu
+npm install @bluedynamics/cdk8s-mailu
 ```
 
 ## Step 3: Create your Mailu chart
@@ -48,7 +48,7 @@ Replace the contents of `main.ts` with a basic Mailu configuration:
 
 ```typescript
 import { App } from 'cdk8s';
-import { MailuChart } from 'cdk8s-mailu';
+import { MailuChart } from '@bluedynamics/cdk8s-mailu';
 
 const app = new App();
 

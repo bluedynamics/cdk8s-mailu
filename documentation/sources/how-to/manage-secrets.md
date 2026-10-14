@@ -209,7 +209,7 @@ After creating secrets, reference them in your `MailuChart`:
 
 ```typescript
 import { App } from 'cdk8s';
-import { MailuChart } from 'cdk8s-mailu';
+import { MailuChart } from '@bluedynamics/cdk8s-mailu';
 
 const app = new App();
 
