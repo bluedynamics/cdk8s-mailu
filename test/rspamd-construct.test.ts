@@ -224,9 +224,31 @@ describe('RspamdConstruct', () => {
 
     // Should contain all override files
     expect(overridesCm.data['actions.conf']).toBeDefined();
-    expect(overridesCm.data['classifier-bayes.conf']).toBeDefined();
-    expect(overridesCm.data['fuzzy_check.conf']).toBeDefined();
     expect(overridesCm.data['rbl.conf']).toBeDefined();
+    expect(overridesCm.data['groups.conf']).toBeDefined();
+    expect(overridesCm.data['metrics.conf']).toBeDefined();
+    expect(overridesCm.data['milter_headers.conf']).toBeDefined();
+  });
+
+  test('overrides ConfigMap does not override files Mailu merges with duplicate=merge', () => {
+    // Mailu includes /overrides/<file> into its own local.d/<file> with
+    // duplicate=merge. Repeating a scalar key turns it into an array:
+    // autolearn thresholds became [6, 5] and crashed lua_bayes_learn.lua,
+    // a second rspamd.com fuzzy rule caused a duplicate symbol.
+    new RspamdConstruct(chart, 'rspamd', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const configMaps = manifests.filter((m: any) => m.kind === 'ConfigMap');
+    const overridesCm = configMaps.find(
+      (cm: any) => cm.data?.['actions.conf'] !== undefined,
+    );
+
+    expect(overridesCm.data['classifier-bayes.conf']).toBeUndefined();
+    expect(overridesCm.data['fuzzy_check.conf']).toBeUndefined();
   });
 
   test('overrides ConfigMap contains stricter thresholds', () => {
@@ -248,7 +270,9 @@ describe('RspamdConstruct', () => {
     expect(overridesCm.data['actions.conf']).toContain('greylist = 3');
   });
 
-  test('overrides ConfigMap contains remote fuzzy server configuration', () => {
+  test('overrides ConfigMap restores scores of the rspamd.com fuzzy symbols', () => {
+    // Mailu's local.d/metrics.conf replaces the stock "fuzzy" group with
+    // LOCAL_FUZZY_* only, which leaves FUZZY_DENIED & co. at score 0.
     new RspamdConstruct(chart, 'rspamd', {
       config,
       namespace,
@@ -258,15 +282,17 @@ describe('RspamdConstruct', () => {
     const manifests = Testing.synth(chart);
     const configMaps = manifests.filter((m: any) => m.kind === 'ConfigMap');
     const overridesCm = configMaps.find(
-      (cm: any) => cm.data?.['fuzzy_check.conf'] !== undefined,
+      (cm: any) => cm.data?.['metrics.conf'] !== undefined,
     );
 
-    // Remote rspamd.com fuzzy servers
-    expect(overridesCm.data['fuzzy_check.conf']).toContain('fuzzy1.rspamd.com');
-    expect(overridesCm.data['fuzzy_check.conf']).toContain('fuzzy2.rspamd.com');
+    const metrics = overridesCm.data['metrics.conf'];
+    expect(metrics).toContain('group "fuzzy"');
+    expect(metrics).toMatch(/symbol "FUZZY_DENIED" \{ weight = 12\.0;/);
+    expect(metrics).toMatch(/symbol "FUZZY_PROB" \{ weight = 5\.0;/);
+    expect(metrics).toMatch(/symbol "FUZZY_WHITE" \{ weight = -2\.1;/);
   });
 
-  test('overrides ConfigMap contains RBL configuration', () => {
+  test('overrides ConfigMap adds only RBLs that rspamd does not ship, with a score', () => {
     new RspamdConstruct(chart, 'rspamd', {
       config,
       namespace,
@@ -279,12 +305,27 @@ describe('RspamdConstruct', () => {
       (cm: any) => cm.data?.['rbl.conf'] !== undefined,
     );
 
-    // Spamhaus ZEN and DBL
-    expect(overridesCm.data['rbl.conf']).toContain('zen.spamhaus.org');
-    expect(overridesCm.data['rbl.conf']).toContain('dbl.spamhaus.org');
-    // Barracuda and Spamcop
+    // Spamhaus ZEN/DBL are rspamd defaults; duplicates only added 0-score symbols
+    expect(overridesCm.data['rbl.conf']).not.toContain('spamhaus.org');
     expect(overridesCm.data['rbl.conf']).toContain('b.barracudacentral.org');
-    expect(overridesCm.data['rbl.conf']).toContain('bl.spamcop.net');
+    // rbl rules register their symbols with score 0, the score lives in groups
+    expect(overridesCm.data['groups.conf']).toMatch(/"RBL_BARRACUDA" \{ weight = 2\.0;/);
+  });
+
+  test('overrides ConfigMap adds X-Spamd-Result header for diagnosis', () => {
+    new RspamdConstruct(chart, 'rspamd', {
+      config,
+      namespace,
+      sharedConfigMap,
+    });
+
+    const manifests = Testing.synth(chart);
+    const configMaps = manifests.filter((m: any) => m.kind === 'ConfigMap');
+    const overridesCm = configMaps.find(
+      (cm: any) => cm.data?.['milter_headers.conf'] !== undefined,
+    );
+
+    expect(overridesCm.data['milter_headers.conf']).toContain('use = ["x-spamd-result"];');
   });
 
   test('mounts overrides ConfigMap to rspamd container', () => {

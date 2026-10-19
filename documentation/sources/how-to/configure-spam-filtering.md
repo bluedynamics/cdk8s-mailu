@@ -33,7 +33,6 @@ graph LR
     C -->|DNS queries| D[Unbound Sidecar]
     D -->|recursive| E[Spamhaus]
     D -->|recursive| F[Barracuda]
-    D -->|recursive| G[Spamcop]
     D -->|forward| H[kube-dns]
     H -->|.cluster.local| I[K8s Services]
 ```
@@ -67,25 +66,32 @@ add_header = 5  # Add X-Spam header at score >= 5 (default: 6)
 greylist = 3    # Greylist at score >= 3 (default: 4)
 ```
 
-### Bayes Auto-Learning (`classifier-bayes.conf`)
+### Additional RBL (`rbl.conf`, `groups.conf`)
 
+Adds the Barracuda RBL as `RBL_BARRACUDA` with a score of 2.0.
+Spamhaus ZEN and DBL and the other rspamd default RBLs stay active without an override.
+
+### Fuzzy scores (`metrics.conf`)
+
+Restores the scores of the rspamd.com fuzzy symbols (`FUZZY_DENIED` 12, `FUZZY_PROB` 5, `FUZZY_WHITE` -2.1), which Mailu's own `metrics.conf` drops.
+
+### Spam diagnosis header (`milter_headers.conf`)
+
+Adds `X-Spamd-Result` to every scanned message.
+Read it in the headers of a missed spam message to see which symbols fired.
+
+### Bayes learning
+
+The Bayes classifier uses Mailu's defaults.
+It stores its data in Redis, so give Redis persistent storage.
+Bayes adds no score until it has learned 200 spam and 200 ham messages.
+Moving a message into the Junk folder learns it as spam.
+
+```{warning}
+Do not add a `classifier-bayes.conf` or `fuzzy_check.conf` override.
+Mailu merges these with its own files, turns repeated keys into arrays, and breaks Bayes autolearning.
+See [Rspamd Architecture](../explanation/rspamd-architecture.md) for details.
 ```
-autolearn {
-  spam_threshold = 5.0   # Learn as spam at score >= 5 (default: 6)
-  ham_threshold = -1.0   # Learn as ham at score <= -1 (default: -0.5)
-}
-```
-
-### Remote Fuzzy Servers (`fuzzy_check.conf`)
-
-Checks incoming mail hashes against rspamd.com's global fuzzy database of known spam.
-
-### RBL Blocklists (`rbl.conf`)
-
-- **Spamhaus ZEN** (SBL + XBL + PBL) - IP-based blocklist
-- **Spamhaus DBL** - Domain-based blocklist (DKIM, URLs, emails)
-- **Barracuda RBL** - IP-based blocklist
-- **Spamcop** - IP-based blocklist
 
 ## Troubleshooting
 
