@@ -61,7 +61,11 @@ password = "mailu";
       },
     });
 
-    // Create ConfigMap for rspamd configuration overrides (spam filter improvements)
+    // Create ConfigMap for rspamd configuration overrides (spam filter improvements).
+    // Mailu's start.py copies an override into local.d only if Mailu ships no file
+    // of that name; otherwise Mailu's local.d/<file> includes /overrides/<file> with
+    // duplicate=merge, which turns repeated scalar keys into arrays. Never override
+    // a key Mailu already sets (e.g. classifier-bayes.conf autolearn thresholds).
     this.overridesConfigMap = new kplus.ConfigMap(this, 'overrides-config', {
       metadata: {
         namespace: namespace.name,
@@ -72,69 +76,35 @@ reject = 12;
 add_header = 5;
 greylist = 3;
 `,
-        'classifier-bayes.conf': `# Optimized Bayes auto-learning
-autolearn {
-  spam_threshold = 5.0;
-  ham_threshold = -1.0;
-  check_balance = true;
-  min_balance = 0.9;
-}
-`,
-        'fuzzy_check.conf': `# Remote rspamd.com fuzzy servers for known spam detection
-rule "rspamd.com" {
-    algorithm = "mumhash";
-    servers = "round-robin:fuzzy1.rspamd.com:11335,fuzzy2.rspamd.com:11335";
-    encryption_key = "icy63itbhhni8bq15ntp5n5symuixf73s1kpjh6skaq4e7nx5fiy";
-    symbol = "FUZZY_RSPAMD_DENIED";
-    read_only = yes;
-    fuzzy_map = {
-        FUZZY_RSPAMD_DENIED {
-            flag = 1;
-        }
-    }
-}
-`,
-        'rbl.conf': `# DNS-based Real-time Blackhole Lists
+        'rbl.conf': `# Additional DNS blocklists (Spamhaus ZEN/DBL etc. are rspamd defaults)
 # Requires Unbound DNS sidecar for recursive resolution
 rbls {
-  "spamhaus_zen" {
-    symbol = "RBL_SPAMHAUS_ZEN";
-    rbl = "zen.spamhaus.org";
-    ipv4 = true;
-    ipv6 = true;
-    returncodes {
-      SPAMHAUS_SBL = "127.0.0.2";
-      SPAMHAUS_CSS = "127.0.0.3";
-      SPAMHAUS_XBL = "127.0.0.4";
-      SPAMHAUS_XBL_2 = "127.0.0.5";
-      SPAMHAUS_PBL = "127.0.0.10";
-      SPAMHAUS_PBL_2 = "127.0.0.11";
-    }
-  }
-  "spamhaus_dbl" {
-    symbol = "RBL_SPAMHAUS_DBL";
-    rbl = "dbl.spamhaus.org";
-    dkim = true;
-    emails = true;
-    urls = true;
-    returncodes {
-      SPAMHAUS_DBL_SPAM = "127.0.1.2";
-      SPAMHAUS_DBL_PHISH = "127.0.1.4";
-      SPAMHAUS_DBL_MALWARE = "127.0.1.5";
-      SPAMHAUS_DBL_ABUSE = "127.0.1.102";
-    }
-  }
   "barracuda" {
     symbol = "RBL_BARRACUDA";
     rbl = "b.barracudacentral.org";
     ipv4 = true;
-  }
-  "spamcop" {
-    symbol = "RBL_SPAMCOP";
-    rbl = "bl.spamcop.net";
-    ipv4 = true;
+    checks = ["from"];
   }
 }
+`,
+        'groups.conf': `# Scores for symbols added in rbl.conf (rbl rules register them with score 0)
+group "rbl" {
+  symbols {
+    "RBL_BARRACUDA" { weight = 2.0; description = "Sending IP is listed in Barracuda RBL"; }
+  }
+}
+`,
+        'metrics.conf': `# Mailu's metrics.conf replaces the stock "fuzzy" group, dropping the
+# rspamd.com fuzzy symbols to score 0; restore the stock weights
+group "fuzzy" {
+    symbol "FUZZY_UNKNOWN" { weight = 5.0; description = "Generic fuzzy hash match, bl.rspamd.com"; }
+    symbol "FUZZY_DENIED" { weight = 12.0; description = "Denied fuzzy hash, bl.rspamd.com"; }
+    symbol "FUZZY_PROB" { weight = 5.0; description = "Probable fuzzy hash, bl.rspamd.com"; }
+    symbol "FUZZY_WHITE" { weight = -2.1; description = "Whitelisted fuzzy hash, bl.rspamd.com"; }
+}
+`,
+        'milter_headers.conf': `# Show which symbols fired, to diagnose missed spam from the message itself
+use = ["x-spamd-result"];
 `,
       },
     });

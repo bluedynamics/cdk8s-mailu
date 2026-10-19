@@ -30,25 +30,43 @@ Rspamd uses multiple detection methods in parallel:
 
 RBL providers maintain lists of known spam-sending IP addresses and domains. Rspamd queries these via DNS. A positive response (e.g. `127.0.0.2` from Spamhaus) adds score to the message.
 
-**Configured RBLs:**
-- Spamhaus ZEN (SBL + XBL + PBL)
-- Spamhaus DBL (domain-based)
-- Barracuda RBL
-- Spamcop
+rspamd ships a set of RBLs and enables them by default, among them Spamhaus ZEN and DBL, SURBL, URIBL, Mailspike, SenderScore, and DNSWL.
+cdk8s-mailu adds only the Barracuda RBL on top.
+Redefining a list that rspamd already ships does not strengthen it.
+It registers a second set of symbols that carry no score, because rspamd takes RBL scores from its symbol groups, not from the rule.
 
 ### 2. Bayesian Classification
 
 Statistical analysis of message content. Rspamd learns from previous spam and ham (legitimate mail) to classify new messages.
 
 - **Auto-learning**: Messages above spam threshold are automatically learned as spam, below ham threshold as ham
-- **Storage**: Bayes database persisted in `/var/lib/rspamd` PVC
+- **Manual learning**: Dovecot learns a message as spam when a user moves it into the Junk folder, and as ham when it moves out again
+- **Storage**: Mailu stores Bayes tokens in Redis, not on the rspamd PVC, so Redis needs persistent storage
+- **Activation**: Bayes adds no score until it has learned at least 200 spam and 200 ham messages
 
 ### 3. Fuzzy Hashing
 
 Compares message content hashes against databases of known spam:
 
-- **Local fuzzy storage**: Learns from locally identified spam (port 11333)
+- **Local fuzzy storage**: Learns from locally identified spam (fuzzy worker on port 11335, stored in Redis)
 - **Remote fuzzy servers**: rspamd.com maintains a global fuzzy database with known spam hashes
+
+## Why some overrides would break Mailu's configuration
+
+Mailu's rspamd image starts with its own files in `local.d/`.
+For an override file in `/overrides/`, Mailu does one of two things:
+
+- If Mailu ships no file of that name, it copies the override into `local.d/` as is.
+- If Mailu ships a file of that name, Mailu's file includes the override with `duplicate=merge`.
+
+The merge mode adds values rather than replacing them.
+A key that both files set becomes an array.
+Overriding the Bayes `autolearn` thresholds that way turned `spam_threshold` into `[6, 5]`, and rspamd's autolearn script then failed on every message, so Bayes never learned anything.
+For that reason cdk8s-mailu overrides only keys that Mailu does not set.
+
+Mailu's own `metrics.conf` defines the `fuzzy` symbol group with its local fuzzy symbols only.
+That replaces the stock group, so the rspamd.com fuzzy symbols lose their scores.
+cdk8s-mailu restores those scores through a `metrics.conf` override.
 
 ### 4. Protocol Checks
 

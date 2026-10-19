@@ -255,16 +255,20 @@ Core components are always deployed and required for Mailu to function.
 - **CPU**: 10m request / 50m limit
 - **Memory**: 32Mi request / 64Mi limit
 - **Config Mount**: `/config/custom.conf` (via subPath from ConfigMap)
-- **Purpose**: Recursive DNS for RBL lookups (Spamhaus, Barracuda, Spamcop)
+- **Purpose**: Recursive DNS for RBL lookups (Spamhaus, Barracuda, and the other rspamd default RBLs)
 
 **Configuration Overrides** (mounted at `/overrides/`):
 
-| File | Purpose |
-|------|---------|
-| `actions.conf` | Scoring thresholds (reject=12, add_header=5, greylist=3) |
-| `classifier-bayes.conf` | Bayes auto-learning optimization |
-| `fuzzy_check.conf` | Remote rspamd.com fuzzy server |
-| `rbl.conf` | DNS-based blocklists (Spamhaus ZEN/DBL, Barracuda, Spamcop) |
+| File | Mailu handling | Purpose |
+|------|----------------|---------|
+| `actions.conf` | copied to `local.d/` | Scoring thresholds (reject=12, add_header=5, greylist=3) |
+| `rbl.conf` | copied to `local.d/` | Adds the Barracuda RBL (`RBL_BARRACUDA`) |
+| `groups.conf` | copied to `local.d/` | Score for `RBL_BARRACUDA` (2.0) |
+| `metrics.conf` | merged into Mailu's file | Restores scores of `FUZZY_DENIED` (12), `FUZZY_PROB` (5), `FUZZY_WHITE` (-2.1), `FUZZY_UNKNOWN` (5) |
+| `milter_headers.conf` | merged into Mailu's file | Adds the `X-Spamd-Result` header |
+
+Overrides that Mailu merges must not set keys that Mailu's file already sets, because merging turns them into arrays.
+Do not override `classifier-bayes.conf` or `fuzzy_check.conf`.
 
 **DNS Override** (`/conf/options.inc`):
 - Points rspamd DNS to Unbound sidecar at `127.0.0.1:53`
