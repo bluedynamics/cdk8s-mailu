@@ -80,8 +80,6 @@ http {
             proxy_set_header Cookie $http_cookie;
         }
 
-        # Static assets bypass - no authentication required
-        # These paths contain CSS, JS, images that must load for the login page to display
         # Bare /webmail must gain a trailing slash BEFORE hitting the proxy:
         # Roundcube answers with relative Location headers (e.g. "index.php"),
         # which the browser resolves against the current path — at /webmail
@@ -91,8 +89,15 @@ http {
             return 301 /webmail/;
         }
 
+        # Static assets, cached. They still need auth: the webmail container
+        # hands unknown paths to index.php and *.php (also with a trailing
+        # path) to PHP-FPM, so an unauthenticated route here would run PHP.
+        # Login happens in the Mailu SSO with its own assets, not in Roundcube.
         # Note: paths come in with /webmail prefix from ingress, strip it when proxying
         location ~ ^/webmail/(skins|program/js|plugins)/ {
+            auth_request /_auth;
+            error_page 401 403 = @login_redirect;
+
             # Rewrite to strip /webmail prefix - webmail serves assets at root paths
             rewrite ^/webmail/(.*) /$1 break;
 
