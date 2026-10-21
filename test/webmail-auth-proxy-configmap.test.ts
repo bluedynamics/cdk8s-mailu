@@ -37,4 +37,18 @@ describe('WebmailAuthProxyConfigMap', () => {
     expect(conf).toContain('auth_request /_auth;');
     expect(conf).toContain('proxy_pass http://webmail_backend');
   });
+
+  test('every location that reaches the webmail backend requires auth', () => {
+    // The webmail container hands unknown paths to index.php (try_files) and
+    // *.php to PHP-FPM, so any unauthenticated route to it executes PHP.
+    const conf = nginxConf();
+    const locations = conf.split(/\n\s*location /).slice(1);
+    const toWebmail = locations.filter((block) => block.includes('proxy_pass http://webmail_backend'));
+    expect(toWebmail.length).toBeGreaterThan(0);
+    for (const block of toWebmail) {
+      const header = block.split('\n')[0];
+      expect({ location: header, hasAuth: block.includes('auth_request /_auth;') })
+        .toEqual({ location: header, hasAuth: true });
+    }
+  });
 });
