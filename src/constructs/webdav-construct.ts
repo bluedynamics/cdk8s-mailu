@@ -2,12 +2,14 @@ import { Duration } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-33';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from '../config';
+import { applyPriorityClassName } from '../utils/priority-class';
 import { parseMemorySize, parseCpuMillis, parseStorageSize } from '../utils/resource-parser';
 
 export interface WebdavConstructProps {
   readonly config: MailuChartConfig;
   readonly namespace: kplus.Namespace;
   readonly sharedConfigMap: kplus.ConfigMap;
+  readonly priorityClassName?: string;
 }
 
 /**
@@ -67,6 +69,8 @@ export class WebdavConstruct extends Construct {
         ensureNonRoot: false,
       },
     });
+
+    applyPriorityClassName(this.deployment, props.priorityClassName);
 
     // Configure container
     const container = this.deployment.addContainer({

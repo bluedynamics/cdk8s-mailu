@@ -2,6 +2,7 @@ import { Duration } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-33';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from '../config';
+import { applyPriorityClassName } from '../utils/priority-class';
 import { parseMemorySize, parseCpuMillis, parseStorageSize } from '../utils/resource-parser';
 
 export interface WebmailConstructProps {
@@ -12,6 +13,7 @@ export interface WebmailConstructProps {
   readonly dovecotService?: kplus.Service; // Reference to dovecot (IMAP) service
   readonly postfixService?: kplus.Service; // Reference to postfix (SMTP) service
   readonly webmailPatchConfigMap?: kplus.ConfigMap; // Wrapper script for patching Roundcube config
+  readonly priorityClassName?: string;
 }
 
 /**
@@ -71,6 +73,8 @@ export class WebmailConstruct extends Construct {
         ensureNonRoot: false,
       },
     });
+
+    applyPriorityClassName(this.deployment, props.priorityClassName);
 
     // Prepare container configuration with optional command override
     const containerConfig: any = {

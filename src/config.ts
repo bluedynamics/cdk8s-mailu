@@ -305,6 +305,13 @@ export interface MailuConfig {
    * @default "roundcube"
    */
   readonly webmailType?: 'roundcube' | 'snappymail';
+
+  /**
+   * PriorityClass for every Mailu pod
+   * Name of an existing PriorityClass, set on the pod template of all workloads
+   * @default undefined (cluster default)
+   */
+  readonly priorityClassName?: string;
 }
 
 /**

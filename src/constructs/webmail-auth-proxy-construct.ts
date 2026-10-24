@@ -1,6 +1,7 @@
 import { Duration } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-33';
 import { Construct } from 'constructs';
+import { applyPriorityClassName } from '../utils/priority-class';
 import { parseMemorySize, parseCpuMillis } from '../utils/resource-parser';
 
 export interface WebmailAuthProxyConstructProps {
@@ -8,6 +9,7 @@ export interface WebmailAuthProxyConstructProps {
   readonly authProxyConfigMap: kplus.ConfigMap;
   readonly webmailServiceName: string;
   readonly adminServiceName: string;
+  readonly priorityClassName?: string;
 }
 
 /**
@@ -54,6 +56,8 @@ export class WebmailAuthProxyConstruct extends Construct {
         ensureNonRoot: true,
       },
     });
+
+    applyPriorityClassName(this.deployment, props.priorityClassName);
 
     // Configure container
     const container = this.deployment.addContainer({
