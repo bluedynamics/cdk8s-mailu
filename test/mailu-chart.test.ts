@@ -312,4 +312,55 @@ describe('MailuChart', () => {
       expect(adminDeployment).toBeUndefined();
     });
   });
+
+  describe('priorityClassName', () => {
+    // Every optional component plus the Traefik ingress (which adds the
+    // webmail-auth-proxy), so all eleven workloads are rendered
+    const allComponentsConfig: MailuChartConfig = {
+      ...validConfig,
+      components: { webmail: true, clamav: true, fetchmail: true, webdav: true },
+      ingress: { enabled: true, type: 'traefik', traefik: { hostname: 'mail.example.com' } },
+    };
+
+    const podTemplateSpec = (manifest: any): any => {
+      switch (manifest.kind) {
+        case 'Deployment':
+        case 'StatefulSet':
+        case 'DaemonSet':
+        case 'Job':
+          return manifest.spec?.template?.spec;
+        case 'CronJob':
+          return manifest.spec?.jobTemplate?.spec?.template?.spec;
+        default:
+          return undefined;
+      }
+    };
+
+    it('sets priorityClassName on every pod template when configured', () => {
+      const app = Testing.app();
+      const config = {
+        ...allComponentsConfig,
+        mailu: { priorityClassName: 'kup6s-high' },
+      };
+      const chart = new MailuChart(app, 'test', config);
+      const manifests = Testing.synth(chart);
+
+      const workloads = manifests.filter((m) => podTemplateSpec(m) !== undefined);
+      expect(workloads).toHaveLength(11);
+
+      const missing = workloads
+        .filter((m) => podTemplateSpec(m).priorityClassName !== 'kup6s-high')
+        .map((m) => `${m.kind}/${m.metadata?.name}`);
+      expect(missing).toEqual([]);
+    });
+
+    it('omits priorityClassName from every manifest when unset', () => {
+      const app = Testing.app();
+      const chart = new MailuChart(app, 'test', allComponentsConfig);
+      const manifests = Testing.synth(chart);
+
+      expect(manifests.filter((m) => podTemplateSpec(m) !== undefined)).toHaveLength(11);
+      expect(JSON.stringify(manifests)).not.toContain('priorityClassName');
+    });
+  });
 });

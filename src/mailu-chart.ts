@@ -205,6 +205,13 @@ export class MailuChart extends Chart {
   }
 
   /**
+   * PriorityClass for every Mailu pod (undefined = cluster default)
+   */
+  private get priorityClassName(): string | undefined {
+    return this.config.mailu?.priorityClassName;
+  }
+
+  /**
    * Creates shared ConfigMap with environment variables common to all components
    */
   private createSharedConfigMap(): kplus.ConfigMap {
@@ -298,6 +305,7 @@ export class MailuChart extends Chart {
     this.adminConstruct = new AdminConstruct(this, 'admin', {
       config: this.config,
       namespace: this.mailuNamespace,
+      priorityClassName: this.priorityClassName,
       sharedConfigMap: this.sharedConfigMap,
     });
   }
@@ -309,6 +317,7 @@ export class MailuChart extends Chart {
     this.frontConstruct = new FrontConstruct(this, 'front', {
       config: this.config,
       namespace: this.mailuNamespace,
+      priorityClassName: this.priorityClassName,
       sharedConfigMap: this.sharedConfigMap,
       nginxPatchConfigMap: this.nginxPatchConfigMap,
     });
@@ -321,6 +330,7 @@ export class MailuChart extends Chart {
     this.postfixConstruct = new PostfixConstruct(this, 'postfix', {
       config: this.config,
       namespace: this.mailuNamespace,
+      priorityClassName: this.priorityClassName,
       sharedConfigMap: this.sharedConfigMap,
     });
   }
@@ -332,6 +342,7 @@ export class MailuChart extends Chart {
     this.dovecotConstruct = new DovecotConstruct(this, 'dovecot', {
       config: this.config,
       namespace: this.mailuNamespace,
+      priorityClassName: this.priorityClassName,
       sharedConfigMap: this.sharedConfigMap,
     });
   }
@@ -343,6 +354,7 @@ export class MailuChart extends Chart {
     this.rspamdConstruct = new RspamdConstruct(this, 'rspamd', {
       config: this.config,
       namespace: this.mailuNamespace,
+      priorityClassName: this.priorityClassName,
       sharedConfigMap: this.sharedConfigMap,
     });
   }
@@ -357,6 +369,7 @@ export class MailuChart extends Chart {
     this.dovecotSubmissionConstruct = new DovecotSubmissionConstruct(this, 'dovecot-submission', {
       config: this.config,
       namespace: this.mailuNamespace,
+      priorityClassName: this.priorityClassName,
       postfixServiceName,
     });
   }
@@ -368,6 +381,7 @@ export class MailuChart extends Chart {
     this.webmailConstruct = new WebmailConstruct(this, 'webmail', {
       config: this.config,
       namespace: this.mailuNamespace,
+      priorityClassName: this.priorityClassName,
       sharedConfigMap: this.sharedConfigMap,
       frontService: this.frontConstruct?.service, // Pass front service for inter-component communication
       dovecotService: this.dovecotConstruct?.service, // Pass dovecot service for IMAP connection
@@ -383,6 +397,7 @@ export class MailuChart extends Chart {
     this.clamavConstruct = new ClamavConstruct(this, 'clamav', {
       config: this.config,
       namespace: this.mailuNamespace,
+      priorityClassName: this.priorityClassName,
       sharedConfigMap: this.sharedConfigMap,
     });
   }
@@ -394,6 +409,7 @@ export class MailuChart extends Chart {
     this.fetchmailConstruct = new FetchmailConstruct(this, 'fetchmail', {
       config: this.config,
       namespace: this.mailuNamespace,
+      priorityClassName: this.priorityClassName,
       sharedConfigMap: this.sharedConfigMap,
     });
   }
@@ -405,6 +421,7 @@ export class MailuChart extends Chart {
     this.webdavConstruct = new WebdavConstruct(this, 'webdav', {
       config: this.config,
       namespace: this.mailuNamespace,
+      priorityClassName: this.priorityClassName,
       sharedConfigMap: this.sharedConfigMap,
     });
   }
@@ -448,6 +465,7 @@ export class MailuChart extends Chart {
 
     this.webmailAuthProxyConstruct = new WebmailAuthProxyConstruct(this, 'webmail-auth-proxy', {
       namespace: this.mailuNamespace,
+      priorityClassName: this.priorityClassName,
       authProxyConfigMap: authProxyConfigMapConstruct.configMap,
       webmailServiceName: `${this.webmailConstruct.service.name}.${this.config.namespace}.svc.cluster.local`,
       adminServiceName: `${this.adminConstruct.service.name}.${this.config.namespace}.svc.cluster.local`,

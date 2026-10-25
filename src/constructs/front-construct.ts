@@ -2,6 +2,7 @@ import { Duration } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-33';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from '../config';
+import { applyPriorityClassName } from '../utils/priority-class';
 import { parseMemorySize, parseCpuMillis } from '../utils/resource-parser';
 
 export interface FrontConstructProps {
@@ -9,6 +10,7 @@ export interface FrontConstructProps {
   readonly namespace: kplus.Namespace;
   readonly sharedConfigMap: kplus.ConfigMap;
   readonly nginxPatchConfigMap?: kplus.ConfigMap;
+  readonly priorityClassName?: string;
 }
 
 /**
@@ -59,6 +61,8 @@ export class FrontConstruct extends Construct {
         ensureNonRoot: false,
       },
     });
+
+    applyPriorityClassName(this.deployment, props.priorityClassName);
 
     // Prepare container configuration with optional command override
     const containerConfig: any = {

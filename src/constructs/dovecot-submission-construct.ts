@@ -2,12 +2,14 @@ import { Duration, JsonPatch } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-33';
 import { Construct } from 'constructs';
 import { MailuChartConfig } from '../config';
+import { applyPriorityClassName } from '../utils/priority-class';
 import { parseMemorySize, parseCpuMillis } from '../utils/resource-parser';
 
 export interface DovecotSubmissionConstructProps {
   readonly config: MailuChartConfig;
   readonly namespace: kplus.Namespace;
   readonly postfixServiceName: string; // Full DNS name of postfix service
+  readonly priorityClassName?: string;
 }
 
 /**
@@ -56,6 +58,7 @@ export class DovecotSubmissionConstruct extends Construct {
       },
     });
 
+    applyPriorityClassName(this.deployment, props.priorityClassName);
 
     // Configure container with official dovecot image
     const container = this.deployment.addContainer({

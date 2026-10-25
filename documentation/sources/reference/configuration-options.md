@@ -169,6 +169,23 @@ The `MailuConfig` interface defines all configuration options for deploying Mail
 
 **`namespaceSeparator`**: IMAP namespace hierarchy separator. Set to `'/'` for Apple Mail compatibility. See [Configure Apple Mail Compatibility](../how-to/configure-apple-mail.md) for details and important warnings.
 
+### Scheduling Configuration
+
+#### mailu.priorityClassName
+- **Type:** `string`
+- **Default:** `undefined` (the cluster's default PriorityClass)
+- **Description:** Name of an existing Kubernetes [PriorityClass](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/), set on the pod template of every Mailu workload: admin, front, postfix, dovecot, dovecot-submission, rspamd and, when enabled, webmail, clamav, fetchmail, webdav and the webmail auth proxy. Use it to schedule the mail server ahead of, and evict it after, lower-priority workloads under node pressure.
+
+```typescript
+{
+  mailu: {
+    priorityClassName: 'high-priority',
+  },
+}
+```
+
+The PriorityClass is not created by the chart; it must already exist in the cluster.
+
 ### Additional Configuration
 
 *[Content placeholder for docwriter]*
