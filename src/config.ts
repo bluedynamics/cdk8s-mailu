@@ -393,7 +393,7 @@ export interface TraefikIngressConfig {
 
   /**
    * Forward PROXY protocol v2 from Traefik to the mailu-front service for
-   * SMTPS (465), Submission (587), IMAPS (993) and POP3S (995).
+   * SMTPS (465), IMAPS (993) and POP3S (995).
    *
    * When `false`, every TCP connection arrives at nginx with Traefik's pod IP
    * as `$remote_addr`. Mailu's per-IP auth rate-limit (`AUTH_RATELIMIT_IP`)

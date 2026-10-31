@@ -36,9 +36,9 @@ describe('TraefikIngressConstruct', () => {
       manifests.find(m => m.kind === 'IngressRouteTCP' && m.metadata?.name === name);
 
     return {
+      tcpRoutes: manifests.filter(m => m.kind === 'IngressRouteTCP'),
       smtp: byName('mailu-smtp'),
       smtps: byName('mailu-smtps'),
-      submission: byName('mailu-submission'),
       imaps: byName('mailu-imaps'),
       pop3s: byName('mailu-pop3s'),
     };
@@ -56,18 +56,25 @@ describe('TraefikIngressConstruct', () => {
     }
   });
 
-  test('default: front-bound routes (465/587/993/995) have NO proxyProtocol', () => {
-    const { smtps, submission, imaps, pop3s } = synthRoutes({});
+  test('no submission route on 587 (front offers no STARTTLS there)', () => {
+    const { tcpRoutes } = synthRoutes({});
 
-    for (const route of [smtps, submission, imaps, pop3s]) {
+    expect(tcpRoutes.map(r => r.metadata.name)).not.toContain('mailu-submission');
+    expect(tcpRoutes.flatMap(r => r.spec.entryPoints)).not.toContain('smtp-submission');
+  });
+
+  test('default: front-bound routes (465/993/995) have NO proxyProtocol', () => {
+    const { smtps, imaps, pop3s } = synthRoutes({});
+
+    for (const route of [smtps, imaps, pop3s]) {
       expect(serviceOf(route)).not.toHaveProperty('proxyProtocol');
     }
   });
 
-  test('proxyProtocolToFront: true → all four front routes get PROXY v2', () => {
-    const { smtps, submission, imaps, pop3s } = synthRoutes({ proxyProtocolToFront: true });
+  test('proxyProtocolToFront: true → all three front routes get PROXY v2', () => {
+    const { smtps, imaps, pop3s } = synthRoutes({ proxyProtocolToFront: true });
 
-    for (const route of [smtps, submission, imaps, pop3s]) {
+    for (const route of [smtps, imaps, pop3s]) {
       expect(serviceOf(route).proxyProtocol).toEqual({ version: 2 });
     }
   });
@@ -78,7 +85,7 @@ describe('TraefikIngressConstruct', () => {
     chart = Testing.chart();
     const explicitFalseRoutes = synthRoutes({ proxyProtocolToFront: false });
 
-    for (const port of ['smtps', 'submission', 'imaps', 'pop3s'] as const) {
+    for (const port of ['smtps', 'imaps', 'pop3s'] as const) {
       expect(serviceOf(explicitFalseRoutes[port])).toEqual(serviceOf(defaultRoutes[port]));
     }
   });

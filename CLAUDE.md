@@ -120,7 +120,7 @@ this.sharedConfigMap.addData('ADMIN_ADDRESS',
 **Critical Design**: Webmail email sending uses a dedicated Dovecot submission service (not the main Dovecot IMAP service) to enable token-based authentication without password entry.
 
 **Architecture**:
-- Webmail → Dovecot Submission (port 587, token auth) → Postfix (port 25, relay)
+- Webmail → Dovecot Submission (port 10025, token auth) → Postfix (port 25, relay)
 - `DovecotSubmissionConstruct` creates a separate StatefulSet
 - Webmail environment variable `SUBMISSION_ADDRESS` points to this service
 - See [documentation/sources/explanation/dovecot-submission.md](documentation/sources/explanation/dovecot-submission.md) for details
@@ -189,11 +189,11 @@ make clean         # Clean generated files
 
 **Implementation**:
 - Web traffic: HTTP on port 80 (Traefik Ingress → HTTPS)
-- Mail protocols: Wrapper script patches nginx config to add plaintext listeners on ports 465, 587, 993, 995
+- Mail protocols: Wrapper script patches nginx config to add plaintext listeners on ports 465, 993, 995 (no 587: Traefik cannot terminate STARTTLS, so a plain 587 listener would offer AUTH without TLS)
 - Patch script: [src/constructs/nginx-patch-configmap.ts](src/constructs/nginx-patch-configmap.ts)
 - Traefik IngressRouteTCP handles TLS for mail protocols
 
-**CRITICAL**: The nginx patch is required because Mailu's TLS_FLAVOR=notls only supports web traffic on port 80. Mail protocol ports (465, 587, 993, 995) must be explicitly patched.
+**CRITICAL**: The nginx patch is required because Mailu's TLS_FLAVOR=notls only supports web traffic on port 80. Mail protocol ports (465, 993, 995) must be explicitly patched.
 
 ### Webmail Backend Connection
 

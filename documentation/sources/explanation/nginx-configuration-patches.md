@@ -6,7 +6,7 @@
 
 When using `TLS_FLAVOR=notls` with Traefik TLS termination, the Front nginx container requires configuration patches to:
 
-1. Add mail protocol listeners for ports 587, 465, 993, 995
+1. Add mail protocol listeners for ports 465, 993, 995
 2. Configure auth_http to use Admin service instead of localhost
 
 This document explains the patching mechanism and what changes are applied.
@@ -19,7 +19,7 @@ This document explains the patching mechanism and what changes are applied.
 
 **Mailu's Default Behavior**:
 - `TLS_FLAVOR=notls` only configures HTTP on port 80
-- Mail protocol ports (587, 465, 993, 995) are NOT created
+- Mail protocol ports (465, 993, 995) are NOT created
 - Assumes TLS handled internally or not needed
 - auth_http points to localhost:8000 (doesn't work in Kubernetes multi-pod architecture)
 
@@ -106,20 +106,11 @@ auth_http http://admin-service.mailu.svc.cluster.local:8080/internal/auth/email;
 
 #### Patch 2: Inject Mail Protocol Listeners
 
-**Problem**: TLS_FLAVOR=notls doesn't create listeners for 587, 465, 993, 995
+**Problem**: TLS_FLAVOR=notls doesn't create listeners for 465, 993, 995
 
-**Patch**: Inserts four server blocks into `mail{}` section after port 25 block:
+**Patch**: Inserts three server blocks into `mail{}` section after port 25 block:
 
 ```nginx
-# Submission (port 587) for Traefik TLS termination
-server {
-  listen 587;
-  protocol smtp;
-  smtp_auth plain;
-  auth_http_header Auth-Port 587;
-  auth_http_header Client-Port $remote_port;
-}
-
 # SMTPS (port 465) for Traefik TLS termination
 server {
   listen 465;
@@ -153,6 +144,13 @@ server {
 - `smtp_auth plain` / `imap_auth plain` / `pop3_auth plain`: Enable PLAIN authentication
 - `auth_http_header Auth-Port`: Tells Admin which port client connected to
 - `auth_http_header Client-Port`: Passes client's source port for logging
+- With `proxyProtocolToFront: true`, each `listen` directive carries the `proxy_protocol` keyword, and the marker comment ends with ` [proxy_protocol]`
+
+**Why there is no port 587**:
+Traefik cannot terminate STARTTLS for SMTP, so a port 587 route could only pass the connection through to nginx unchanged.
+Under `TLS_FLAVOR=notls`, a plain 587 listener would offer `AUTH PLAIN` without `STARTTLS` and expose credentials in cleartext.
+Mail clients submit mail on port 465 with implicit TLS instead, as recommended by RFC 8314.
+Offering 587 would require STARTTLS inside the Front pod, with the certificate mounted, `starttls only`, and an nginx reload on certificate renewal.
 
 **Authentication Flow**:
 1. Client sends credentials (username/password)
@@ -164,7 +162,8 @@ server {
 
 ```bash
 # Verify patches were applied
-if ! grep -q "# Submission (port 587) for Traefik TLS termination" "$NGINX_CONF"; then
+# The marker ends with " [proxy_protocol]" when proxyProtocolToFront is enabled
+if ! grep -qF "# SMTPS (port 465) for Traefik TLS termination" "$NGINX_CONF"; then
   echo "ERROR: Mail protocol patches not found in $NGINX_CONF"
   exit 1
 fi
@@ -176,7 +175,7 @@ exec /usr/sbin/nginx -g "daemon off;"
 ```
 
 **Verification checks**:
-- Mail protocol listeners added (ports 587, 465, 993, 995)
+- Mail protocol listeners added (ports 465, 993, 995)
 - Fails with error if patches not found
 
 **Failure handling**: Exit immediately if patches not applied (fail-fast approach)
@@ -194,7 +193,7 @@ mail {
         protocol smtp;
         auth_http http://127.0.0.1:8000/auth/email;  # Wrong: localhost
     }
-    # No 587, 465, 993, 995 listeners
+    # No 465, 993, 995 listeners
 }
 
 http {
@@ -215,14 +214,6 @@ mail {
         listen 25;
         protocol smtp;
         auth_http http://admin-service.mailu.svc.cluster.local:8080/internal/auth/email;  # Fixed
-    }
-
-    # NEW: Submission listener
-    server {
-        listen 587;
-        protocol smtp;
-        smtp_auth plain;
-        auth_http_header Auth-Port 587;
     }
 
     # NEW: SMTPS listener
@@ -275,9 +266,6 @@ spec:
   - name: smtps
     port: 465
     targetPort: 465
-  - name: submission
-    port: 587
-    targetPort: 587
   # TLS-terminated IMAP port
   - name: imaps
     port: 993
@@ -292,35 +280,16 @@ spec:
 - Port 25 (SMTP): Traefik routes directly to Postfix:25
 - Port 80/443 (HTTP/HTTPS): Traefik routes directly to Admin:8080 and Webmail:80
 - Port 143/110 (IMAP/POP3): Plaintext protocols disabled (use IMAPS/POP3S instead)
+- Port 587 (Submission): not offered, mail clients submit on port 465
 
 ### Traefik Configuration
 
 **Required Traefik EntryPoints** (configured in cluster infrastructure):
 - `smtps` (465) - SMTPS with TLS termination
-- `smtp-submission` (587) - Submission with TLS termination (or passthrough)
 - `imaps` (993) - IMAPS with TLS termination
 - `pop3s` (995) - POP3S with TLS termination
 
-**Example IngressRouteTCP** (created by TraefikIngressConstruct):
-
-```yaml
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRouteTCP
-metadata:
-  name: mailu-submission
-spec:
-  entryPoints:
-    - smtp-submission  # 587
-  routes:
-  - match: HostSNI(`*`)
-    services:
-    - name: front-service
-      port: 587
-  # Note: Submission (587) typically uses STARTTLS, not TLS wrapping
-  # So TLS section may be omitted (passthrough)
-```
-
-**Example with TLS termination** (SMTPS/IMAPS/POP3S):
+**Example IngressRouteTCP** (created by TraefikIngressConstruct for SMTPS, IMAPS, and POP3S):
 
 ```yaml
 apiVersion: traefik.containo.us/v1alpha1
@@ -342,9 +311,9 @@ spec:
 ```
 
 **Traffic Flow** (TLS-terminated mail protocols):
-1. Mail client connects to Traefik:465/587/993/995 with TLS
-2. Traefik terminates TLS (for 465/993/995; passthrough for 587)
-3. Traefik forwards plaintext to Front:465/587/993/995
+1. Mail client connects to Traefik:465/993/995 with TLS
+2. Traefik terminates TLS
+3. Traefik forwards plaintext to Front:465/993/995
 4. Front nginx receives on patched listener
 5. Front nginx authenticates via Admin service
 6. Front nginx proxies to backend (Postfix or Dovecot)
@@ -383,7 +352,7 @@ Wrapper script relies on these environment variables:
 
 ### Authentication Fails on Mail Protocols
 
-**Symptoms**: Mail clients get "Authentication failed" on ports 587/993/995
+**Symptoms**: Mail clients get "Authentication failed" on ports 465/993/995
 
 **Check**:
 1. Verify auth_http endpoint is correct:

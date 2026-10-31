@@ -20,7 +20,6 @@ Complete reference of all network ports used by Mailu components:
 | **Dovecot** | 2525 | LMTP | Mail delivery from Postfix | | ✓ |
 | **Dovecot-Sub** | 10025 | Submission | SMTP relay from webmail | | ✓ |
 | **Front** | 465 | Submission | SMTP submission (plaintext from Traefik) | ✓ | |
-| **Front** | 587 | Submission | SMTP submission (plaintext from Traefik) | ✓ | |
 | **Front** | 993 | IMAP | IMAP access (plaintext from Traefik) | ✓ | |
 | **Front** | 995 | POP3 | POP3 access (plaintext from Traefik) | ✓ | |
 | **Postfix** | 25 | SMTP | SMTP relay and MX reception | ✓ | |
@@ -36,7 +35,7 @@ Complete reference of all network ports used by Mailu components:
 - **Internal Only**: Used for inter-component communication only
 - **TLS_FLAVOR=notls Architecture** (used with Traefik ingress):
   - Traefik handles ALL TLS termination (HTTPS, SMTPS, IMAPS, POP3S)
-  - Front is ONLY used for authenticated mail protocols (587/465/993/995)
+  - Front is ONLY used for authenticated mail protocols (465/993/995)
   - Front receives **plaintext** traffic after Traefik decrypts
   - Front does NOT handle HTTP/HTTPS web traffic (Traefik routes directly to Admin/Webmail)
   - MX mail (port 25) routes directly to Postfix, bypassing Front
@@ -64,7 +63,7 @@ Core components are always deployed and required for Mailu to function.
 - `443/TCP` - HTTPS (Web UI, admin, webmail) - **UNUSED** with TLS_FLAVOR=notls
 - `25/TCP` - SMTP (mail submission) - **UNUSED** with TLS_FLAVOR=notls (Traefik routes MX mail to Postfix directly)
 - `465/TCP` - SMTPS (SMTP over TLS) - **USED** (mail client submission via auth_http, relays to Postfix; webmail uses separate dovecot-submission service)
-- `587/TCP` - Submission (mail submission with STARTTLS) - **USED** (mail client submission via auth_http, relays to Postfix; webmail uses separate dovecot-submission service)
+- `587/TCP` - Submission (mail submission with STARTTLS) - **NOT OFFERED** (Traefik cannot terminate STARTTLS for SMTP, and a plaintext listener would accept `AUTH PLAIN` without TLS; mail clients submit on 465)
 - `143/TCP` - IMAP (mail retrieval) - **UNUSED** with TLS_FLAVOR=notls
 - `993/TCP` - IMAPS (IMAP over TLS) - **USED** (mail client access via auth_http, relays to Dovecot)
 - `110/TCP` - POP3 (mail retrieval) - **UNUSED** with TLS_FLAVOR=notls
