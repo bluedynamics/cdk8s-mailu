@@ -72,7 +72,7 @@ export interface TraefikIngressConstructProps {
 
   /**
    * Forward PROXY protocol v2 from Traefik to the mailu-front service for
-   * SMTPS (465), Submission (587), IMAPS (993) and POP3S (995), so the
+   * SMTPS (465), IMAPS (993) and POP3S (995), so the
    * nginx mail{} listeners see the real client IP instead of Traefik's pod
    * IP. Required for Mailu's per-IP auth rate-limit to work as intended.
    *
@@ -579,30 +579,6 @@ export class TraefikIngressConstruct extends Construct {
         },
       });
       this.tcpRoutes.push(smtpsRoute);
-
-      // SMTP Submission (port 587) - SMTP with STARTTLS
-      const submissionRoute = new traefik.IngressRouteTcp(this, 'submission', {
-        metadata: {
-          name: 'mailu-submission',
-          namespace: props.namespace,
-        },
-        spec: {
-          entryPoints: ['smtp-submission'],
-          routes: [
-            {
-              match: 'HostSNI(`*`)',
-              services: [
-                {
-                  name: props.frontService.name,
-                  port: k8s.IntOrString.fromNumber(587),
-                  ...proxyProtocolV2,
-                },
-              ],
-            },
-          ],
-        },
-      });
-      this.tcpRoutes.push(submissionRoute);
 
       // IMAPS (port 993)
       // Traefik terminates TLS using mailu-tls certificate and mail TLS options

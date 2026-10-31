@@ -88,7 +88,6 @@ describe('FrontConstruct', () => {
       'imaps',
       'pop3s',
       'smtps',
-      'submission',
     ]);
 
     // Verify specific port configurations
@@ -96,10 +95,6 @@ describe('FrontConstruct', () => {
     const smtpsPort = ports.find((p: any) => p.name === 'smtps');
     expect(smtpsPort?.port).toBe(465);
     expect(smtpsPort?.targetPort).toBe(465);
-
-    const submissionPort = ports.find((p: any) => p.name === 'submission');
-    expect(submissionPort?.port).toBe(587);
-    expect(submissionPort?.targetPort).toBe(587);
 
     const imapsPort = ports.find((p: any) => p.name === 'imaps');
     expect(imapsPort?.port).toBe(993);
