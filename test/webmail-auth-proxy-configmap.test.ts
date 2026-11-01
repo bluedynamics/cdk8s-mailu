@@ -32,6 +32,18 @@ describe('WebmailAuthProxyConfigMap', () => {
     expect(conf).toContain('return 301 /webmail/;');
   });
 
+  test('keeps Location headers that already carry the /webmail prefix', () => {
+    // Roundcube builds absolute redirects from request_path (WEB_WEBMAIL=/webmail),
+    // e.g. "/webmail/?_task=mail&_action=compose". Prefixing them again yields
+    // /webmail/webmail/…, where every relative asset URL 404s.
+    // nginx applies the first matching proxy_redirect, so order matters.
+    const conf = nginxConf();
+    const keepPrefixed = conf.indexOf('proxy_redirect /webmail/ /webmail/;');
+    const addPrefix = conf.indexOf('proxy_redirect / /webmail/;');
+    expect(keepPrefixed).toBeGreaterThan(-1);
+    expect(addPrefix).toBeGreaterThan(keepPrefixed);
+  });
+
   test('proxies /webmail/ paths to the webmail backend with auth', () => {
     const conf = nginxConf();
     expect(conf).toContain('auth_request /_auth;');
