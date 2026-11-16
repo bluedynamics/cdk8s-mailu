@@ -96,7 +96,7 @@ Core components are always deployed and required for Mailu to function.
 - Memory Limit: `512Mi`
 
 **Network Ports**:
-- `8080/TCP` - HTTP API and web interface (internal service port; exposed via Ingress)
+- `8080/TCP` - HTTP API and web interface (internal service port). The Ingress exposes only `/admin`, `/sso` and `/static`. The `/internal` API has no authentication and serves DKIM private keys, so only cluster components reach it through the Service.
 
 **Storage**:
 - **PVC Size**: `5Gi` (default)
