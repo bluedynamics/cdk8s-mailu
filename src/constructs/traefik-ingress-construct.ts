@@ -187,18 +187,9 @@ export class TraefikIngressConstruct extends Construct {
                     },
                   },
                 },
-                {
-                  path: '/internal',
-                  pathType: 'Prefix',
-                  backend: {
-                    service: {
-                      name: props.adminService.name,
-                      port: {
-                        number: 8080,
-                      },
-                    },
-                  },
-                },
+                // /internal must never be routed here: Mailu's internal API has no
+                // authentication and serves DKIM private keys; cluster components
+                // reach it through the admin Service directly.
                 // NOTE: /webmail path is handled by separate webmailIngress with ForwardAuth middleware
                 // Health check endpoint on front service
                 {

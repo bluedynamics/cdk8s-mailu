@@ -72,6 +72,29 @@ describe('TraefikIngressConstruct', () => {
     }
   });
 
+  // Mailu's /internal API (DKIM private keys, fetchmail passwords, header-trusting
+  // auth) has no authentication of its own; only cluster components may reach it.
+  test('no public Ingress path exposes the Mailu /internal API', () => {
+    new TraefikIngressConstruct(chart, 'traefik-ingress', {
+      namespace: 'test-mailu',
+      domain: 'test.example.com',
+      hostname: 'mail.test.example.com',
+      frontService: makeService('front', 'mailu-front'),
+      adminService: makeService('admin', 'mailu-admin'),
+      webmailService: makeService('webmail', 'mailu-webmail'),
+      postfixService: makeService('postfix', 'mailu-postfix'),
+      rspamdService: makeService('rspamd', 'mailu-rspamd'),
+      enableTcp: true,
+      enableSmtp: true,
+    });
+    const publicPaths = Testing.synth(chart)
+      .filter(m => m.kind === 'Ingress')
+      .flatMap(m => m.spec.rules.flatMap((rule: any) => rule.http.paths.map((p: any) => p.path)));
+
+    expect(publicPaths).toContain('/admin');
+    expect(publicPaths.filter((p: string) => p.startsWith('/internal'))).toEqual([]);
+  });
+
   test('proxyProtocolToFront: false explicit matches default', () => {
     const defaultRoutes = synthRoutes({});
 
