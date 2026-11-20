@@ -469,6 +469,7 @@ export class MailuChart extends Chart {
       authProxyConfigMap: authProxyConfigMapConstruct.configMap,
       webmailServiceName: `${this.webmailConstruct.service.name}.${this.config.namespace}.svc.cluster.local`,
       adminServiceName: `${this.adminConstruct.service.name}.${this.config.namespace}.svc.cluster.local`,
+      image: this.config.images?.webmailAuthProxy,
     });
 
     this.traefikIngressConstruct = new TraefikIngressConstruct(this, 'traefik-ingress', {

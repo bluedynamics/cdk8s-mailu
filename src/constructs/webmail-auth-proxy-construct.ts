@@ -10,7 +10,16 @@ export interface WebmailAuthProxyConstructProps {
   readonly webmailServiceName: string;
   readonly adminServiceName: string;
   readonly priorityClassName?: string;
+  /**
+   * Container image of the proxy
+   * @default "nginx:1.30.7-alpine"
+   */
+  readonly image?: string;
 }
+
+// Patch-pinned on a stable branch (even minor): a floating tag of a mainline branch
+// gets no more images once the next stable branch appears.
+const DEFAULT_IMAGE = 'nginx:1.30.7-alpine';
 
 /**
  * Webmail Auth Proxy Construct
@@ -22,7 +31,7 @@ export interface WebmailAuthProxyConstructProps {
  * instead of redirecting to the SSO login page.
  *
  * Components:
- * - Deployment (nginx:alpine with auth_request configuration)
+ * - Deployment (nginx with auth_request configuration)
  * - Service (ClusterIP, port 80)
  */
 export class WebmailAuthProxyConstruct extends Construct {
@@ -62,7 +71,7 @@ export class WebmailAuthProxyConstruct extends Construct {
     // Configure container
     const container = this.deployment.addContainer({
       name: 'auth-proxy',
-      image: 'nginx:1.27-alpine',
+      image: props.image ?? DEFAULT_IMAGE,
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
       command: ['/bin/sh', '/etc/nginx/scripts/entrypoint.sh'],
       securityContext: {

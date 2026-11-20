@@ -142,18 +142,25 @@ The `MailuConfig` interface defines all configuration options for deploying Mail
 ### Image Configuration
 
 #### images
-- **Type:** `Record<string, ImageConfig>`
-- **Description:** Container image configuration for each component
+- **Type:** `ImageConfig`
+- **Description:** Container images of the Mailu components and of the webmail auth proxy
 
 ```typescript
 {
-  [componentName]: {
-    repository: string,
-    tag: string,
-    pullPolicy?: 'Always' | 'IfNotPresent' | 'Never'
-  }
+  registry?: string,          // Default: 'ghcr.io/mailu'
+  tag?: string,               // Mailu version, default: '2024.06.47'
+  pullPolicy?: string,        // Default: 'IfNotPresent'
+  webmailAuthProxy?: string   // Default: 'nginx:1.30.7-alpine'
 }
 ```
+
+**`registry`** and **`tag`** apply to every Mailu image.
+
+**`webmailAuthProxy`**: Full image reference of the nginx auth proxy in front of webmail.
+It is not a Mailu image.
+`registry` and `tag` do not apply to it.
+Pin a patch version of a stable nginx branch, which has an even minor number, and update it with every nginx release.
+A floating tag of a mainline branch gets no more images once the next stable branch appears.
 
 ### Dovecot Configuration
 
