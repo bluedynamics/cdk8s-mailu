@@ -335,6 +335,15 @@ export interface ImageConfig {
    * @default "IfNotPresent"
    */
   readonly pullPolicy?: string;
+
+  /**
+   * Container image of the nginx auth proxy in front of webmail.
+   * It is not a Mailu image, so `registry` and `tag` do not apply to it.
+   * Pin a patch version of a stable nginx branch (even minor number) and keep it updated:
+   * a floating tag of a mainline branch gets no more images once the next stable branch appears.
+   * @default "nginx:1.30.7-alpine"
+   */
+  readonly webmailAuthProxy?: string;
 }
 
 /**
