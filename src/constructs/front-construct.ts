@@ -64,7 +64,11 @@ export class FrontConstruct extends Construct {
     super(scope, id);
 
     const { config, namespace, adminServiceHost } = props;
-    const resources = config.resources?.front ?? DEFAULT_RESOURCES;
+    // Callers that build the config from YAML can omit what the type requires.
+    // Missing requests fall back to the defaults, missing limits mean no limit.
+    const resources: Partial<ResourcesConfig> = config.resources?.front ?? DEFAULT_RESOURCES;
+    const requests = { ...DEFAULT_RESOURCES.requests, ...resources.requests };
+    const limits: Partial<ResourcesConfig['limits']> = resources.limits ?? {};
 
     const nginxConfig = renderFrontNginxConfig({
       serverName: config.hostnames[0],
@@ -121,12 +125,12 @@ export class FrontConstruct extends Construct {
       },
       resources: {
         cpu: {
-          request: parseCpuMillis(resources.requests.cpu),
-          limit: parseCpuMillis(resources.limits.cpu),
+          request: parseCpuMillis(requests.cpu),
+          limit: limits.cpu ? parseCpuMillis(limits.cpu) : undefined,
         },
         memory: {
-          request: parseMemorySize(resources.requests.memory),
-          limit: parseMemorySize(resources.limits.memory),
+          request: parseMemorySize(requests.memory),
+          limit: limits.memory ? parseMemorySize(limits.memory) : undefined,
         },
       },
       ports: [

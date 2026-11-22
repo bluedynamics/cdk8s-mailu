@@ -373,6 +373,27 @@ describe('MailuChart', () => {
       expect(without).not.toContain('set_real_ip_from');
     });
 
+    test('Traefik sends the PROXY header exactly when the front expects it', () => {
+      // A mismatch in either direction breaks every mail session
+      for (const proxyProtocolToFront of [undefined, false, true]) {
+        const manifests = Testing.synth(new MailuChart(Testing.app(), 'test', {
+          ...validConfig,
+          components: { webmail: true },
+          ingress: { enabled: true, type: 'traefik', traefik: { hostname: 'mail.example.com', proxyProtocolToFront } },
+        }));
+        const conf: string = manifests.find((m) => m.kind === 'ConfigMap' && m.data?.['nginx.conf']).data['nginx.conf'];
+        const frontExpectsHeader = /listen \d+ proxy_protocol;/.test(conf);
+        const routes = manifests.filter(
+          (m) => m.kind === 'IngressRouteTCP' && ['mailu-smtps', 'mailu-imaps', 'mailu-pop3s'].includes(m.metadata.name),
+        );
+        expect(routes).toHaveLength(3);
+        for (const route of routes) {
+          expect(route.spec.routes[0].services[0].proxyProtocol !== undefined).toBe(frontExpectsHeader);
+        }
+        expect(frontExpectsHeader).toBe(proxyProtocolToFront === true);
+      }
+    });
+
     test('a front without the admin component is rejected', () => {
       expect(() => new MailuChart(Testing.app(), 'test', { ...validConfig, components: { admin: false } }))
         .toThrow(/front.*admin/i);

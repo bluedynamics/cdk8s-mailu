@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { Testing } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-33';
 import { MailuChartConfig } from '../src/config';
@@ -126,12 +127,17 @@ describe('FrontConstruct', () => {
     expect(without).not.toContain('set_real_ip_from');
   });
 
-  test('a changed configuration changes the pod template, so the pod restarts', () => {
-    const before = synth().pod.metadata.annotations['checksum/config'];
-    const after = synth({ ...baseConfig, mailu: { messageSizeLimit: 10 } }).pod.metadata.annotations['checksum/config'];
-    expect(before).toMatch(/^[0-9a-f]{64}$/);
-    expect(after).toMatch(/^[0-9a-f]{64}$/);
-    expect(after).not.toBe(before);
+  test('any change of the configuration changes the pod template, so the pod restarts', () => {
+    // The checksum covers the whole file, not selected inputs
+    for (const config of [baseConfig, { ...baseConfig, mailu: { messageSizeLimit: 10 } }]) {
+      const { pod, configMap } = synth(config);
+      expect(pod.metadata.annotations['checksum/config']).toBe(
+        createHash('sha256').update(configMap.data['nginx.conf']).digest('hex'),
+      );
+    }
+    expect(synth().configMap.data['nginx.conf']).not.toBe(
+      synth({ ...baseConfig, mailu: { messageSizeLimit: 10 } }).configMap.data['nginx.conf'],
+    );
   });
 
   test('the service keeps the public ports and targets the container ports', () => {
@@ -162,6 +168,16 @@ describe('FrontConstruct', () => {
       requests: { cpu: '10m', memory: '16Mi' },
       limits: { cpu: '100m', memory: '64Mi' },
     });
+  });
+
+  test('tolerates resources without limits, as releases before 0.5 did', () => {
+    // Callers that build the config from YAML can omit what the type requires
+    const { container } = synth({
+      ...baseConfig,
+      resources: { front: { requests: { cpu: '20m', memory: '32Mi' } } as any },
+    });
+    expect(container.resources.requests).toEqual({ cpu: '20m', memory: '32Mi' });
+    expect(container.resources.limits ?? {}).toEqual({});
   });
 
   test('applies configured resources', () => {
