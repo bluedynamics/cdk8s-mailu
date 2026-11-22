@@ -3,7 +3,7 @@ import { Duration } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-33';
 import { Construct } from 'constructs';
 import { FRONT_HEALTH_PORT, FRONT_LISTENERS, renderFrontNginxConfig } from './front-nginx-config';
-import { MailuChartConfig } from '../config';
+import { MailuChartConfig, ResourcesConfig } from '../config';
 import { applyPriorityClassName } from '../utils/priority-class';
 import { parseMemorySize, parseCpuMillis } from '../utils/resource-parser';
 
@@ -21,6 +21,13 @@ const DEFAULT_IMAGE = 'nginx:1.30.7-alpine';
 
 // User and group "nginx" of the official image
 const NGINX_UID = 101;
+
+// The mail proxy needs a few megabytes. Left unset, cdk8s-plus would request
+// a whole CPU and 512Mi.
+const DEFAULT_RESOURCES: ResourcesConfig = {
+  requests: { cpu: '10m', memory: '16Mi' },
+  limits: { cpu: '100m', memory: '64Mi' },
+};
 
 const CONFIG_FILE = 'nginx.conf';
 const CONFIG_PATH = `/etc/nginx/${CONFIG_FILE}`;
@@ -57,6 +64,7 @@ export class FrontConstruct extends Construct {
     super(scope, id);
 
     const { config, namespace, adminServiceHost } = props;
+    const resources = config.resources?.front ?? DEFAULT_RESOURCES;
 
     const nginxConfig = renderFrontNginxConfig({
       serverName: config.hostnames[0],
@@ -111,22 +119,16 @@ export class FrontConstruct extends Construct {
         capabilities: { drop: [kplus.Capability.ALL] },
         seccompProfile: { type: kplus.SeccompProfileType.RUNTIME_DEFAULT },
       },
-      resources: config.resources?.front
-        ? {
-          cpu: {
-            request: parseCpuMillis(config.resources.front.requests?.cpu || '100m'),
-            limit: config.resources.front.limits?.cpu
-              ? parseCpuMillis(config.resources.front.limits.cpu)
-              : undefined,
-          },
-          memory: {
-            request: parseMemorySize(config.resources.front.requests?.memory || '256Mi'),
-            limit: config.resources.front.limits?.memory
-              ? parseMemorySize(config.resources.front.limits.memory)
-              : undefined,
-          },
-        }
-        : undefined,
+      resources: {
+        cpu: {
+          request: parseCpuMillis(resources.requests.cpu),
+          limit: parseCpuMillis(resources.limits.cpu),
+        },
+        memory: {
+          request: parseMemorySize(resources.requests.memory),
+          limit: parseMemorySize(resources.limits.memory),
+        },
+      },
       ports: [
         ...FRONT_LISTENERS.map((listener) => ({
           name: listener.name,

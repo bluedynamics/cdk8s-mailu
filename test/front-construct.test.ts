@@ -156,6 +156,14 @@ describe('FrontConstruct', () => {
     expect(service.metadata.namespace).toBe('test-mailu');
   });
 
+  test('requests little when no resources are configured', () => {
+    // Left unset, cdk8s-plus requests a whole CPU and 512Mi, for a proxy that needs a few megabytes
+    expect(synth().container.resources).toEqual({
+      requests: { cpu: '10m', memory: '16Mi' },
+      limits: { cpu: '100m', memory: '64Mi' },
+    });
+  });
+
   test('applies configured resources', () => {
     const { container } = synth({
       ...baseConfig,
