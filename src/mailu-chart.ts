@@ -10,7 +10,6 @@ import { DovecotConstruct } from './constructs/dovecot-construct';
 import { DovecotSubmissionConstruct } from './constructs/dovecot-submission-construct';
 import { FetchmailConstruct } from './constructs/fetchmail-construct';
 import { FrontConstruct } from './constructs/front-construct';
-import { NginxPatchConfigMap } from './constructs/nginx-patch-configmap';
 import { PostfixConstruct } from './constructs/postfix-construct';
 import { PostfixServiceMonitorConstruct } from './constructs/postfix-servicemonitor-construct';
 import { RspamdConstruct } from './constructs/rspamd-construct';
@@ -80,11 +79,6 @@ export class MailuChart extends Chart {
   private readonly sharedConfigMap: kplus.ConfigMap;
 
   /**
-   * Nginx patch ConfigMap for Traefik TLS termination (optional)
-   */
-  private nginxPatchConfigMap?: kplus.ConfigMap;
-
-  /**
    * Webmail patch ConfigMap for direct backend connections (optional)
    */
   private webmailPatchConfigMap?: kplus.ConfigMap;
@@ -134,16 +128,6 @@ export class MailuChart extends Chart {
     // Create shared ConfigMap with environment variables
     // Note: Front service discovery address will be added after front component creation
     this.sharedConfigMap = this.createSharedConfigMap();
-
-    // Create nginx patch ConfigMap for Traefik TLS termination
-    // Mirror the Traefik PROXY-v2 flag so the `listen` directives match what
-    // Traefik actually emits — divergence between the two hangs all mail
-    // submissions.
-    const patchConfigMapConstruct = new NginxPatchConfigMap(this, 'nginx-patch', {
-      namespace: this.mailuNamespace,
-      proxyProtocolToFront: config.ingress?.traefik?.proxyProtocolToFront ?? false,
-    });
-    this.nginxPatchConfigMap = patchConfigMapConstruct.configMap;
 
     // Create webmail patch ConfigMap for direct backend connections (TLS_FLAVOR=notls)
     const webmailPatchConstruct = new WebmailPatchConfigMap(this, 'webmail-patch', {
@@ -311,15 +295,18 @@ export class MailuChart extends Chart {
   }
 
   /**
-   * Creates the Front component (Nginx frontend)
+   * Creates the Front component (nginx mail proxy)
    */
   private createFrontComponent(): void {
+    if (!this.adminConstruct) {
+      // nginx refuses to start when it cannot resolve the host in auth_http
+      throw new Error('Cannot create front: the admin component is required, it decides every login');
+    }
     this.frontConstruct = new FrontConstruct(this, 'front', {
       config: this.config,
       namespace: this.mailuNamespace,
       priorityClassName: this.priorityClassName,
-      sharedConfigMap: this.sharedConfigMap,
-      nginxPatchConfigMap: this.nginxPatchConfigMap,
+      adminServiceHost: `${this.adminConstruct.service.name}.${this.mailuNamespace.name}.svc.cluster.local`,
     });
   }
 

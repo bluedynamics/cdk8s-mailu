@@ -76,8 +76,9 @@ export interface TraefikIngressConstructProps {
    * nginx mail{} listeners see the real client IP instead of Traefik's pod
    * IP. Required for Mailu's per-IP auth rate-limit to work as intended.
    *
-   * Must be paired with `proxyProtocolToFront: true` on
-   * {@link NginxPatchConfigMapProps} so nginx parses the PROXY header.
+   * Must match the front: its listeners expect the PROXY header exactly
+   * when this is set. `MailuChart` derives both from
+   * `ingress.traefik.proxyProtocolToFront`.
    *
    * Port 25 is unaffected; it always uses PROXY v2 to postfix.
    *
@@ -108,7 +109,7 @@ export class TraefikIngressConstruct extends Construct {
     const smtpConnectionLimit = props.smtpConnectionLimit ?? 15;
     const enableSmtp = props.enableSmtp ?? false; // Default false for security
     // PROXY v2 forwarding to mailu-front. Default off: requires matching
-    // `proxyProtocolToFront` on NginxPatchConfigMap or the listeners hang.
+    // the `proxy_protocol` listeners of the front or the sessions hang.
     const proxyProtocolToFront = props.proxyProtocolToFront ?? false;
     const proxyProtocolV2 = proxyProtocolToFront
       ? { proxyProtocol: { version: 2 } }

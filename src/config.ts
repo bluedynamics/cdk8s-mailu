@@ -337,6 +337,16 @@ export interface ImageConfig {
   readonly pullPolicy?: string;
 
   /**
+   * Container image of the front, the mail proxy for SMTPS, IMAPS and POP3S.
+   * It is the official nginx image, not a Mailu image, so `registry` and `tag` do not apply to it.
+   * Any nginx built with the mail module works; the image must run as user 101 on a read-only root filesystem.
+   * Pin a patch version of a stable nginx branch (even minor number) and keep it updated:
+   * a floating tag of a mainline branch gets no more images once the next stable branch appears.
+   * @default "nginx:1.30.7-alpine"
+   */
+  readonly front?: string;
+
+  /**
    * Container image of the nginx auth proxy in front of webmail.
    * It is not a Mailu image, so `registry` and `tag` do not apply to it.
    * Pin a patch version of a stable nginx branch (even minor number) and keep it updated:
@@ -409,8 +419,8 @@ export interface TraefikIngressConfig {
    * then collapses bots and legitimate users into one bucket, so brute-force
    * traffic locks out real users.
    *
-   * When `true`, Traefik prepends the PROXY v2 header and the wrapper script
-   * adds `proxy_protocol` to the matching nginx `listen` directives, so
+   * When `true`, Traefik prepends the PROXY v2 header and the front listens
+   * with `proxy_protocol` and trusts the header from `subnet`, so
    * `$remote_addr` is the real client IP and per-IP rate-limit works.
    *
    * Port 25 already uses PROXY v2 unconditionally (postfix consumes it via
