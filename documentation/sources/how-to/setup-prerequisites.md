@@ -365,16 +365,15 @@ curl -I https://mail.example.com/admin
 │  Traefik Ingress Controller (TLS Termination)               │
 │  - HTTP/HTTPS (80, 443)                                     │
 │  - Mail Protocols (25, 465, 993, 995)                       │
-└───────────────────────┬─────────────────────────────────────┘
-                        │
-                        ↓
-┌─────────────────────────────────────────────────────────────┐
-│  Mailu Front (Nginx)                                        │
-│  - Protocol routing                                         │
-│  - Authentication proxy                                     │
 └─────┬───────────────────────┬───────────────┬───────────────┘
-      │                       │               │
-      ↓                       ↓               ↓
+      │ HTTP                  │ HTTP          │ 465, 993, 995
+      │                       │               ↓
+      │                       │         ┌──────────────┐
+      │                       │         │ Front (nginx │
+      │                       │         │ mail proxy)  │
+      │                       │         └──────┬───────┘
+      │                       │                │  port 25 skips the front
+      ↓                       ↓                ↓
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
 │ Admin UI     │    │ Webmail      │    │ Mail Services│
 │ (Flask)      │    │ (Roundcube)  │    │ (SMTP/IMAP)  │

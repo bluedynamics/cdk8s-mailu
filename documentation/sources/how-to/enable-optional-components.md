@@ -16,7 +16,7 @@ The `MailuChart` accepts a `components` configuration object that controls which
 
 | Component | Purpose | Can Disable? |
 |-----------|---------|--------------|
-| **Front** | Nginx reverse proxy | No (required) |
+| **Front** | nginx mail proxy for SMTPS, IMAPS, POP3S | No (required) |
 | **Admin** | Web admin interface | No (required) |
 | **Postfix** | SMTP server | No (required) |
 | **Dovecot** | IMAP/POP3 server | No (required) |

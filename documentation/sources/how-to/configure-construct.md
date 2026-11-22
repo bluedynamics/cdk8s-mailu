@@ -87,8 +87,8 @@ config: {
 config: {
   resources: {
     front: {
-      requests: { cpu: '200m', memory: '256Mi' },
-      limits: { cpu: '500m', memory: '512Mi' },
+      requests: { cpu: '10m', memory: '16Mi' },
+      limits: { cpu: '100m', memory: '64Mi' },
     },
     admin: {
       requests: { cpu: '100m', memory: '256Mi' },

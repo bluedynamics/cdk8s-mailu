@@ -23,7 +23,7 @@ Client (TLS)
     ↓
 Traefik IngressRoute (TLS termination with Let's Encrypt)
     ↓
-Mailu Front Service (plaintext, port 80 for HTTP, 465/993/995 for mail)
+Admin and Webmail for HTTP, Front for mail on 465/993/995 (plaintext)
     ↓
 Backend Services (plaintext internal communication)
 ```
@@ -67,9 +67,8 @@ app.synth();
 ```
 
 **What this does automatically**:
-- Sets `TLS_FLAVOR=notls` (Traefik handles TLS, not Mailu)
-- Mounts nginx-patch ConfigMap to Front container
-- Patches nginx to support mail protocol TLS ports (465, 993, 995)
+- Sets `TLS_FLAVOR=notls` for the Mailu components (Traefik handles TLS, not Mailu)
+- Renders Front as a plain nginx mail proxy that accepts plaintext for 465, 993, and 995
 - Configures plaintext internal communication between components
 
 **No additional TLS configuration needed** in the CDK8S code!
@@ -183,7 +182,11 @@ kubectl get certificate -n mailu -w
 
 ### Step 2: Create HTTP/HTTPS IngressRoute
 
-Route web traffic (admin UI, webmail) through Traefik:
+Route web traffic for the admin UI through Traefik.
+Front serves no HTTP, so the routes point at the Admin Service.
+The paths are the ones the built-in ingress routes to Admin.
+The webmail needs an authentication proxy in addition, which only the built-in ingress creates.
+Use Option 1 when you deploy the webmail.
 
 ```yaml
 apiVersion: traefik.io/v1alpha1
@@ -195,11 +198,11 @@ spec:
   entryPoints:
     - websecure  # HTTPS entry point
   routes:
-    - match: Host(`mail.example.com`)
+    - match: Host(`mail.example.com`) && (PathPrefix(`/admin`) || PathPrefix(`/sso`) || PathPrefix(`/static`))
       kind: Rule
       services:
-        - name: mailu-front
-          port: 80  # Mailu front service (plaintext internal)
+        - name: mailu-admin
+          port: 8080  # Mailu admin service (plaintext internal)
   tls:
     secretName: mailu-tls-cert  # Certificate from cert-manager
 ---
@@ -217,8 +220,8 @@ spec:
       middlewares:
         - name: redirect-to-https
       services:
-        - name: mailu-front
-          port: 80
+        - name: mailu-admin
+          port: 8080
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
@@ -575,7 +578,7 @@ kubectl get ingress -n mailu
 kubectl get ingressroute -n mailu
 
 # Test internal service
-kubectl port-forward -n mailu svc/mailu-front 8080:80
+kubectl port-forward -n mailu svc/mailu-admin 8080:8080
 curl http://localhost:8080/admin
 ```
 
@@ -589,11 +592,9 @@ kubectl patch svc -n mailu mailu-front -p '{"spec":{"type":"NodePort"}}'
 
 # Get assigned node ports
 kubectl get svc -n mailu mailu-front
-
-# Access via http://<node-ip>:<node-port>
 ```
 
-**Note**: This exposes Mailu without TLS encryption. Only use for testing.
+**Note**: This exposes the mail ports 465, 993, and 995 without TLS encryption. Only use for testing.
 
 ## See Also
 

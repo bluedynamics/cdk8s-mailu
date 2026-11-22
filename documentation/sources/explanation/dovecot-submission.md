@@ -4,20 +4,22 @@
 
 ## Overview
 
-The `DovecotSubmissionConstruct` provides a dedicated dovecot submission service that enables email sending from Roundcube webmail. This service was introduced to solve configuration challenges with the bundled dovecot in the front container when using `TLS_FLAVOR=notls` (required for Traefik TLS termination).
+The `DovecotSubmissionConstruct` provides a dedicated dovecot submission service that enables email sending from Roundcube webmail.
+Mailu's own front image bundles a dovecot for this purpose.
+The front of cdk8s-mailu is a plain nginx mail proxy without one, so the service runs on its own.
 
 ## The Problem
 
-When a user sends an email from webmail, the webmail backend needs to submit that email to the SMTP server. Mailu's standard architecture uses the bundled dovecot service in the `front` container for this, but with `TLS_FLAVOR=notls`, configuring this bundled dovecot becomes extremely difficult because:
+When a user sends an email from webmail, the webmail backend needs to submit that email to the SMTP server.
+Mailu's standard architecture uses the dovecot bundled in its `front` image for this.
+cdk8s-mailu does not:
 
-1. The front container's dovecot configuration is deeply embedded in Mailu's startup scripts
-2. Environment variable substitution doesn't work properly with dovecot syntax
-3. Configuration files are generated at runtime in read-only locations
-4. Modifying the bundled dovecot requires extensive wrapper script modifications
+1. The front is the official nginx image and contains no dovecot (see [The front mail proxy](front-mail-proxy.md))
+2. The bundled dovecot was hard to configure even while the front still was the Mailu image: its configuration is embedded in Mailu's startup scripts and generated at runtime
 
 ## The Solution
 
-Instead of fighting with the bundled dovecot, cdk8s-mailu deploys a **separate dovecot submission service** using the official `dovecot/dovecot:2.3-latest` image with custom configuration.
+cdk8s-mailu deploys a **separate dovecot submission service** using the official `dovecot/dovecot:2.3-latest` image with custom configuration.
 
 ### Architecture
 
@@ -56,7 +58,6 @@ Email Delivery ✅
 **Service Isolation**
 - Dedicated pod with clear logs
 - Independent scaling and resource management
-- No conflicts with front container's dovecot usage
 
 ## Implementation Details
 

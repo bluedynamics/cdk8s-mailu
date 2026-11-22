@@ -59,10 +59,10 @@ Adjust resources for all heavy components in a high-load deployment:
 
 ```typescript
 resources: {
-  // Front (Nginx) - handles all incoming connections
+  // Front (nginx mail proxy) - relays mail client sessions, needs little
   front: {
-    requests: { cpu: '200m', memory: '512Mi' },
-    limits: { cpu: '1000m', memory: '1Gi' },
+    requests: { cpu: '20m', memory: '32Mi' },
+    limits: { cpu: '200m', memory: '128Mi' },
   },
 
   // Dovecot - memory-intensive for IMAP

@@ -48,6 +48,7 @@ maxdepth: 1
 titlesonly: true
 ---
 upgrade-mailu
+upgrade-to-nginx-front
 backup-restore
 ```
 

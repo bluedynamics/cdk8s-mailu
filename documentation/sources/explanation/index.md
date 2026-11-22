@@ -18,7 +18,7 @@ titlesonly: true
 ---
 architecture
 authentication-flows
-nginx-configuration-patches
+front-mail-proxy
 storage-architecture
 dovecot-submission
 egress-gateway-considerations
@@ -31,7 +31,7 @@ rspamd-architecture
 *This section explains:*
 - Mailu architecture and component relationships
 - Authentication mechanisms (nginx auth_http, SSO, network trust)
-- Nginx configuration patching for Traefik TLS termination
+- The front as a plain nginx mail proxy behind Traefik TLS termination
 - Storage architecture and sizing for mail data
 - CDK8S construct patterns and best practices
 - Dovecot submission service for webmail sending

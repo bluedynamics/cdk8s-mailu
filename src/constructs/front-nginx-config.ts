@@ -14,7 +14,8 @@ export interface FrontListener {
 }
 
 // The container ports must never be 10025, 10143 or 14190: admin treats those
-// values in `Auth-Port` as "webmail" and skips rate limiting for them.
+// values in `Auth-Port` as "webmail", accepts webmail session tokens for them
+// and skips rate limiting.
 export const FRONT_LISTENERS: readonly FrontListener[] = [
   { name: 'smtps', protocol: 'smtp', servicePort: 465, containerPort: 10465 },
   { name: 'imaps', protocol: 'imap', servicePort: 993, containerPort: 10993 },

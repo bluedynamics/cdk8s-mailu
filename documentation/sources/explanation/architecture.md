@@ -17,7 +17,7 @@ graph TB
     Ingress -->|HTTP:80| Webmail[Webmail:80<br/>Roundcube]
     Ingress -.MX:25.-> Postfix[Postfix:25<br/>SMTP]
     FrontNginx -->|auth_http:8080/internal/auth/email| Admin
-    FrontNginx -->|Relay SMTP:25| Postfix
+    FrontNginx -->|Relay SMTP:10025| Postfix
     FrontNginx -->|Relay IMAP:143<br/>POP3:110| Dovecot[Dovecot<br/>IMAP/POP3]
 
     Webmail -.SMTP:10025.-> DovecotSub[Dovecot<br/>Submission:10025]
@@ -42,14 +42,15 @@ graph TB
 - LoadBalancer service with public IP
 
 **Front (Nginx)**
-- Protocol routing for authenticated mail protocols (SMTP submission 465, IMAP 993, POP3 995)
-- Authentication proxy using Admin's auth_http endpoint
+- Mail proxy for authenticated mail protocols (SMTP submission 465, IMAP 993, POP3 995)
+- The official nginx image with a static configuration, not a Mailu image
+- Authenticates every login against Admin's auth_http endpoint
 - Receives plain TCP from Traefik after TLS termination
-- Proxies to backend Kubernetes Services (Postfix, Dovecot)
-- **Note**: nginx proxies to Services, not directly to pods; if multiple backend replicas exist, the Service handles load balancing
+- Relays the session to the backend Admin names (Postfix, Dovecot)
 - **Note**: Port 25 (MX mail reception) and HTTP/HTTPS bypass Front entirely
-- **Note**: There is no port 587, because Traefik cannot terminate STARTTLS for SMTP; mail clients submit with implicit TLS on port 465 (see [Nginx Configuration Patches](nginx-configuration-patches.md))
-- Always required for authenticated mail protocols
+- **Note**: There is no port 587, because Traefik cannot terminate STARTTLS for SMTP; mail clients submit with implicit TLS on port 465
+- Always required for authenticated mail protocols: the backends check no password themselves
+- See [The front mail proxy](front-mail-proxy.md) for the design
 
 **Admin**
 - Web-based administration interface (accessed via Ingress at port 80 internally)
@@ -97,7 +98,7 @@ graph TB
 - Uses official `dovecot/dovecot:2.3-latest` image
 - Listens on port 10025 for token authentication
 - Relays to Postfix:25 using `submission_relay_host`
-- Solves configuration issues with bundled dovecot in front container
+- Independent of the front, which has no dovecot of its own
 - Always deployed (required for webmail functionality)
 
 ### Optional Components
@@ -171,17 +172,17 @@ Understanding how mail flows through the system is crucial for troubleshooting a
 
 1. **Mail client → Traefik:465/993/995** - Client connects (Thunderbird, Outlook, etc.)
 2. **Traefik TLS termination** - Traefik decrypts TLS, forwards plaintext
-3. **Traefik → Front:465/993/995** - Nginx receives plaintext connection
+3. **Traefik → Front:465/993/995** - Nginx receives plaintext connection (the Service maps to container ports 10465/10993/10995)
 4. **Front → Admin:8080/internal/auth/email** - Nginx auth_http check
 5. **Admin validates** - Queries PostgreSQL for user credentials
-6. **Admin → Front** - Returns HTTP 200 (success) or 403 (failure) with backend address
+6. **Admin → Front** - Answers with the header `Auth-Status`, and on success with the backend address
 7. **If authenticated**:
-   - SMTP (465): Front → Postfix:25
-   - IMAP (993/143): Front → Dovecot:143
-   - POP3 (995/110): Front → Dovecot:110
+   - SMTP (465): Front → Postfix:10025
+   - IMAP (993): Front → Dovecot:143
+   - POP3 (995): Front → Dovecot:110
 
 **Key Points**:
-- All TLS ports receive **plaintext** traffic (TLS_FLAVOR=notls, Traefik handles TLS)
+- All TLS ports receive **plaintext** traffic (Traefik handles TLS)
 - Nginx auth_http protocol validates every connection
 - Front acts as authentication proxy, not just protocol router
 - Port 25 (MX) bypasses authentication (accepts from any sender)
@@ -214,11 +215,11 @@ Understanding how mail flows through the system is crucial for troubleshooting a
 MailuChart (extends Chart)
   ├── Namespace
   ├── SharedConfigMap (service discovery)
-  ├── NginxPatchConfigMap (TLS_FLAVOR=notls wrapper)
   ├── WebmailPatchConfigMap (backend connection patches)
   ├── FrontConstruct
-  │   ├── Deployment (nginx with wrapper script)
-  │   └── Service (HTTP, SMTP, IMAP, POP3 ports)
+  │   ├── ConfigMap (complete nginx configuration)
+  │   ├── Deployment (official nginx image, mail proxy only)
+  │   └── Service (SMTPS, IMAPS, POP3S ports)
   ├── AdminConstruct
   │   ├── Deployment
   │   ├── Service
@@ -312,7 +313,7 @@ All components communicate via Kubernetes services:
 
 **Traefik TLS Termination (Supported & Tested)**
 - Traefik handles TLS for all protocols (SMTP/IMAP/HTTP/HTTPS)
-- Nginx wrapper patches Front component for plaintext backend communication
+- Front receives plaintext from Traefik and authenticates the mail protocols
 - Automatic certificate management via cert-manager
 - This is the **only tested and supported configuration** in cdk8s-mailu
 
@@ -321,11 +322,9 @@ All components communicate via Kubernetes services:
 - Would require custom configuration and testing
 - **Not tested or documented** - use at your own risk
 
-**Front Direct TLS (Not Recommended)**
-- Mailu's Front component can handle TLS directly (TLS_FLAVOR=cert, letsencrypt, mail, etc.)
-- **This configuration is untested in cdk8s-mailu** and likely requires significant modifications
-- Manual certificate management, no nginx patching applied
-- Not recommended: use Traefik termination instead
+**Front Direct TLS (Not Supported)**
+- The front of cdk8s-mailu has no TLS configuration and no certificates
+- Something in front of it has to terminate TLS for 465, 993 and 995
 
 ## Design Decisions
 
