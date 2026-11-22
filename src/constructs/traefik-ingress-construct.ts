@@ -192,19 +192,6 @@ export class TraefikIngressConstruct extends Construct {
                 // authentication and serves DKIM private keys; cluster components
                 // reach it through the admin Service directly.
                 // NOTE: /webmail path is handled by separate webmailIngress with ForwardAuth middleware
-                // Health check endpoint on front service
-                {
-                  path: '/health',
-                  pathType: 'Exact',
-                  backend: {
-                    service: {
-                      name: props.frontService.name,
-                      port: {
-                        number: 80,
-                      },
-                    },
-                  },
-                },
               ],
             },
           },

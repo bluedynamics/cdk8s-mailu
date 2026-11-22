@@ -36,6 +36,7 @@ describe('TraefikIngressConstruct', () => {
       manifests.find(m => m.kind === 'IngressRouteTCP' && m.metadata?.name === name);
 
     return {
+      manifests,
       tcpRoutes: manifests.filter(m => m.kind === 'IngressRouteTCP'),
       smtp: byName('mailu-smtp'),
       smtps: byName('mailu-smtps'),
@@ -47,6 +48,16 @@ describe('TraefikIngressConstruct', () => {
   function serviceOf(route: any) {
     return route.spec.routes[0].services[0];
   }
+
+  test('no HTTP route points at the front service', () => {
+    // The front speaks only mail protocols; its Service has no HTTP port.
+    const ingresses = synthRoutes({}).manifests.filter((m) => m.kind === 'Ingress');
+    expect(ingresses.length).toBeGreaterThan(0);
+    const backends = ingresses.flatMap((i) =>
+      i.spec.rules.flatMap((r: any) => r.http.paths.map((p: any) => p.backend.service.name)),
+    );
+    expect(backends).not.toContain('mailu-front');
+  });
 
   test('port 25 always uses PROXY v2 (independent of flag)', () => {
     for (const flag of [undefined, false, true]) {
