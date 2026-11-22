@@ -164,8 +164,8 @@ Perform smoke tests after upgrade:
 
 **Mail Protocols**:
 ```bash
-# Test SMTP (send mail)
-telnet mail.example.com 587
+# Test SMTP submission (SMTPS)
+openssl s_client -connect mail.example.com:465
 
 # Test IMAP (check mailbox)
 openssl s_client -connect mail.example.com:993
@@ -275,7 +275,7 @@ print('Database connection: OK')
 
 # Test 4: SMTP connectivity
 echo "Testing SMTP..."
-timeout 5 bash -c "echo 'QUIT' | openssl s_client -connect $DOMAIN:587 -starttls smtp 2>&1" | grep -q "250 HELP" || { echo "SMTP test failed"; exit 1; }
+timeout 5 bash -c "echo 'QUIT' | openssl s_client -connect $DOMAIN:465 -quiet 2>/dev/null" | grep -q "^220 " || { echo "SMTP test failed"; exit 1; }
 
 echo "All tests passed!"
 ```

@@ -27,7 +27,7 @@ describe('NginxPatchConfigMap', () => {
   test('default: plain listen directives, no proxy_protocol keyword', () => {
     const script = synthScript({});
 
-    for (const port of [587, 465, 993, 995]) {
+    for (const port of [465, 993, 995]) {
       expect(script).toContain(`listen ${port};`);
       expect(script).not.toContain(`listen ${port} proxy_protocol;`);
     }
@@ -36,14 +36,26 @@ describe('NginxPatchConfigMap', () => {
     // when the flag is off. We check the marker string specifically rather
     // than the whole script, since the wrapper's explanatory comments may
     // legitimately mention "[proxy_protocol]".
-    expect(script).toContain('"# Submission (port 587) for Traefik TLS termination"');
-    expect(script).not.toContain('"# Submission (port 587) for Traefik TLS termination [proxy_protocol]"');
+    expect(script).toContain('"# SMTPS (port 465) for Traefik TLS termination"');
+    expect(script).not.toContain('"# SMTPS (port 465) for Traefik TLS termination [proxy_protocol]"');
   });
 
-  test('proxyProtocolToFront: true → adds proxy_protocol on 465/587/993/995', () => {
+  test('no submission listener on 587 in either mode (would offer AUTH without STARTTLS)', () => {
+    for (const proxyProtocolToFront of [false, true]) {
+      chart = Testing.chart();
+      namespace = new kplus.Namespace(chart, 'test-namespace', {
+        metadata: { name: 'test-mailu' },
+      });
+      const script = synthScript({ proxyProtocolToFront });
+      expect(script).not.toMatch(/listen 587/);
+      expect(script).not.toContain('Auth-Port 587');
+    }
+  });
+
+  test('proxyProtocolToFront: true → adds proxy_protocol on 465/993/995', () => {
     const script = synthScript({ proxyProtocolToFront: true });
 
-    for (const port of [587, 465, 993, 995]) {
+    for (const port of [465, 993, 995]) {
       expect(script).toContain(`listen ${port} proxy_protocol;`);
       expect(script).not.toContain(`listen ${port};`);
     }
@@ -54,11 +66,11 @@ describe('NginxPatchConfigMap', () => {
 
     // The grep guard and the injected comment must agree, otherwise toggling
     // the flag at runtime would accept the previous (now-wrong) injection.
-    expect(script).toContain('# Submission (port 587) for Traefik TLS termination [proxy_protocol]');
+    expect(script).toContain('# SMTPS (port 465) for Traefik TLS termination [proxy_protocol]');
     // Must use -F (fixed-string): the marker contains `[proxy_protocol]`,
     // which is a regex character class under default grep and would never
     // match the literal injected string. Without -F, the wrapper crashloops.
-    expect(script).toContain('grep -qF "# Submission (port 587) for Traefik TLS termination [proxy_protocol]"');
+    expect(script).toContain('grep -qF "# SMTPS (port 465) for Traefik TLS termination [proxy_protocol]"');
     expect(script).not.toMatch(/grep -q\s+"/); // no plain -q that would be regex-interpreted
   });
 

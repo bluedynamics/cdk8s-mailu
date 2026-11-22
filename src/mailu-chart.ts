@@ -224,7 +224,7 @@ export class MailuChart extends Chart {
 
       // TLS configuration - 'notls' for Traefik TLS termination
       // Web traffic: HTTP on port 80 (Traefik Ingress handles HTTPS)
-      // Mail protocols: Wrapper script patches nginx to add plaintext listeners on 465, 587, 993, 995
+      // Mail protocols: Wrapper script patches nginx to add plaintext listeners on 465, 993, 995
       // (Traefik IngressRouteTCP handles TLS for mail protocols)
       TLS_FLAVOR: 'notls',
 
@@ -275,7 +275,7 @@ export class MailuChart extends Chart {
 
     // Security: Relay and rate limiting configuration
     // RELAYNETS: Networks allowed to relay without authentication (empty = no external relaying)
-    // Only authenticated users via SASL can send mail (ports 465/587)
+    // Only authenticated users via SASL can send mail (port 465)
     envVars.RELAYNETS = '';
 
     // Rate limiting configuration

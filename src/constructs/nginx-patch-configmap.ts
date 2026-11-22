@@ -6,7 +6,7 @@ export interface NginxPatchConfigMapProps {
 
   /**
    * Inject the `proxy_protocol` keyword on the `listen` directives for
-   * 465 / 587 / 993 / 995. Must be paired with `proxyProtocolToFront: true`
+   * 465 / 993 / 995. Must be paired with `proxyProtocolToFront: true`
    * on TraefikIngressConfig, otherwise nginx waits forever for a PROXY
    * header that never arrives (or vice versa).
    * @default false
@@ -18,10 +18,14 @@ export interface NginxPatchConfigMapProps {
  * ConfigMap containing nginx patch script for Traefik TLS termination
  *
  * Creates a bash script that patches /conf/nginx.conf to inject
- * mail protocol server blocks (465, 587, 993, 995) when TLS_FLAVOR='traefik'.
+ * mail protocol server blocks (465, 993, 995) when TLS_FLAVOR='notls'.
  *
  * The patch enables Traefik to terminate TLS while nginx handles mail protocols
  * in plaintext mode with authentication proxying.
+ *
+ * There is deliberately no submission listener on 587: Traefik cannot
+ * terminate STARTTLS for SMTP, and a plain 587 listener would offer
+ * AUTH PLAIN without TLS. Submission is implicit TLS on 465 (RFC 8314).
  */
 export class NginxPatchConfigMap extends Construct {
   public readonly configMap: kplus.ConfigMap;
@@ -35,8 +39,8 @@ export class NginxPatchConfigMap extends Construct {
     // after toggling the flag forces a re-patch instead of accepting the
     // previous (now-wrong) injection as already-applied.
     const patchMarker = props.proxyProtocolToFront
-      ? '# Submission (port 587) for Traefik TLS termination [proxy_protocol]'
-      : '# Submission (port 587) for Traefik TLS termination';
+      ? '# SMTPS (port 465) for Traefik TLS termination [proxy_protocol]'
+      : '# SMTPS (port 465) for Traefik TLS termination';
 
     // Patch 3 is emitted only when proxyProtocolToFront is on: it injects
     // `set_real_ip_from <cidr>;` directives inside the mail{} context so
@@ -46,7 +50,7 @@ export class NginxPatchConfigMap extends Construct {
     // and the built-in Client-IP auth header sent to mailu-admin still
     // carries the Traefik pod IP. Mailu's stock template emits exactly this
     // pattern for port 25 (see Mailu nginx.conf.tmpl mail{} block); we
-    // extend it to our injected 465/587/993/995 listeners. CIDR list is
+    // extend it to our injected 465/993/995 listeners. CIDR list is
     // expanded from $REAL_IP_FROM at wrapper runtime so updates flow
     // through the env-config ConfigMap without re-baking this script.
     const realIpInjection = props.proxyProtocolToFront ? `
@@ -133,20 +137,11 @@ sed -i "s|auth_http http://127.0.0.1:8000/auth/email;|auth_http http://\${ADMIN_
 
 # Patch 2: Inject mail protocol server blocks (in mail{} section)
 # Find the port 25 server block and insert new blocks after its closing brace
-echo "  - Adding mail protocol listeners (587, 465, 993, 995)..."
+echo "  - Adding mail protocol listeners (465, 993, 995)..."
 sed -i '/auth_http_header Auth-Port 25;/,/^    }$/{
   /^    }$/a\\
 \\
     ${patchMarker}\\
-    server {\\
-      listen 587${listenSuffix};\\
-      protocol smtp;\\
-      smtp_auth plain;\\
-      auth_http_header Auth-Port 587;\\
-      auth_http_header Client-Port \\$remote_port;\\
-    }\\
-\\
-    # SMTPS (port 465) for Traefik TLS termination\\
     server {\\
       listen 465${listenSuffix};\\
       protocol smtp;\\

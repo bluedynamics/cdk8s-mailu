@@ -12,7 +12,7 @@ Mailu is a modular mail server composed of multiple services working together:
 
 ```mermaid
 graph TB
-    Ingress[Traefik<br/>TLS Termination] -->|Plaintext: 587, 465, 993, 995| FrontNginx[Front Nginx<br/>Auth Proxy]
+    Ingress[Traefik<br/>TLS Termination] -->|Plaintext: 465, 993, 995| FrontNginx[Front Nginx<br/>Auth Proxy]
     Ingress -->|HTTP:80| Admin[Admin:8080<br/>Web UI + SSO]
     Ingress -->|HTTP:80| Webmail[Webmail:80<br/>Roundcube]
     Ingress -.MX:25.-> Postfix[Postfix:25<br/>SMTP]
@@ -37,17 +37,18 @@ graph TB
 **Ingress (Traefik)**
 - TLS termination for all protocols (HTTPS, SMTPS, IMAPS, POP3S)
 - Routes HTTP/HTTPS (80/443) directly to Admin and Webmail
-- Routes mail protocols (587, 465, 993, 995) to Front (Nginx)
+- Routes mail protocols (465, 993, 995) to Front (Nginx)
 - Routes MX mail (port 25) directly to Postfix
 - LoadBalancer service with public IP
 
 **Front (Nginx)**
-- Protocol routing for authenticated mail protocols (SMTP submission 587/465, IMAP 993, POP3 995)
+- Protocol routing for authenticated mail protocols (SMTP submission 465, IMAP 993, POP3 995)
 - Authentication proxy using Admin's auth_http endpoint
 - Receives plain TCP from Traefik after TLS termination
 - Proxies to backend Kubernetes Services (Postfix, Dovecot)
 - **Note**: nginx proxies to Services, not directly to pods; if multiple backend replicas exist, the Service handles load balancing
 - **Note**: Port 25 (MX mail reception) and HTTP/HTTPS bypass Front entirely
+- **Note**: There is no port 587, because Traefik cannot terminate STARTTLS for SMTP; mail clients submit with implicit TLS on port 465 (see [Nginx Configuration Patches](nginx-configuration-patches.md))
 - Always required for authenticated mail protocols
 
 **Admin**
@@ -168,14 +169,14 @@ Understanding how mail flows through the system is crucial for troubleshooting a
 
 **Complete flow for authenticated mail client access:**
 
-1. **Mail client → Traefik:587/993/995** - Client connects (Thunderbird, Outlook, etc.)
+1. **Mail client → Traefik:465/993/995** - Client connects (Thunderbird, Outlook, etc.)
 2. **Traefik TLS termination** - Traefik decrypts TLS, forwards plaintext
-3. **Traefik → Front:587/993/995** - Nginx receives plaintext connection
+3. **Traefik → Front:465/993/995** - Nginx receives plaintext connection
 4. **Front → Admin:8080/internal/auth/email** - Nginx auth_http check
 5. **Admin validates** - Queries PostgreSQL for user credentials
 6. **Admin → Front** - Returns HTTP 200 (success) or 403 (failure) with backend address
 7. **If authenticated**:
-   - SMTP (587/465): Front → Postfix:25
+   - SMTP (465): Front → Postfix:25
    - IMAP (993/143): Front → Dovecot:143
    - POP3 (995/110): Front → Dovecot:110
 

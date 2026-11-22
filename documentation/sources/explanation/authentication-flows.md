@@ -10,11 +10,11 @@ cdk8s-mailu uses multiple authentication mechanisms depending on the access path
 
 ### nginx auth_http Protocol (Mail Clients)
 
-**Used for**: Authenticated SMTP submission (587/465) and IMAP/POP3 access (993/995) from mail clients (Thunderbird, Outlook, mobile apps).
+**Used for**: Authenticated SMTP submission (465) and IMAP/POP3 access (993/995) from mail clients (Thunderbird, Outlook, mobile apps).
 
 **How it works**:
 
-1. **Client Connection**: Mail client connects to Traefik on port 587, 465, 993, or 995
+1. **Client Connection**: Mail client connects to Traefik on port 465, 993, or 995
 2. **TLS Termination**: Traefik decrypts TLS and forwards plaintext connection to Front (Nginx)
 3. **Authentication Subrequest**: Before proxying to backend, Nginx makes an HTTP subrequest to Admin
    - URL: `http://admin-service:8080/internal/auth/email`
@@ -24,7 +24,7 @@ cdk8s-mailu uses multiple authentication mechanisms depending on the access path
    - **Success (HTTP 200)**: Admin returns backend server address in `Auth-Status: OK` header
    - **Failure (HTTP 403)**: Admin returns `Auth-Status: Invalid credentials`
 6. **Backend Routing**: If authenticated, Nginx proxies connection to appropriate backend:
-   - SMTP (587/465) → Postfix:25
+   - SMTP (465) → Postfix:25
    - IMAP (993/143) → Dovecot:143
    - POP3 (995/110) → Dovecot:110
 
@@ -33,6 +33,7 @@ cdk8s-mailu uses multiple authentication mechanisms depending on the access path
 - Credentials never reach the backend services (Front handles auth)
 - Admin acts as centralized authentication backend for all protocols
 - Uses standard SMTP/IMAP/POP3 username/password authentication
+- Credentials always travel inside TLS between client and Traefik; there is no port 587, because a plain 587 listener would offer `AUTH PLAIN` without `STARTTLS`
 
 **Configuration**:
 - Implemented in nginx-patch-configmap.ts via `auth_http` directive
@@ -43,7 +44,7 @@ cdk8s-mailu uses multiple authentication mechanisms depending on the access path
 ```typescript
 // src/constructs/nginx-patch-configmap.ts
 server {
-  listen 587;
+  listen 465;
   auth_http http://admin-service:8080/internal/auth/email;
   proxy_pass postfix-service:25;
 }
@@ -167,7 +168,7 @@ SUBMISSION_PORT=10025
 
 | Access Path | Method | Authentication | Backend | Notes |
 |-------------|--------|----------------|---------|-------|
-| **Mail client SMTP (587/465)** | nginx auth_http | Username/password | Admin:8080 → Postfix:25 | Every connection authenticated |
+| **Mail client SMTP (465)** | nginx auth_http | Username/password | Admin:8080 → Postfix:25 | Every connection authenticated |
 | **Mail client IMAP/POP3 (993/995)** | nginx auth_http | Username/password | Admin:8080 → Dovecot:143/110 | Every connection authenticated |
 | **Webmail access (HTTPS)** | SSO session | Username/password (first login) | Admin database | Session cookie for subsequent access |
 | **Webmail sending (SMTP)** | Network isolation | None (trust) | Dovecot-Submission:10025 → Postfix:25 | Webmail session = trusted |

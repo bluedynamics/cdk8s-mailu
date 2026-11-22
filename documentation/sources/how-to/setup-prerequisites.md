@@ -22,7 +22,7 @@ Before deploying Mailu, ensure you have:
   - 100Gi+ available for mailboxes
 
 - [ ] **Ingress controller** (Traefik recommended)
-  - Ports 80, 443, 25, 587, 465, 993, 995 exposed
+  - Ports 80, 443, 25, 465, 993, 995 exposed
   - TLS certificate management (cert-manager)
 
 ### Required Services
@@ -120,8 +120,6 @@ helm install traefik traefik/traefik \
   --set ports.smtp.exposedPort=25 \
   --set ports.smtps.port=465 \
   --set ports.smtps.exposedPort=465 \
-  --set ports.submission.port=587 \
-  --set ports.submission.exposedPort=587 \
   --set ports.imaps.port=993 \
   --set ports.imaps.exposedPort=993 \
   --set ports.pop3s.port=995 \
@@ -144,10 +142,6 @@ ports:
   smtp:
     port: 25
     exposedPort: 25
-    protocol: TCP
-  submission:
-    port: 587
-    exposedPort: 587
     protocol: TCP
   smtps:
     port: 465
@@ -370,7 +364,7 @@ curl -I https://mail.example.com/admin
 ┌─────────────────────────────────────────────────────────────┐
 │  Traefik Ingress Controller (TLS Termination)               │
 │  - HTTP/HTTPS (80, 443)                                     │
-│  - Mail Protocols (25, 587, 465, 993, 995)                 │
+│  - Mail Protocols (25, 465, 993, 995)                       │
 └───────────────────────┬─────────────────────────────────────┘
                         │
                         ↓

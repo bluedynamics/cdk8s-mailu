@@ -23,7 +23,7 @@ Client (TLS)
     ↓
 Traefik IngressRoute (TLS termination with Let's Encrypt)
     ↓
-Mailu Front Service (plaintext, port 80 for HTTP, 25/587/465/993/995 for mail)
+Mailu Front Service (plaintext, port 80 for HTTP, 465/993/995 for mail)
     ↓
 Backend Services (plaintext internal communication)
 ```
@@ -42,7 +42,7 @@ Before configuring TLS, ensure you have:
 2. **cert-manager** installed (for Let's Encrypt certificates)
 3. **DNS records** pointing to your cluster:
    - `mail.example.com` → Cluster ingress IP
-4. **Cluster ingress** accessible from internet (ports 80, 443, 25, 587, 465, 993, 995)
+4. **Cluster ingress** accessible from internet (ports 80, 443, 25, 465, 993, 995)
 
 ## Built-in TLS Configuration
 
@@ -69,7 +69,7 @@ app.synth();
 **What this does automatically**:
 - Sets `TLS_FLAVOR=notls` (Traefik handles TLS, not Mailu)
 - Mounts nginx-patch ConfigMap to Front container
-- Patches nginx to support mail protocol TLS ports (587, 465, 993, 995)
+- Patches nginx to support mail protocol TLS ports (465, 993, 995)
 - Configures plaintext internal communication between components
 
 **No additional TLS configuration needed** in the CDK8S code!
@@ -118,7 +118,6 @@ app.synth();
 - ✅ Traefik TLSOption with Mailu-compatible cipher suites
 - ✅ Traefik IngressRouteTCP for SMTP (port 25) with rate limiting
 - ✅ Traefik IngressRouteTCP for SMTPS (port 465) with TLS termination
-- ✅ Traefik IngressRouteTCP for Submission (port 587) with TLS termination
 - ✅ Traefik IngressRouteTCP for IMAPS (port 993) with TLS termination
 - ✅ Traefik IngressRouteTCP for POP3S (port 995) with TLS termination
 - ✅ Traefik IngressRouteTCP for IMAP (port 143, plaintext)
@@ -237,24 +236,7 @@ spec:
 Route SMTP, IMAP, POP3 traffic with TLS termination:
 
 ```yaml
-# SMTP Submission (port 587)
-apiVersion: traefik.io/v1alpha1
-kind: IngressRouteTCP
-metadata:
-  name: mailu-smtp-submission
-  namespace: mailu
-spec:
-  entryPoints:
-    - smtp-submission  # Traefik TCP entry point on port 587
-  routes:
-    - match: HostSNI(`*`)
-      services:
-        - name: mailu-front
-          port: 587
-  tls:
-    secretName: mailu-tls-cert
----
-# SMTPS (port 465)
+# SMTPS (port 465), the submission port for mail clients
 apiVersion: traefik.io/v1alpha1
 kind: IngressRouteTCP
 metadata:
@@ -355,9 +337,6 @@ ports:
   smtp:
     port: 25
     exposedPort: 25
-  smtp-submission:
-    port: 587
-    exposedPort: 587
   smtps:
     port: 465
     exposedPort: 465
@@ -368,6 +347,9 @@ ports:
     port: 995
     exposedPort: 995
 ```
+
+Do not add an entry point for port 587.
+cdk8s-mailu offers mail submission only on port 465 with implicit TLS.
 
 ## SMTP Rate Limiting Strategy
 
@@ -442,7 +424,7 @@ Port 25: Traefik (InFlightConn) → Postfix (anvil rate limits)
 - Reduced latency for incoming mail (one less proxy hop)
 - Improved reliability (nginx restart doesn't affect MX delivery)
 
-**Authenticated ports (587, 465, 993, 995)** still route through Front (nginx) for protocol-aware authentication proxy.
+**Authenticated ports (465, 993, 995)** still route through Front (nginx) for protocol-aware authentication proxy.
 
 ### Adjusting Rate Limits
 
@@ -480,22 +462,16 @@ openssl s_client -connect mail.example.com:443 -servername mail.example.com < /d
 
 ### Test Mail Protocols
 
-**SMTP Submission (587)**:
+**SMTPS (465)**:
 ```bash
-openssl s_client -connect mail.example.com:587 -starttls smtp
-# Should show TLS handshake success
+openssl s_client -connect mail.example.com:465
+# Should show TLS handshake and SMTP greeting
 ```
 
 **IMAPS (993)**:
 ```bash
 openssl s_client -connect mail.example.com:993
 # Should show TLS handshake and IMAP greeting
-```
-
-**SMTPS (465)**:
-```bash
-openssl s_client -connect mail.example.com:465
-# Should show TLS handshake and SMTP greeting
 ```
 
 ### Configure Email Client
@@ -510,9 +486,24 @@ Use these settings in your email client (Thunderbird, Outlook, etc.):
 
 **Outgoing Mail (SMTP)**:
 - Server: `mail.example.com`
-- Port: `587` (or `465`)
-- Security: `STARTTLS` (587) or `SSL/TLS` (465)
+- Port: `465`
+- Security: `SSL/TLS`
 - Authentication: `Normal password`
+
+(migrate-from-port-587)=
+
+## Migrate existing deployments from port 587
+
+cdk8s-mailu no longer creates a submission listener on port 587, the `submission` port on the Front service, or the `mailu-submission` IngressRouteTCP.
+Under `TLS_FLAVOR=notls` that listener offered `AUTH PLAIN` without `STARTTLS`, so clients sent credentials in cleartext, and clients that require STARTTLS could not use it at all.
+For details, see [issue #32](https://github.com/bluedynamics/cdk8s-mailu/issues/32).
+
+If you upgrade from a release that still served port 587, follow these steps.
+
+1. Change the outgoing mail server of every mail client to port `465` with security `SSL/TLS`.
+2. Deploy the new manifests, which no longer contain the port 587 resources.
+3. Remove the port 587 entry point (`smtp-submission`) from your Traefik configuration, for example the matching key under `ports` in the Traefik Helm values.
+4. Close port 587 on your load balancer and firewall.
 
 ## Troubleshooting
 
@@ -541,7 +532,7 @@ kubectl logs -n cert-manager deploy/cert-manager
 
 ```bash
 # Test connectivity from outside cluster
-telnet mail.example.com 587
+telnet mail.example.com 465
 telnet mail.example.com 993
 
 # Check IngressRoute status

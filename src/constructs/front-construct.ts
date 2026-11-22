@@ -27,7 +27,7 @@ export interface FrontConstructProps {
  *
  * Components:
  * - Deployment with nginx container
- * - Service exposing TLS-terminated mail protocol ports (465, 587, 993, 995)
+ * - Service exposing TLS-terminated mail protocol ports (465, 993, 995)
  * - Nginx patch ConfigMap for adding mail protocol listeners
  */
 export class FrontConstruct extends Construct {
@@ -159,12 +159,6 @@ export class FrontConstruct extends Construct {
           name: 'smtps',
           port: 465,
           targetPort: 465,
-          protocol: kplus.Protocol.TCP,
-        },
-        {
-          name: 'submission',
-          port: 587,
-          targetPort: 587,
           protocol: kplus.Protocol.TCP,
         },
         // TLS-terminated IMAP port
