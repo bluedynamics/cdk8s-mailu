@@ -15,9 +15,19 @@ For the reasons, see [The front mail proxy](../explanation/front-mail-proxy.md).
 - The ConfigMap with the wrapper script is no longer rendered.
   It carries the label `app.kubernetes.io/name: mailu-nginx-patch`.
 - The Ingress path `/health` is no longer rendered.
+- Without `resources.front` the front requests 10m CPU and 16Mi memory, with limits of 100m and 64Mi.
+  Before, it got the cdk8s-plus defaults with limits of 1.5 CPU and 2Gi.
+- The front does no reverse DNS lookups.
+  Postfix logs submissions as `client=unknown[<address>]`.
+- The front carries about 1000 concurrent mail sessions.
+  It runs two worker processes with 1024 connections each, and a relayed session takes two connections.
+  The Mailu image started one worker per CPU core.
 
 The names of the front Deployment and Service stay the same.
 The Traefik routes stay the same.
+
+If you upgrade from 0.3, port 587 goes away in the same step.
+See {ref}`Migrate existing deployments from port 587 <migrate-from-port-587>`.
 
 (upgrade-front-before)=
 
@@ -28,6 +38,7 @@ The Traefik routes stay the same.
 2. If network policies name the ports of the front pod, change them to 10465, 10993, and 10995.
    A NetworkPolicy matches the container port.
    The Service port does not count.
+   The same applies to Services of your own that target the front pods by port number.
 3. If a log parser reads the failed logins of the front, check its pattern against the new line.
    The text is the same as before.
    The `server:` field now shows the container port, for example `0.0.0.0:10993`.
@@ -35,12 +46,27 @@ The Traefik routes stay the same.
    The proxy needs a few megabytes of memory.
 5. If you disabled the admin component, disable the front as well.
    A chart with the front but without admin is rejected.
+6. Check that the cluster can pull the image set in `images.front`.
+   The next section explains why this matters.
 
 (upgrade-front-deploy)=
 
 ## Deploy
 
-Deploy the new manifests.
+The Service switches to the new target ports the moment you apply the manifests.
+The old pod does not listen on them.
+Until the new pod is ready, new connections to 465, 993, and 995 are refused.
+The rolling update does not close this gap.
+It lasts as long as the new pod needs to pull its image and to start.
+If the new pod cannot start, the mail ports stay down until you roll back.
+
+1. Deploy the new manifests.
+2. Watch the rollout until the new pod is ready:
+
+   ```shell
+   kubectl rollout status -n mailu deployment -l app.kubernetes.io/name=mailu-front
+   ```
+
 Open mail sessions end when the old pod stops.
 Mail clients reconnect on their own.
 
@@ -57,7 +83,9 @@ Mail clients reconnect on their own.
    ```
 
    The line names your public address after `client:`.
-   An address of the pod network there means that Traefik and the front disagree about the PROXY protocol.
+   An address of Traefik there means that nginx ignored the PROXY header.
+   nginx trusts the header only from senders inside `subnet`.
+   Set `subnet` to a network that contains the addresses Traefik connects from.
 3. Delete the ConfigMap with the wrapper script when your deployment tool does not prune:
 
    ```shell
@@ -70,3 +98,5 @@ Mail clients reconnect on their own.
 
 Deploy the manifests of the previous version of cdk8s-mailu.
 The Mailu front image and the wrapper script come back with them.
+The Service switches its target ports back at once.
+New connections are refused again until the old front is ready.

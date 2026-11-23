@@ -31,6 +31,10 @@ For every login nginx sends one HTTP request to `/internal/auth/email` on the ad
 The request carries the credentials and the circumstances of the login in headers.
 Admin answers with `Auth-Status`, and on success with the address and port of the backend.
 
+nginx resolves the name of the admin Service once, when it starts.
+The address of a Service is stable for as long as the Service exists.
+After someone deletes and re-creates the admin Service, the front has to restart.
+
 nginx sends most headers on its own: `Auth-Method`, `Auth-User`, `Auth-Pass`, `Auth-Protocol`, and `Client-IP`.
 Admin needs two more, `Auth-Port` and `Client-Port`, and fails without them.
 The Mailu front image adds them in its configuration template.
@@ -71,6 +75,8 @@ The PROXY protocol solves this.
 With `ingress.traefik.proxyProtocolToFront` enabled, Traefik sends the address of the real client in a header before the mail protocol starts.
 The listeners of the front expect that header, and `set_real_ip_from` makes nginx use the address from it.
 nginx trusts the header only when the connection comes from `subnet`.
+Traefik therefore has to connect from an address inside `subnet`.
+From any other sender nginx accepts the header and ignores its content.
 
 Both sides have to agree.
 A listener that waits for a header Traefik never sends hangs every session.

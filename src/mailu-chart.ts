@@ -207,9 +207,8 @@ export class MailuChart extends Chart {
       TIMEZONE: this.config.timezone || 'UTC',
 
       // TLS configuration - 'notls' for Traefik TLS termination
-      // Web traffic: HTTP on port 80 (Traefik Ingress handles HTTPS)
-      // Mail protocols: Wrapper script patches nginx to add plaintext listeners on 465, 993, 995
-      // (Traefik IngressRouteTCP handles TLS for mail protocols)
+      // Web traffic: Traefik Ingress handles HTTPS and routes HTTP to admin and webmail
+      // Mail protocols: Traefik IngressRouteTCP handles TLS and forwards plaintext to the front
       TLS_FLAVOR: 'notls',
 
       // Proxy configuration - trust X-Forwarded headers from pod network

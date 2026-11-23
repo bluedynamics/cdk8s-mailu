@@ -121,12 +121,9 @@ export class TraefikIngressConstruct extends Construct {
     // Routes different paths to appropriate services:
     // - /admin, /sso, /static → admin service (admin UI, SSO login, static assets)
     // - /webmail → webmail service (webmail UI)
-    // - /health → front service (health check only)
-    // - /internal → admin service (internal auth endpoints)
     //
-    // NOTE: Front service does NOT serve general HTTP traffic - it only handles
-    // mail protocols (SMTP, IMAP, POP3) via IngressRouteTCP resources.
-    // The only HTTP endpoint on front service is /health for health checks.
+    // NOTE: Front service serves no HTTP - it only handles mail protocols
+    // (SMTP, IMAP, POP3) via IngressRouteTCP resources.
     this.httpIngress = new k8s.KubeIngress(this, 'webmail-ingress', {
       metadata: {
         name: 'mailu-webmail',

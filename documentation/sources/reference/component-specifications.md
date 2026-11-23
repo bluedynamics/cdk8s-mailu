@@ -90,6 +90,12 @@ The configuration is derived from these options:
 The pod template carries the annotation `checksum/config`.
 A changed configuration changes the annotation and rolls the pod.
 
+nginx resolves the host in `auth_http` only at start.
+
+**Capacity**: about 1000 concurrent mail sessions.
+nginx runs two worker processes with 1024 connections each, and a relayed session takes two connections.
+Both values are fixed.
+
 **Storage**: None (stateless), an `emptyDir` at `/tmp` for the pid file
 
 **Architecture Support**: AMD64, ARM64
