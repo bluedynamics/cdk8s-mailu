@@ -317,10 +317,10 @@ Use JSDoc comments to explain choices:
 
 ```typescript
 /**
- * Creates Front component with Nginx reverse proxy.
+ * Front Construct - nginx mail proxy
  *
- * Note: When using Traefik TLS termination, the nginx-patch-configmap
- * is automatically applied to wrap backend connections properly.
+ * It is the official nginx image with a static configuration, not a Mailu
+ * image: no Mailu environment, no secret, no root.
  */
 export class FrontConstruct extends Construct { ... }
 ```

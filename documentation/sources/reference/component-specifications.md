@@ -19,11 +19,12 @@ Complete reference of all network ports used by Mailu components:
 | **Dovecot** | 995 | POP3S | POP3 over TLS (via Front after auth) | ✓ | |
 | **Dovecot** | 2525 | LMTP | Mail delivery from Postfix | | ✓ |
 | **Dovecot-Sub** | 10025 | Submission | SMTP relay from webmail | | ✓ |
-| **Front** | 465 | Submission | SMTP submission (plaintext from Traefik) | ✓ | |
-| **Front** | 993 | IMAP | IMAP access (plaintext from Traefik) | ✓ | |
-| **Front** | 995 | POP3 | POP3 access (plaintext from Traefik) | ✓ | |
+| **Front** | 465 | Submission | SMTP submission (plaintext from Traefik), container port 10465 | ✓ | |
+| **Front** | 993 | IMAP | IMAP access (plaintext from Traefik), container port 10993 | ✓ | |
+| **Front** | 995 | POP3 | POP3 access (plaintext from Traefik), container port 10995 | ✓ | |
+| **Front** | 8080 | HTTP | Health endpoint `/health` for the probes, not on the Service | | ✓ |
 | **Postfix** | 25 | SMTP | SMTP relay and MX reception | ✓ | |
-| **Postfix** | 10025 | Submission | Internal relay from dovecot-submission | | ✓ |
+| **Postfix** | 10025 | Submission | Authenticated submission relayed by Front | | ✓ |
 | **Rspamd** | 11332 | Milter | Spam scanning from Postfix | | ✓ |
 | **Rspamd** | 11333 | Fuzzy | Fuzzy hash storage | | ✓ |
 | **Rspamd** | 11334 | HTTP | Web UI and API | ✓ | |
@@ -39,7 +40,7 @@ Complete reference of all network ports used by Mailu components:
   - Front receives **plaintext** traffic after Traefik decrypts
   - Front does NOT handle HTTP/HTTPS web traffic (Traefik routes directly to Admin/Webmail)
   - MX mail (port 25) routes directly to Postfix, bypassing Front
-  - Front service exposes ports 25/80/143/110/443 but nginx doesn't listen on them with `TLS_FLAVOR=notls`
+  - The Front Service has only the ports 465, 993, and 995
 - **Front's Role**: Authentication proxy for mail protocols using nginx auth_http to validate credentials with Admin before relaying to backends
 
 ## Core Components
@@ -48,37 +49,63 @@ Core components are always deployed and required for Mailu to function.
 
 ### Front (Nginx)
 
-**Purpose**: Reverse proxy and protocol router for HTTP/S, SMTP, IMAP, and POP3.
+**Purpose**: Mail proxy that authenticates SMTPS, IMAPS, and POP3S sessions against Admin and relays them to Postfix or Dovecot.
+It serves no HTTP and receives no mail from other servers.
 
-**Image**: `ghcr.io/mailu/nginx:2024.06`
+**Image**: `nginx:1.30.7-alpine`, the official nginx image.
+Set another one with `images.front`.
+`images.registry` and `images.tag` do not apply to the front.
 
-**Resources**:
-- CPU Request: `100m`
-- Memory Request: `256Mi`
-- CPU Limit: `500m`
-- Memory Limit: `512Mi`
+**Command**: `nginx -c /etc/nginx/nginx.conf -g 'daemon off;'`
+
+**Resources** (when `resources.front` is not set):
+- CPU Request: `10m`
+- Memory Request: `16Mi`
+- CPU Limit: `100m`
+- Memory Limit: `64Mi`
 
 **Network Ports**:
-- `80/TCP` - HTTP (redirects to HTTPS) - **UNUSED** with TLS_FLAVOR=notls (Traefik routes to Admin/Webmail directly)
-- `443/TCP` - HTTPS (Web UI, admin, webmail) - **UNUSED** with TLS_FLAVOR=notls
-- `25/TCP` - SMTP (mail submission) - **UNUSED** with TLS_FLAVOR=notls (Traefik routes MX mail to Postfix directly)
-- `465/TCP` - SMTPS (SMTP over TLS) - **USED** (mail client submission via auth_http, relays to Postfix; webmail uses separate dovecot-submission service)
-- `587/TCP` - Submission (mail submission with STARTTLS) - **NOT OFFERED** (Traefik cannot terminate STARTTLS for SMTP, and a plaintext listener would accept `AUTH PLAIN` without TLS; mail clients submit on 465)
-- `143/TCP` - IMAP (mail retrieval) - **UNUSED** with TLS_FLAVOR=notls
-- `993/TCP` - IMAPS (IMAP over TLS) - **USED** (mail client access via auth_http, relays to Dovecot)
-- `110/TCP` - POP3 (mail retrieval) - **UNUSED** with TLS_FLAVOR=notls
-- `995/TCP` - POP3S (POP3 over TLS) - **USED** (mail client access via auth_http, relays to Dovecot)
 
-**Storage**: None (stateless)
+| Service port | Container port | Protocol after TLS termination | Relayed to |
+|---|---|---|---|
+| `465/TCP` | `10465` | SMTP submission | Postfix `10025` |
+| `993/TCP` | `10993` | IMAP | Dovecot `143` |
+| `995/TCP` | `10995` | POP3 | Dovecot `110` |
+| not on the Service | `8080` | HTTP, `/health` answers 204 | |
+
+There is no port 587: Traefik cannot terminate STARTTLS for SMTP, and a plaintext listener would accept `AUTH PLAIN` without TLS.
+Mail clients submit on 465.
+
+**Configuration**: one ConfigMap with the key `nginx.conf`, mounted read-only at `/etc/nginx/nginx.conf`.
+The configuration is derived from these options:
+
+| Option | Effect on the configuration |
+|---|---|
+| `hostnames[0]` | `server_name`, the name in the greeting |
+| `namespace` and the name of the Admin Service | host in `auth_http` |
+| `mailu.messageSizeLimit` | `SIZE` in the SMTP capabilities |
+| `ingress.traefik.proxyProtocolToFront` | `proxy_protocol` on every listener and `set_real_ip_from` |
+| `subnet` | network in `set_real_ip_from` |
+
+The pod template carries the annotation `checksum/config`.
+A changed configuration changes the annotation and rolls the pod.
+
+nginx resolves the host in `auth_http` only at start.
+
+**Capacity**: about 1000 concurrent mail sessions.
+nginx runs two worker processes with 1024 connections each, and a relayed session takes two connections.
+Both values are fixed.
+
+**Storage**: None (stateless), an `emptyDir` at `/tmp` for the pid file
 
 **Architecture Support**: AMD64, ARM64
 
-**Environment Variables**:
-- `TLS_FLAVOR=notls` - TLS handled by Traefik
-- `SUBNET` - Kubernetes pod network CIDR
-- `MESSAGE_SIZE_LIMIT` - Maximum email size (default: 50MB)
-- `MESSAGE_RATELIMIT` - Rate limiting per user
-- All service discovery variables from shared ConfigMap
+**Environment Variables**: None.
+The front gets neither the shared ConfigMap nor a secret.
+
+**Security Context**: user and group `101`, `runAsNonRoot`, read-only root filesystem, no privilege escalation, all capabilities dropped, seccomp profile `RuntimeDefault`
+
+**Probes**: liveness and readiness with HTTP GET `/health` on port 8080
 
 ---
 
@@ -491,7 +518,8 @@ cdk8s-mailu does not currently create NetworkPolicy resources. Recommended polic
 
 **Ingress**:
 - Front: Allow from ingress controller only
-- Admin: Allow from front only
+- Admin: Allow from the ingress controller and from the other Mailu components
+- Postfix and Dovecot: Allow the backend ports only from the other Mailu components, because they trust every client inside `subnet`
 - Other services: Deny external ingress
 
 **Egress**:
@@ -522,8 +550,8 @@ cdk8s-mailu does not currently create NetworkPolicy resources. Recommended polic
 All components include liveness and readiness probes:
 
 **Probe Types**:
-- **TCP Socket**: Front, dovecot submission, dovecot, postfix
-- **HTTP**: Admin, webmail, rspamd
+- **TCP Socket**: Dovecot submission, dovecot, postfix
+- **HTTP**: Front, admin, webmail, rspamd
 - **Exec**: ClamAV (checks daemon status)
 
 **Typical Settings**:
@@ -540,13 +568,14 @@ All components include liveness and readiness probes:
 
 ## Security Context
 
-**Non-Root Filesystem**: Disabled for mail services (require write access to system directories)
+**Read-Only Root Filesystem**: Enabled for Front, disabled for the Mailu images (they write to system directories)
 
 **User/Group IDs**:
-- Most containers: Run as root (required for port binding <1024)
+- Mailu images: Run as root (required for port binding <1024)
+- Front: UID 101 (nginx user), listens on ports above 1024
 - Dovecot submission: UID 8 (mail user)
 
-**Capabilities**: Default (no special capabilities required)
+**Capabilities**: All dropped for Front; default for the other containers
 
 ---
 

@@ -1,0 +1,110 @@
+# A Mailu built from the original images, with the front replaced by a plain
+# nginx that runs the configuration under test. Started by run.sh, which sets
+# the variables; not meant to be started by hand.
+name: cdk8s-mailu-front-it
+
+x-mailu: &mailu
+  env_file: ${FRONT_TEST_ENV_FILE:?set by run.sh}
+  restart: "no"
+  # Mailu insists on a validating resolver
+  dns:
+    - 10.42.203.254
+
+services:
+  resolver:
+    image: ghcr.io/mailu/unbound:${MAILU_VERSION:?set by run.sh}
+    env_file: ${FRONT_TEST_ENV_FILE:?set by run.sh}
+    restart: "no"
+    networks:
+      default:
+        ipv4_address: 10.42.203.254
+
+  redis:
+    image: redis:7-alpine
+    restart: "no"
+
+  admin:
+    <<: *mailu
+    image: ghcr.io/mailu/admin:${MAILU_VERSION:?set by run.sh}
+    volumes:
+      - data:/data
+      - dkim:/dkim
+    depends_on:
+      - redis
+      - resolver
+    networks:
+      default:
+        aliases:
+          # The host name in the auth_http line of the configuration under
+          # test, in Kubernetes the DNS name of the admin Service
+          - ${FRONT_TEST_ADMIN_ALIAS:?set by run.sh}
+
+  imap:
+    <<: *mailu
+    image: ghcr.io/mailu/dovecot:${MAILU_VERSION:?set by run.sh}
+    volumes:
+      - mail:/mail
+    depends_on:
+      - resolver
+
+  smtp:
+    <<: *mailu
+    image: ghcr.io/mailu/postfix:${MAILU_VERSION:?set by run.sh}
+    volumes:
+      - queue:/queue
+    depends_on:
+      - resolver
+
+  antispam:
+    <<: *mailu
+    image: ghcr.io/mailu/rspamd:${MAILU_VERSION:?set by run.sh}
+    hostname: antispam
+    volumes:
+      - filter:/var/lib/rspamd
+    depends_on:
+      - redis
+      - resolver
+
+  # Runs like the pod FrontConstruct renders: same command, same user,
+  # read-only root filesystem, no capabilities. "entrypoint" because a
+  # Kubernetes "command" replaces the entrypoint of the image, too.
+  front:
+    image: ${NGINX_IMAGE:?set by run.sh}
+    user: "101:101"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:uid=101,gid=101,mode=0700
+    # The limits FrontConstruct sets when resources.front is not configured
+    # (DEFAULT_RESOURCES), so that logins and transfers run under them
+    mem_limit: 64m
+    cpus: 0.1
+    entrypoint: ["nginx", "-c", "/etc/nginx/nginx.conf", "-g", "daemon off;"]
+    volumes:
+      - ${FRONT_TEST_CONFIG:?set by run.sh}:/etc/nginx/nginx.conf:ro
+    restart: "no"
+    depends_on:
+      - admin
+    ports:
+      - 127.0.0.1:20465:10465
+      - 127.0.0.1:20993:10993
+      - 127.0.0.1:20995:10995
+      - 127.0.0.1:20080:8080
+
+volumes:
+  data: {}
+  dkim: {}
+  mail: {}
+  queue: {}
+  filter: {}
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        # Inside the subnet the configuration under test trusts for the PROXY header
+        - subnet: 10.42.203.0/24

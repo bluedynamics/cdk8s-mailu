@@ -301,7 +301,8 @@ describe('MailuChart', () => {
       const app = Testing.app();
       const config = {
         ...validConfig,
-        components: { admin: false },
+        // The front authenticates against admin, so it has to go as well
+        components: { admin: false, front: false },
       };
       const chart = new MailuChart(app, 'test', config);
       const manifests = Testing.synth(chart);
@@ -310,6 +311,92 @@ describe('MailuChart', () => {
         (m) => m.kind === 'Deployment' && m.metadata?.labels?.['app.kubernetes.io/component'] === 'admin',
       );
       expect(adminDeployment).toBeUndefined();
+    });
+  });
+
+  describe('front', () => {
+    const frontConf = (config: MailuChartConfig): string =>
+      Testing.synth(new MailuChart(Testing.app(), 'test', config))
+        .find((m) => m.kind === 'ConfigMap' && m.data?.['nginx.conf']).data['nginx.conf'];
+
+    test('the front keeps its construct paths, so object names survive the rewrite', () => {
+      const chart = new MailuChart(Testing.app(), 'test', validConfig);
+      expect(chart.frontConstruct!.deployment.node.path).toBe('test/front/deployment');
+      expect(chart.frontConstruct!.service.node.path).toBe('test/front/service');
+    });
+
+    test('no wrapper is rendered for the front any more', () => {
+      const manifests = Testing.synth(new MailuChart(Testing.app(), 'test', validConfig));
+      expect(manifests.filter((m) => m.metadata?.labels?.['app.kubernetes.io/name'] === 'mailu-nginx-patch')).toEqual([]);
+      const front = manifests.find(
+        (m) => m.kind === 'Deployment' && m.metadata?.labels?.['app.kubernetes.io/component'] === 'front',
+      );
+      // Webmail still has a wrapper of the same file name
+      expect(JSON.stringify(front)).not.toContain('entrypoint-wrapper.sh');
+    });
+
+    test('the front advertises the message size limit that postfix enforces', () => {
+      for (const config of [validConfig, { ...validConfig, mailu: { messageSizeLimit: 25 } }]) {
+        const manifests = Testing.synth(new MailuChart(Testing.app(), 'test', config));
+        const env = manifests.find((m) => m.kind === 'ConfigMap' && m.data?.MESSAGE_SIZE_LIMIT);
+        expect(frontConf(config)).toContain(`"SIZE ${env.data.MESSAGE_SIZE_LIMIT}"`);
+      }
+    });
+
+    test('the front authenticates against the admin service of the chart', () => {
+      const manifests = Testing.synth(new MailuChart(Testing.app(), 'test', validConfig));
+      const adminService = manifests.find(
+        (m) => m.kind === 'Service' && m.metadata?.labels?.['app.kubernetes.io/component'] === 'admin',
+      );
+      expect(frontConf(validConfig)).toContain(
+        `auth_http http://${adminService.metadata.name}.mailu-test.svc.cluster.local:8080/internal/auth/email;`,
+      );
+    });
+
+    test('the front finds admin in the default namespace when none is configured', () => {
+      const { namespace, ...withoutNamespace } = validConfig;
+      expect(namespace).toBeDefined();
+      expect(frontConf(withoutNamespace)).toMatch(
+        /auth_http http:\/\/[a-z0-9-]+\.mailu\.svc\.cluster\.local:8080\/internal\/auth\/email;/,
+      );
+    });
+
+    test('the front follows proxyProtocolToFront', () => {
+      const withProxy = frontConf({
+        ...validConfig,
+        ingress: { enabled: false, type: 'traefik', traefik: { hostname: 'mail.example.com', proxyProtocolToFront: true } },
+      });
+      expect(withProxy).toContain('listen 10993 proxy_protocol;');
+      expect(withProxy).toContain('set_real_ip_from 10.42.0.0/16;');
+      const without = frontConf(validConfig);
+      expect(without).not.toContain('proxy_protocol');
+      expect(without).not.toContain('set_real_ip_from');
+    });
+
+    test('Traefik sends the PROXY header exactly when the front expects it', () => {
+      // A mismatch in either direction breaks every mail session
+      for (const proxyProtocolToFront of [undefined, false, true]) {
+        const manifests = Testing.synth(new MailuChart(Testing.app(), 'test', {
+          ...validConfig,
+          components: { webmail: true },
+          ingress: { enabled: true, type: 'traefik', traefik: { hostname: 'mail.example.com', proxyProtocolToFront } },
+        }));
+        const conf: string = manifests.find((m) => m.kind === 'ConfigMap' && m.data?.['nginx.conf']).data['nginx.conf'];
+        const frontExpectsHeader = /listen \d+ proxy_protocol;/.test(conf);
+        const routes = manifests.filter(
+          (m) => m.kind === 'IngressRouteTCP' && ['mailu-smtps', 'mailu-imaps', 'mailu-pop3s'].includes(m.metadata.name),
+        );
+        expect(routes).toHaveLength(3);
+        for (const route of routes) {
+          expect(route.spec.routes[0].services[0].proxyProtocol !== undefined).toBe(frontExpectsHeader);
+        }
+        expect(frontExpectsHeader).toBe(proxyProtocolToFront === true);
+      }
+    });
+
+    test('a front without the admin component is rejected', () => {
+      expect(() => new MailuChart(Testing.app(), 'test', { ...validConfig, components: { admin: false } }))
+        .toThrow(/front.*admin/i);
     });
   });
 

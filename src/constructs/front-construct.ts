@@ -1,182 +1,183 @@
+import { createHash } from 'crypto';
 import { Duration } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-33';
 import { Construct } from 'constructs';
-import { MailuChartConfig } from '../config';
+import { FRONT_HEALTH_PORT, FRONT_LISTENERS, renderFrontNginxConfig } from './front-nginx-config';
+import { MailuChartConfig, ResourcesConfig } from '../config';
 import { applyPriorityClassName } from '../utils/priority-class';
 import { parseMemorySize, parseCpuMillis } from '../utils/resource-parser';
 
 export interface FrontConstructProps {
   readonly config: MailuChartConfig;
   readonly namespace: kplus.Namespace;
-  readonly sharedConfigMap: kplus.ConfigMap;
-  readonly nginxPatchConfigMap?: kplus.ConfigMap;
+  /** Full DNS name of the admin Service, `<service>.<namespace>.svc.cluster.local` */
+  readonly adminServiceHost: string;
   readonly priorityClassName?: string;
 }
 
+// Patch-pinned on a stable branch (even minor): a floating tag of a mainline branch
+// gets no more images once the next stable branch appears.
+const DEFAULT_IMAGE = 'nginx:1.30.7-alpine';
+
+// User and group "nginx" of the official image
+const NGINX_UID = 101;
+
+// The mail proxy needs a few megabytes. Left unset, cdk8s-plus would request
+// a whole CPU and 512Mi.
+const DEFAULT_RESOURCES: ResourcesConfig = {
+  requests: { cpu: '10m', memory: '16Mi' },
+  limits: { cpu: '100m', memory: '64Mi' },
+};
+
+const CONFIG_FILE = 'nginx.conf';
+const CONFIG_PATH = `/etc/nginx/${CONFIG_FILE}`;
+
+const LABELS = {
+  'app.kubernetes.io/name': 'mailu-front',
+  'app.kubernetes.io/component': 'front',
+};
+
 /**
- * Front Construct - Nginx mail protocol authentication proxy
+ * Front Construct - nginx mail proxy
  *
- * The Front component provides:
- * - Authentication proxy for TLS-terminated mail protocols (SMTPS, Submission, IMAPS, POP3S)
- * - Routes authenticated connections to backend services (Postfix, Dovecot)
- * - Traefik terminates TLS and forwards plaintext to Front nginx
+ * Traefik terminates TLS for SMTPS, IMAPS and POP3S and forwards plaintext to
+ * the front. The front authenticates every login against the Mailu admin and
+ * relays the session to postfix or dovecot. The backends check no password and
+ * trust the pod network, so the front is the only authentication gate.
  *
- * Note: HTTP traffic (Admin, Webmail) and server-to-server SMTP(25) bypass Front:
- * - Traefik routes HTTP directly to Admin:8080 and Webmail:80
- * - Traefik routes SMTP(25) directly to Postfix:25
+ * It is the official nginx image with a static configuration, not a Mailu
+ * image: no Mailu environment, no secret, no root.
+ *
+ * HTTP (admin, webmail) and server-to-server SMTP on port 25 bypass the front.
  *
  * Components:
- * - Deployment with nginx container
- * - Service exposing TLS-terminated mail protocol ports (465, 993, 995)
- * - Nginx patch ConfigMap for adding mail protocol listeners
+ * - ConfigMap with the complete nginx configuration
+ * - Deployment
+ * - Service with the public mail ports, targeting unprivileged container ports
  */
 export class FrontConstruct extends Construct {
   public readonly deployment: kplus.Deployment;
   public readonly service: kplus.Service;
+  public readonly configMap: kplus.ConfigMap;
 
   constructor(scope: Construct, id: string, props: FrontConstructProps) {
     super(scope, id);
 
-    const { config, namespace, sharedConfigMap, nginxPatchConfigMap } = props;
+    const { config, namespace, adminServiceHost } = props;
+    // Callers that build the config from YAML can omit what the type requires.
+    // Missing requests fall back to the defaults, missing limits mean no limit.
+    const resources: Partial<ResourcesConfig> = config.resources?.front ?? DEFAULT_RESOURCES;
+    const requests = { ...DEFAULT_RESOURCES.requests, ...resources.requests };
+    const limits: Partial<ResourcesConfig['limits']> = resources.limits ?? {};
 
-    // Create Deployment
+    const nginxConfig = renderFrontNginxConfig({
+      serverName: config.hostnames[0],
+      adminAuthUrl: `http://${adminServiceHost}:8080/internal/auth/email`,
+      messageSizeLimitBytes: (config.mailu?.messageSizeLimit || 50) * 1024 * 1024,
+      proxyProtocol: config.ingress?.traefik?.proxyProtocolToFront ?? false,
+      realIpFrom: [config.subnet],
+    });
+
+    this.configMap = new kplus.ConfigMap(this, 'config', {
+      metadata: {
+        namespace: namespace.name,
+        labels: { ...LABELS, 'app.kubernetes.io/part-of': 'mailu' },
+      },
+      data: { [CONFIG_FILE]: nginxConfig },
+    });
+
     this.deployment = new kplus.Deployment(this, 'deployment', {
       metadata: {
         namespace: namespace.name,
-        labels: {
-          'app.kubernetes.io/name': 'mailu-front',
-          'app.kubernetes.io/component': 'front',
-          'app.kubernetes.io/part-of': 'mailu',
-        },
+        labels: { ...LABELS, 'app.kubernetes.io/part-of': 'mailu' },
       },
       replicas: 1,
       podMetadata: {
-        labels: {
-          'app.kubernetes.io/name': 'mailu-front',
-          'app.kubernetes.io/component': 'front',
+        labels: LABELS,
+        // nginx reads the file only at start. The checksum changes the pod
+        // template with every change of the configuration, which rolls the pod.
+        annotations: {
+          'checksum/config': createHash('sha256').update(nginxConfig).digest('hex'),
         },
       },
       securityContext: {
-        // Mailu containers run as root for privileged operations
-        ensureNonRoot: false,
+        ensureNonRoot: true,
       },
     });
 
     applyPriorityClassName(this.deployment, props.priorityClassName);
 
-    // Prepare container configuration with optional command override
-    const containerConfig: any = {
+    const container = this.deployment.addContainer({
       name: 'front',
-      image: `${config.images?.registry || 'ghcr.io/mailu'}/nginx:${config.images?.tag || '2024.06.47'}`,
+      image: config.images?.front ?? DEFAULT_IMAGE,
       imagePullPolicy: kplus.ImagePullPolicy.IF_NOT_PRESENT,
+      // Bypasses the image's entrypoint, whose scripts try to edit files under /etc/nginx
+      command: ['nginx', '-c', CONFIG_PATH, '-g', 'daemon off;'],
       securityContext: {
-        ensureNonRoot: false, // Nginx needs to bind to privileged ports
-        readOnlyRootFilesystem: false,
+        ensureNonRoot: true,
+        user: NGINX_UID,
+        group: NGINX_UID,
+        privileged: false,
+        allowPrivilegeEscalation: false,
+        readOnlyRootFilesystem: true,
+        capabilities: { drop: [kplus.Capability.ALL] },
+        seccompProfile: { type: kplus.SeccompProfileType.RUNTIME_DEFAULT },
       },
-      resources: config.resources?.front
-        ? {
-          cpu: {
-            request: parseCpuMillis(config.resources.front.requests?.cpu || '100m'),
-            limit: config.resources.front.limits?.cpu
-              ? parseCpuMillis(config.resources.front.limits.cpu)
-              : undefined,
-          },
-          memory: {
-            request: parseMemorySize(config.resources.front.requests?.memory || '256Mi'),
-            limit: config.resources.front.limits?.memory
-              ? parseMemorySize(config.resources.front.limits.memory)
-              : undefined,
-          },
-        }
-        : undefined,
-      // Health check on HTTP port
+      resources: {
+        cpu: {
+          request: parseCpuMillis(requests.cpu),
+          limit: limits.cpu ? parseCpuMillis(limits.cpu) : undefined,
+        },
+        memory: {
+          request: parseMemorySize(requests.memory),
+          limit: limits.memory ? parseMemorySize(limits.memory) : undefined,
+        },
+      },
+      ports: [
+        ...FRONT_LISTENERS.map((listener) => ({
+          name: listener.name,
+          number: listener.containerPort,
+          protocol: kplus.Protocol.TCP,
+        })),
+        { name: 'health', number: FRONT_HEALTH_PORT, protocol: kplus.Protocol.TCP },
+      ],
       liveness: kplus.Probe.fromHttpGet('/health', {
-        port: 80,
-        initialDelaySeconds: Duration.seconds(30),
+        port: FRONT_HEALTH_PORT,
+        initialDelaySeconds: Duration.seconds(5),
         periodSeconds: Duration.seconds(10),
-        timeoutSeconds: Duration.seconds(5),
+        timeoutSeconds: Duration.seconds(3),
         failureThreshold: 3,
       }),
       readiness: kplus.Probe.fromHttpGet('/health', {
-        port: 80,
-        initialDelaySeconds: Duration.seconds(10),
+        port: FRONT_HEALTH_PORT,
+        initialDelaySeconds: Duration.seconds(2),
         periodSeconds: Duration.seconds(5),
         timeoutSeconds: Duration.seconds(3),
         failureThreshold: 3,
       }),
-    };
+    });
 
-    // If nginx patch ConfigMap provided, override command to use wrapper script
-    if (nginxPatchConfigMap) {
-      containerConfig.command = ['/bin/sh', '/usr/local/bin/entrypoint-wrapper.sh'];
-    }
+    container.mount(CONFIG_PATH, kplus.Volume.fromConfigMap(this, 'config-volume', this.configMap), {
+      subPath: CONFIG_FILE,
+      readOnly: true,
+    });
 
-    // Configure container
-    const container = this.deployment.addContainer(containerConfig);
+    // pid file and the temp paths of the http block; everything else is read-only
+    container.mount('/tmp', kplus.Volume.fromEmptyDir(this, 'tmp', 'tmp'));
 
-    // Add environment variables from shared ConfigMap
-    container.env.copyFrom(kplus.Env.fromConfigMap(sharedConfigMap));
-
-    // Add Mailu secret key from secret
-    const mailuSecret = kplus.Secret.fromSecretName(this, 'mailu-secret', config.secrets.mailuSecretKey);
-    container.env.addVariable(
-      'SECRET_KEY',
-      kplus.EnvValue.fromSecretValue({
-        secret: mailuSecret,
-        key: 'secret-key',
-      }),
-    );
-
-    // If nginx patch ConfigMap is provided, mount wrapper script
-    if (nginxPatchConfigMap) {
-      // Create volume from ConfigMap
-      const patchVolume = kplus.Volume.fromConfigMap(this, 'nginx-patch-volume', nginxPatchConfigMap, {
-        defaultMode: 0o755, // Make script executable
-      });
-
-      // Mount wrapper script (command override already set in containerConfig above)
-      container.mount('/usr/local/bin/entrypoint-wrapper.sh', patchVolume, {
-        subPath: 'entrypoint-wrapper.sh',
-        readOnly: true,
-      });
-    }
-
-    // Create Service exposing TLS-terminated mail protocol ports
-    // Note: Traefik routes HTTP to Admin/Webmail directly, and SMTP(25) to Postfix directly
     this.service = new kplus.Service(this, 'service', {
       metadata: {
         namespace: namespace.name,
-        labels: {
-          'app.kubernetes.io/name': 'mailu-front',
-          'app.kubernetes.io/component': 'front',
-        },
+        labels: LABELS,
       },
-      type: kplus.ServiceType.CLUSTER_IP, // Use ClusterIP by default; Traefik will handle external access
+      type: kplus.ServiceType.CLUSTER_IP,
       selector: this.deployment,
-      ports: [
-        // TLS-terminated SMTP ports (Traefik terminates TLS, forwards plaintext to Front)
-        {
-          name: 'smtps',
-          port: 465,
-          targetPort: 465,
-          protocol: kplus.Protocol.TCP,
-        },
-        // TLS-terminated IMAP port
-        {
-          name: 'imaps',
-          port: 993,
-          targetPort: 993,
-          protocol: kplus.Protocol.TCP,
-        },
-        // TLS-terminated POP3 port
-        {
-          name: 'pop3s',
-          port: 995,
-          targetPort: 995,
-          protocol: kplus.Protocol.TCP,
-        },
-      ],
+      ports: FRONT_LISTENERS.map((listener) => ({
+        name: listener.name,
+        port: listener.servicePort,
+        targetPort: listener.containerPort,
+        protocol: kplus.Protocol.TCP,
+      })),
     });
   }
-
 }

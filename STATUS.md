@@ -96,9 +96,9 @@ Need to implement construct files for each component:
    - Health checks
 
 2. **Front Construct** (`src/constructs/front-construct.ts`)
-   - Deployment (or optional DaemonSet)
-   - Service exposing all mail protocol ports
-   - Volume mounts for TLS certificates
+   - ConfigMap with the complete nginx configuration
+   - Deployment of the official nginx image as mail proxy
+   - Service for SMTPS, IMAPS and POP3S (TLS is terminated by Traefik)
 
 3. **Postfix Construct** (`src/constructs/postfix-construct.ts`)
    - Deployment

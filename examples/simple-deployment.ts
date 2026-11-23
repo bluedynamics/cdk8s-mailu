@@ -101,8 +101,8 @@ new MailuChart(app, 'simple-deployment', {
   // Resource limits (optional - adjust based on your cluster)
   resources: {
     front: {
-      requests: { cpu: '100m', memory: '256Mi' },
-      limits: { cpu: '500m', memory: '512Mi' },
+      requests: { cpu: '10m', memory: '16Mi' },
+      limits: { cpu: '100m', memory: '64Mi' },
     },
     admin: {
       requests: { cpu: '100m', memory: '512Mi' },

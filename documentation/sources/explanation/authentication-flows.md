@@ -18,35 +18,42 @@ cdk8s-mailu uses multiple authentication mechanisms depending on the access path
 2. **TLS Termination**: Traefik decrypts TLS and forwards plaintext connection to Front (Nginx)
 3. **Authentication Subrequest**: Before proxying to backend, Nginx makes an HTTP subrequest to Admin
    - URL: `http://admin-service:8080/internal/auth/email`
-   - Headers: `Auth-User`, `Auth-Pass`, `Auth-Protocol`, `Client-IP`
+   - Headers: `Auth-User`, `Auth-Pass`, `Auth-Method`, `Auth-Protocol`, `Auth-Port`, `Client-IP`, `Client-Port`
 4. **Credential Validation**: Admin queries PostgreSQL/SQLite for user credentials
-5. **Response**:
-   - **Success (HTTP 200)**: Admin returns backend server address in `Auth-Status: OK` header
-   - **Failure (HTTP 403)**: Admin returns `Auth-Status: Invalid credentials`
+5. **Response**: always HTTP 200; the header `Auth-Status` carries the verdict
+   - **Success**: `Auth-Status: OK`, plus `Auth-Server` and `Auth-Port` with the backend address
+   - **Failure**: `Auth-Status` carries the error message the client gets
 6. **Backend Routing**: If authenticated, Nginx proxies connection to appropriate backend:
-   - SMTP (465) → Postfix:25
-   - IMAP (993/143) → Dovecot:143
-   - POP3 (995/110) → Dovecot:110
+   - SMTP (465) → Postfix:10025
+   - IMAP (993) → Dovecot:143
+   - POP3 (995) → Dovecot:110
 
 **Key Points**:
 - Authentication happens on **every connection** (not just once)
-- Credentials never reach the backend services (Front handles auth)
+- The backends do not check the password; Front is the only gate for mail clients
 - Admin acts as centralized authentication backend for all protocols
 - Uses standard SMTP/IMAP/POP3 username/password authentication
 - Credentials always travel inside TLS between client and Traefik; there is no port 587, because a plain 587 listener would offer `AUTH PLAIN` without `STARTTLS`
 
 **Configuration**:
-- Implemented in nginx-patch-configmap.ts via `auth_http` directive
-- TLS_FLAVOR=notls ensures Front receives plaintext after Traefik TLS termination
+- Front is the official nginx image; its complete configuration is rendered by `src/constructs/front-nginx-config.ts`
+- Front receives plaintext after Traefik TLS termination
 - Admin endpoint `/internal/auth/email` is internal-only (not exposed via Ingress)
+- See [The front mail proxy](front-mail-proxy.md) for the headers, the PROXY protocol and the rate limit
 
 **Code Reference**:
-```typescript
-// src/constructs/nginx-patch-configmap.ts
-server {
-  listen 465;
-  auth_http http://admin-service:8080/internal/auth/email;
-  proxy_pass postfix-service:25;
+```nginx
+# rendered by src/constructs/front-nginx-config.ts
+mail {
+    auth_http http://admin-service:8080/internal/auth/email;
+
+    server {
+        listen 10465;
+        protocol smtp;
+        smtp_auth plain;
+        auth_http_header Auth-Port 465;
+        auth_http_header Client-Port $remote_port;
+    }
 }
 ```
 
@@ -210,9 +217,9 @@ SUBMISSION_PORT=10025
    ```bash
    kubectl logs -n mailu deployment/admin-deployment | grep auth/email
    ```
-3. Verify Front can reach Admin:
+3. Check the Front logs; a failed login and an unreachable Admin both show up there:
    ```bash
-   kubectl exec -n mailu deployment/front-deployment -- curl http://admin-service:8080/internal/auth/email
+   kubectl logs -n mailu deployment/front-deployment | grep -E 'login failed|auth http'
    ```
 4. Check database connectivity (PostgreSQL or SQLite)
 
@@ -271,5 +278,5 @@ SUBMISSION_PORT=10025
 
 - [Architecture Overview](architecture.md) - Complete system architecture with all flows
 - [Component Specifications](../reference/component-specifications.md) - Port and service details
-- [Nginx Configuration Patches](nginx-configuration-patches.md) - How nginx auth_http is implemented
+- [The front mail proxy](front-mail-proxy.md) - How the front authenticates against Admin
 - [Manage Secrets](../how-to/manage-secrets.md) - Secret management for credentials

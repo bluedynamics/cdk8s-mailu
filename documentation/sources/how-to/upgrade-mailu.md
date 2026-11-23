@@ -29,8 +29,12 @@ kubectl get pods -n mailu -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.
 
 # Example output:
 # mailu-admin-xxx    ghcr.io/mailu/admin:2024.06
-# mailu-front-xxx    ghcr.io/mailu/nginx:2024.06
+# mailu-front-xxx    nginx:1.30.7-alpine
 ```
+
+The front is the official nginx image, not a Mailu image.
+`images.tag` does not change it.
+Set its version with `images.front`, see [Configuration Options](../reference/configuration-options.md).
 
 ## Review Release Notes
 

@@ -76,8 +76,9 @@ export interface TraefikIngressConstructProps {
    * nginx mail{} listeners see the real client IP instead of Traefik's pod
    * IP. Required for Mailu's per-IP auth rate-limit to work as intended.
    *
-   * Must be paired with `proxyProtocolToFront: true` on
-   * {@link NginxPatchConfigMapProps} so nginx parses the PROXY header.
+   * Must match the front: its listeners expect the PROXY header exactly
+   * when this is set. `MailuChart` derives both from
+   * `ingress.traefik.proxyProtocolToFront`.
    *
    * Port 25 is unaffected; it always uses PROXY v2 to postfix.
    *
@@ -108,7 +109,7 @@ export class TraefikIngressConstruct extends Construct {
     const smtpConnectionLimit = props.smtpConnectionLimit ?? 15;
     const enableSmtp = props.enableSmtp ?? false; // Default false for security
     // PROXY v2 forwarding to mailu-front. Default off: requires matching
-    // `proxyProtocolToFront` on NginxPatchConfigMap or the listeners hang.
+    // the `proxy_protocol` listeners of the front or the sessions hang.
     const proxyProtocolToFront = props.proxyProtocolToFront ?? false;
     const proxyProtocolV2 = proxyProtocolToFront
       ? { proxyProtocol: { version: 2 } }
@@ -120,12 +121,9 @@ export class TraefikIngressConstruct extends Construct {
     // Routes different paths to appropriate services:
     // - /admin, /sso, /static → admin service (admin UI, SSO login, static assets)
     // - /webmail → webmail service (webmail UI)
-    // - /health → front service (health check only)
-    // - /internal → admin service (internal auth endpoints)
     //
-    // NOTE: Front service does NOT serve general HTTP traffic - it only handles
-    // mail protocols (SMTP, IMAP, POP3) via IngressRouteTCP resources.
-    // The only HTTP endpoint on front service is /health for health checks.
+    // NOTE: Front service serves no HTTP - it only handles mail protocols
+    // (SMTP, IMAP, POP3) via IngressRouteTCP resources.
     this.httpIngress = new k8s.KubeIngress(this, 'webmail-ingress', {
       metadata: {
         name: 'mailu-webmail',
@@ -191,19 +189,6 @@ export class TraefikIngressConstruct extends Construct {
                 // authentication and serves DKIM private keys; cluster components
                 // reach it through the admin Service directly.
                 // NOTE: /webmail path is handled by separate webmailIngress with ForwardAuth middleware
-                // Health check endpoint on front service
-                {
-                  path: '/health',
-                  pathType: 'Exact',
-                  backend: {
-                    service: {
-                      name: props.frontService.name,
-                      port: {
-                        number: 80,
-                      },
-                    },
-                  },
-                },
               ],
             },
           },

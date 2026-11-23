@@ -1,220 +1,191 @@
+import { createHash } from 'crypto';
 import { Testing } from 'cdk8s';
 import * as kplus from 'cdk8s-plus-33';
 import { MailuChartConfig } from '../src/config';
 import { FrontConstruct } from '../src/constructs/front-construct';
 
 describe('FrontConstruct', () => {
-  let chart: any;
-  let namespace: kplus.Namespace;
-  let sharedConfigMap: kplus.ConfigMap;
-  let config: MailuChartConfig;
+  const adminServiceHost = 'admin.test-mailu.svc.cluster.local';
+  const baseConfig: MailuChartConfig = {
+    domain: 'test.example.com',
+    hostnames: ['mail.test.example.com', 'smtp.test.example.com'],
+    subnet: '10.42.0.0/16',
+    database: {
+      type: 'postgresql',
+      postgresql: {
+        host: 'postgres',
+        secretName: 'postgres-secret',
+      },
+    },
+    redis: {
+      host: 'redis',
+    },
+    secrets: {
+      mailuSecretKey: 'test-secret-key',
+    },
+  };
 
-  beforeEach(() => {
-    chart = Testing.chart();
-
-    namespace = new kplus.Namespace(chart, 'test-namespace', {
+  const synth = (config: MailuChartConfig = baseConfig) => {
+    const chart = Testing.chart();
+    const namespace = new kplus.Namespace(chart, 'test-namespace', {
       metadata: { name: 'test-mailu' },
     });
-
-    sharedConfigMap = new kplus.ConfigMap(chart, 'test-config', {
-      metadata: { namespace: namespace.name },
-      data: {
-        DOMAIN: 'test.example.com',
-        SUBNET: '10.42.0.0/16',
-      },
-    });
-
-    config = {
-      domain: 'test.example.com',
-      hostnames: ['mail.test.example.com'],
-      subnet: '10.42.0.0/16',
-      database: {
-        type: 'postgresql',
-        postgresql: {
-          host: 'postgres',
-          secretName: 'postgres-secret',
-        },
-      },
-      redis: {
-        host: 'redis',
-      },
-      secrets: {
-        mailuSecretKey: 'test-secret-key',
-      },
+    new FrontConstruct(chart, 'front', { config, namespace, adminServiceHost });
+    const manifests = Testing.synth(chart);
+    const deployment = manifests.find((m) => m.kind === 'Deployment');
+    return {
+      deployment,
+      pod: deployment.spec.template,
+      container: deployment.spec.template.spec.containers[0],
+      service: manifests.find((m) => m.kind === 'Service'),
+      configMap: manifests.find((m) => m.kind === 'ConfigMap'),
     };
+  };
+
+  test('runs a patch-pinned nginx of a stable branch by default', () => {
+    // Even minor = stable branch. A floating tag of an odd (mainline) minor
+    // stops getting images when the next stable branch appears.
+    expect(synth().container.image).toMatch(/^nginx:1\.\d*[02468]\.\d+-alpine$/);
   });
 
-  test('creates deployment and service', () => {
-    const construct = new FrontConstruct(chart, 'front', {
-      config,
-      namespace,
-      sharedConfigMap,
-    });
-
-    // Verify construct exposes expected properties
-    expect(construct.deployment).toBeDefined();
-    expect(construct.service).toBeDefined();
-
-    // Synthesize and verify manifests
-    const manifests = Testing.synth(chart);
-
-    // Should create Deployment
-    const deployments = manifests.filter(m => m.kind === 'Deployment');
-    expect(deployments).toHaveLength(1);
-    expect(deployments[0].spec.replicas).toBe(1);
-    expect(deployments[0].metadata.labels['app.kubernetes.io/name']).toBe('mailu-front');
-    expect(deployments[0].metadata.labels['app.kubernetes.io/component']).toBe('front');
-
-    // Should create Service
-    const services = manifests.filter(m => m.kind === 'Service');
-    expect(services).toHaveLength(1);
-    expect(services[0].spec.type).toBe('ClusterIP');
+  test('uses the configured front image', () => {
+    const { container } = synth({ ...baseConfig, images: { front: 'registry.example.com/nginx:1.30.9-alpine' } });
+    expect(container.image).toBe('registry.example.com/nginx:1.30.9-alpine');
   });
 
-  test('exposes only TLS-terminated mail protocol ports', () => {
-    new FrontConstruct(chart, 'front', {
-      config,
-      namespace,
-      sharedConfigMap,
+  test('the Mailu registry and tag do not apply to the front', () => {
+    const { container } = synth({ ...baseConfig, images: { registry: 'registry.example.com/mailu', tag: '2024.06.72' } });
+    expect(container.image).toMatch(/^nginx:/);
+  });
+
+  test('starts nginx directly, without a wrapper and without any Mailu environment', () => {
+    const { container } = synth();
+    expect(container.name).toBe('front');
+    expect(container.command).toEqual(['nginx', '-c', '/etc/nginx/nginx.conf', '-g', 'daemon off;']);
+    expect(container.env).toBeUndefined();
+    expect(container.envFrom).toBeUndefined();
+  });
+
+  test('runs unprivileged on a read-only root filesystem', () => {
+    const { container } = synth();
+    expect(container.securityContext).toMatchObject({
+      runAsNonRoot: true,
+      runAsUser: 101,
+      runAsGroup: 101,
+      readOnlyRootFilesystem: true,
+      allowPrivilegeEscalation: false,
+      privileged: false,
+      capabilities: { drop: ['ALL'] },
+      seccompProfile: { type: 'RuntimeDefault' },
     });
+  });
 
-    const manifests = Testing.synth(chart);
-    const service = manifests.find(m => m.kind === 'Service');
+  test('listens on unprivileged ports and a health port', () => {
+    const ports = Object.fromEntries(synth().container.ports.map((p: any) => [p.name, p.containerPort]));
+    expect(ports).toEqual({ smtps: 10465, imaps: 10993, pop3s: 10995, health: 8080 });
+  });
 
-    // Check only TLS-terminated mail protocol ports are exposed
-    // (HTTP and plaintext mail ports are NOT exposed - routed differently by Traefik)
-    const portNames = service?.spec.ports.map((p: any) => p.name).sort();
-    expect(portNames).toEqual([
-      'imaps',
-      'pop3s',
-      'smtps',
+  test('probes the health endpoint', () => {
+    const { container } = synth();
+    for (const probe of [container.livenessProbe, container.readinessProbe]) {
+      expect(probe.httpGet.path).toBe('/health');
+      expect(probe.httpGet.port).toBe(8080);
+    }
+  });
+
+  test('no probe opens a mail port, where a missing PROXY header would log an error', () => {
+    expect(synth().container.startupProbe).toBeUndefined();
+  });
+
+  test('mounts the configuration read-only and a writable /tmp', () => {
+    const { pod, container, configMap } = synth();
+    expect(container.volumeMounts).toContainEqual(
+      expect.objectContaining({ mountPath: '/etc/nginx/nginx.conf', subPath: 'nginx.conf', readOnly: true }),
+    );
+    const tmpMount = container.volumeMounts.find((m: any) => m.mountPath === '/tmp');
+    expect(pod.spec.volumes.find((v: any) => v.name === tmpMount.name).emptyDir).toBeDefined();
+    const configVolume = pod.spec.volumes.find((v: any) => v.configMap);
+    expect(configVolume.configMap.name).toBe(configMap.metadata.name);
+  });
+
+  test('the configuration authenticates against admin and greets with the first hostname', () => {
+    const conf = synth().configMap.data['nginx.conf'];
+    expect(conf).toContain(`auth_http http://${adminServiceHost}:8080/internal/auth/email;`);
+    expect(conf).toContain('server_name mail.test.example.com;');
+    expect(conf).toContain('"SIZE 52428800"');
+  });
+
+  test('the configuration follows proxyProtocolToFront and the subnet', () => {
+    const withProxy = synth({
+      ...baseConfig,
+      ingress: { enabled: false, type: 'traefik', traefik: { hostname: 'mail.test.example.com', proxyProtocolToFront: true } },
+    }).configMap.data['nginx.conf'];
+    expect(withProxy).toContain('listen 10993 proxy_protocol;');
+    expect(withProxy).toContain('set_real_ip_from 10.42.0.0/16;');
+    const without = synth().configMap.data['nginx.conf'];
+    expect(without).not.toContain('proxy_protocol');
+    expect(without).not.toContain('set_real_ip_from');
+  });
+
+  test('any change of the configuration changes the pod template, so the pod restarts', () => {
+    // The checksum covers the whole file, not selected inputs
+    for (const config of [baseConfig, { ...baseConfig, mailu: { messageSizeLimit: 10 } }]) {
+      const { pod, configMap } = synth(config);
+      expect(pod.metadata.annotations['checksum/config']).toBe(
+        createHash('sha256').update(configMap.data['nginx.conf']).digest('hex'),
+      );
+    }
+    expect(synth().configMap.data['nginx.conf']).not.toBe(
+      synth({ ...baseConfig, mailu: { messageSizeLimit: 10 } }).configMap.data['nginx.conf'],
+    );
+  });
+
+  test('the service keeps the public ports and targets the container ports', () => {
+    const ports = synth().service.spec.ports.map((p: any) => [p.name, p.port, p.targetPort]);
+    expect(ports).toEqual([
+      ['smtps', 465, 10465],
+      ['imaps', 993, 10993],
+      ['pop3s', 995, 10995],
     ]);
-
-    // Verify specific port configurations
-    const ports = service?.spec.ports;
-    const smtpsPort = ports.find((p: any) => p.name === 'smtps');
-    expect(smtpsPort?.port).toBe(465);
-    expect(smtpsPort?.targetPort).toBe(465);
-
-    const imapsPort = ports.find((p: any) => p.name === 'imaps');
-    expect(imapsPort?.port).toBe(993);
-    expect(imapsPort?.targetPort).toBe(993);
-
-    const pop3sPort = ports.find((p: any) => p.name === 'pop3s');
-    expect(pop3sPort?.port).toBe(995);
-    expect(pop3sPort?.targetPort).toBe(995);
+    expect(synth().service.spec.type).toBe('ClusterIP');
   });
 
-  test('configures container with correct image', () => {
-    new FrontConstruct(chart, 'front', {
-      config: {
-        ...config,
-        images: {
-          registry: 'ghcr.io/mailu',
-          tag: '2024.06',
-        },
-      },
-      namespace,
-      sharedConfigMap,
-    });
-
-    const manifests = Testing.synth(chart);
-    const deployment = manifests.find(m => m.kind === 'Deployment');
-
-    expect(deployment?.spec.template.spec.containers[0].image).toBe('ghcr.io/mailu/nginx:2024.06');
+  test('keeps the labels other tooling selects on', () => {
+    const { deployment, pod, service } = synth();
+    for (const labels of [deployment.metadata.labels, pod.metadata.labels, service.metadata.labels]) {
+      expect(labels).toMatchObject({
+        'app.kubernetes.io/name': 'mailu-front',
+        'app.kubernetes.io/component': 'front',
+      });
+    }
+    expect(deployment.metadata.namespace).toBe('test-mailu');
+    expect(service.metadata.namespace).toBe('test-mailu');
   });
 
-  test('configures health probes', () => {
-    new FrontConstruct(chart, 'front', {
-      config,
-      namespace,
-      sharedConfigMap,
+  test('requests little when no resources are configured', () => {
+    // Left unset, cdk8s-plus requests a whole CPU and 512Mi, for a proxy that needs a few megabytes
+    expect(synth().container.resources).toEqual({
+      requests: { cpu: '10m', memory: '16Mi' },
+      limits: { cpu: '100m', memory: '64Mi' },
     });
-
-    const manifests = Testing.synth(chart);
-    const deployment = manifests.find(m => m.kind === 'Deployment');
-    const container = deployment?.spec.template.spec.containers[0];
-
-    // Liveness probe
-    expect(container.livenessProbe).toBeDefined();
-    expect(container.livenessProbe.httpGet.path).toBe('/health');
-    expect(container.livenessProbe.httpGet.port).toBe(80);
-    expect(container.livenessProbe.initialDelaySeconds).toBe(30);
-
-    // Readiness probe
-    expect(container.readinessProbe).toBeDefined();
-    expect(container.readinessProbe.httpGet.path).toBe('/health');
-    expect(container.readinessProbe.initialDelaySeconds).toBe(10);
   });
 
-  test('configures environment variables from secrets', () => {
-    new FrontConstruct(chart, 'front', {
-      config,
-      namespace,
-      sharedConfigMap,
+  test('tolerates resources without limits, as releases before 0.5 did', () => {
+    // Callers that build the config from YAML can omit what the type requires
+    const { container } = synth({
+      ...baseConfig,
+      resources: { front: { requests: { cpu: '20m', memory: '32Mi' } } as any },
     });
-
-    const manifests = Testing.synth(chart);
-    const deployment = manifests.find(m => m.kind === 'Deployment');
-    const container = deployment?.spec.template.spec.containers[0];
-
-    // Check for secret environment variables
-    const envVars = container.env;
-    const secretKey = envVars.find((e: any) => e.name === 'SECRET_KEY');
-
-    expect(secretKey?.valueFrom?.secretKeyRef?.name).toBe('test-secret-key');
-    expect(secretKey?.valueFrom?.secretKeyRef?.key).toBe('secret-key');
-
-    // Check for ConfigMap environment variables
-    const envFrom = container.envFrom;
-    expect(envFrom).toHaveLength(1);
-    expect(envFrom[0].configMapRef).toBeDefined();
+    expect(container.resources.requests).toEqual({ cpu: '20m', memory: '32Mi' });
+    expect(container.resources.limits ?? {}).toEqual({});
   });
 
-  test('configures resource requests and limits', () => {
-    new FrontConstruct(chart, 'front', {
-      config: {
-        ...config,
-        resources: {
-          front: {
-            requests: { cpu: '100m', memory: '256Mi' },
-            limits: { cpu: '500m', memory: '512Mi' },
-          },
-        },
-      },
-      namespace,
-      sharedConfigMap,
+  test('applies configured resources', () => {
+    const { container } = synth({
+      ...baseConfig,
+      resources: { front: { requests: { cpu: '10m', memory: '64Mi' }, limits: { cpu: '100m', memory: '128Mi' } } },
     });
-
-    const manifests = Testing.synth(chart);
-    const deployment = manifests.find(m => m.kind === 'Deployment');
-    const container = deployment?.spec.template.spec.containers[0];
-
-    expect(container.resources.requests.cpu).toBe('100m');
-    expect(container.resources.requests.memory).toBe('256Mi');
-    expect(container.resources.limits.cpu).toBe('500m');
-    expect(container.resources.limits.memory).toBe('512Mi');
-  });
-
-  test('uses auto-generated names for resources', () => {
-    new FrontConstruct(chart, 'front', {
-      config,
-      namespace,
-      sharedConfigMap,
-    });
-
-    const manifests = Testing.synth(chart);
-
-    // Names should be auto-generated (not hardcoded to 'front')
-    const deployment = manifests.find(m => m.kind === 'Deployment');
-    const service = manifests.find(m => m.kind === 'Service');
-
-    // Names should contain the construct path and be unique
-    expect(deployment?.metadata.name).toMatch(/front-deployment-/);
-    expect(service?.metadata.name).toMatch(/front-service-/);
-
-    // Names should not be bare 'front'
-    expect(deployment?.metadata.name).not.toBe('front');
-    expect(service?.metadata.name).not.toBe('front');
+    expect(container.resources.requests).toEqual({ cpu: '10m', memory: '64Mi' });
+    expect(container.resources.limits).toEqual({ cpu: '100m', memory: '128Mi' });
   });
 });

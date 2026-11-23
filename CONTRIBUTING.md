@@ -85,12 +85,14 @@ cdk8s-mailu/
 │   ├── constructs/            # Component constructs
 │   │   ├── admin-construct.ts
 │   │   ├── front-construct.ts
+│   │   ├── front-nginx-config.ts
 │   │   ├── postfix-construct.ts
 │   │   └── ...
 │   └── utils/                 # Utility functions
 │       ├── resource-parser.ts
 │       └── validators.ts
 ├── test/                      # Unit tests
+│   └── integration/           # Front against a real Mailu (needs docker)
 ├── examples/                  # Example deployments
 └── dist/                      # Generated manifests (git-ignored)
 ```
@@ -271,6 +273,19 @@ pnpm test                    # Run all tests
 pnpm run test:watch          # Watch mode
 pnpm run test:coverage       # With coverage report
 ```
+
+### Integration Test of the Front
+
+The unit tests check the nginx configuration of the front as text.
+The integration test checks that a real nginx with this configuration works with a real Mailu:
+
+```bash
+bash test/integration/run.sh
+```
+
+It needs docker with the compose plugin and python3, and takes about five minutes.
+Run it after every change to the front configuration or its default image.
+CI runs it on every pull request.
 
 ## Documentation
 

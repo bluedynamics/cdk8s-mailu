@@ -87,12 +87,13 @@ This documentation follows the [Diátaxis framework](https://diataxis.fr/), orga
 - [Enable Optional Components](how-to/enable-optional-components.md) - Add ClamAV, Webdav, Fetchmail
 - [Configure TLS](how-to/configure-tls.md) - Set up Traefik TLS termination
 - [Upgrade Mailu](how-to/upgrade-mailu.md) - Upgrade to newer versions
+- [Upgrade to the nginx front](how-to/upgrade-to-nginx-front.md) - Move a deployment to cdk8s-mailu 0.5
 - [Backup and Restore](how-to/backup-restore.md) - Protect your mail data
 
 ### Architecture
 - [Architecture Overview](explanation/architecture.md) - High-level design with flows
 - [Authentication Flows](explanation/authentication-flows.md) - How authentication works
-- [Nginx Configuration Patches](explanation/nginx-configuration-patches.md) - TLS termination implementation
+- [The front mail proxy](explanation/front-mail-proxy.md) - Authentication gate for mail clients
 - [Storage Architecture](explanation/storage-architecture.md) - Persistent storage sizing
 - [Dovecot Submission Service](explanation/dovecot-submission.md) - Webmail email sending
 - [Component Specifications](reference/component-specifications.md) - Technical specifications

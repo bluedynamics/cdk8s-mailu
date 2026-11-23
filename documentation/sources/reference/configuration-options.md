@@ -109,7 +109,7 @@ The `MailuConfig` interface defines all configuration options for deploying Mail
 ```
 
 **Components:**
-- `front` - Nginx reverse proxy
+- `front` - nginx mail proxy for SMTPS, IMAPS, and POP3S; requires `admin`
 - `admin` - Web admin interface
 - `postfix` - SMTP server
 - `dovecot` - IMAP/POP3 server
@@ -143,23 +143,29 @@ The `MailuConfig` interface defines all configuration options for deploying Mail
 
 #### images
 - **Type:** `ImageConfig`
-- **Description:** Container images of the Mailu components and of the webmail auth proxy
+- **Description:** Container images of the Mailu components, of the front, and of the webmail auth proxy
 
 ```typescript
 {
   registry?: string,          // Default: 'ghcr.io/mailu'
   tag?: string,               // Mailu version, default: '2024.06.47'
   pullPolicy?: string,        // Default: 'IfNotPresent'
+  front?: string,             // Default: 'nginx:1.30.7-alpine'
   webmailAuthProxy?: string   // Default: 'nginx:1.30.7-alpine'
 }
 ```
 
 **`registry`** and **`tag`** apply to every Mailu image.
+The front and the webmail auth proxy are not Mailu images.
+`registry` and `tag` do not apply to them.
+
+**`front`**: Full image reference of the front, the mail proxy for SMTPS, IMAPS, and POP3S.
+The image must contain an nginx with the mail module and must run as user 101 on a read-only root filesystem.
+The official nginx image meets both.
 
 **`webmailAuthProxy`**: Full image reference of the nginx auth proxy in front of webmail.
-It is not a Mailu image.
-`registry` and `tag` do not apply to it.
-Pin a patch version of a stable nginx branch, which has an even minor number, and update it with every nginx release.
+
+For both images, pin a patch version of a stable nginx branch, which has an even minor number, and update it with every nginx release.
 A floating tag of a mainline branch gets no more images once the next stable branch appears.
 
 ### Dovecot Configuration
