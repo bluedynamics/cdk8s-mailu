@@ -78,6 +78,10 @@ services:
       - no-new-privileges:true
     tmpfs:
       - /tmp:uid=101,gid=101,mode=0700
+    # The limits FrontConstruct sets when resources.front is not configured
+    # (DEFAULT_RESOURCES), so that logins and transfers run under them
+    mem_limit: 64m
+    cpus: 0.1
     entrypoint: ["nginx", "-c", "/etc/nginx/nginx.conf", "-g", "daemon off;"]
     volumes:
       - ${FRONT_TEST_CONFIG:?set by run.sh}:/etc/nginx/nginx.conf:ro

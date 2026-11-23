@@ -6,7 +6,9 @@
 # Usage: run.sh [--config <nginx.conf>]
 #   Without --config the configuration comes from MailuChart
 #   (render-front-config.ts). With --config the given file is tested, for
-#   example the one a deployment renders.
+#   example the one a deployment renders. The test stack is built for a file
+#   that trusts a network containing 10.42.203.0/24 in set_real_ip_from and
+#   advertises SIZE 52428800.
 # Environment:
 #   MAILU_VERSION         tag of the Mailu images   (default 2024.06.72)
 #   NGINX_IMAGE           image of the front        (default: the one MailuChart renders)
@@ -113,6 +115,12 @@ done
 # client would share one bucket.
 check "admin sees the client address from the PROXY header" log_has admin 'from: 203\.0\.113\.7/'
 check "admin never sees an address of the stack as client" log_lacks admin 'Login attempt .* from: 10\.42\.'
+# admin tells mail clients from the webmail by the port it is told. It must be
+# the public port, never a port of the container.
+for listener in smtp/465 imap/993 pop3/995; do
+  check "admin is told the public port for $listener" log_has admin \
+    "Login attempt for: [^ ]+/$listener from: 203\.0\.113\.7/"
+done
 check "postfix gets client address and login by XCLIENT" log_has smtp 'client=unknown\[203\.0\.113\.7\], sasl_method=XCLIENT'
 check "front starts and runs without a warning" log_lacks front '\[(warn|emerg|alert|crit)\]'
 check "front runs as user 101" test "$(compose exec -T front id -u)" = 101
