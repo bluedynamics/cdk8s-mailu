@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="cyan" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>The front mail proxy - cdk8s-mailu</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Storage Architecture" href="storage-architecture.html" /><link rel="prev" title="Authentication Flows" href="authentication-flows.html" />
+      <link rel="canonical" href="https://bluedynamics.github.io/cdk8s-mailu/explanation/front-mail-proxy.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"dark");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=6a604523" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/brand-theme.css?v=e545c45d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://bluedynamics.github.io/cdk8s-mailu/explanation/front-mail-proxy.html"/>
+  <meta property="og:title" content="The front mail proxy"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="/">
+      <img class="light-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/mailu-logo.svg" alt="cdk8s-mailu" height="28" loading="lazy" />
+      <strong>cdk8s-mailu</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/01-quick-start.html">Quick Start: Deploy Your First Mailu Instance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/index.html">How-To Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-prerequisites.html">Setup Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-postgresql.html">Setup PostgreSQL Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-redis.html">Setup Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-construct.html">Configure Constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/scale-resources.html">Scale Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/customize-storage.html">Customize Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/enable-optional-components.html">Enable Optional Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-tls.html">Configure TLS Termination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/manage-secrets.html">Manage Secrets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-spam-filtering.html">Configure Spam Filtering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/configure-apple-mail.html">Configure Apple Mail Compatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/upgrade-mailu.html">Upgrade Mailu Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/upgrade-to-nginx-front.html">Upgrade to the nginx front</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/backup-restore.html">Backup and Restore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/configuration-options.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/component-specifications.html">Component Specifications</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Explanation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="architecture.html">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authentication-flows.html">Authentication Flows</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">The front mail proxy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage-architecture.html">Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dovecot-submission.html">Dovecot Submission Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="egress-gateway-considerations.html">Egress Gateway Considerations for Mail Delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdk8s-patterns.html">CDK8S Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rspamd-architecture.html">Rspamd Architecture</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#front-why-a-proxy">Why a proxy stands in front of postfix and dovecot</a></li>
+<li><a class="reference internal" href="#front-contract-with-admin">The contract with admin</a></li>
+<li><a class="reference internal" href="#front-client-address">The client address and the rate limit</a></li>
+<li><a class="reference internal" href="#front-official-nginx">Why the official nginx image</a></li>
+<li><a class="reference internal" href="#front-unprivileged-ports">Unprivileged ports</a></li>
+<li><a class="reference internal" href="#front-what-it-does-not-do">What the front does not do</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">cdk8s-mailu</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Explanation</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">The front mail proxy</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <div class="copy-page-wrapper relative pb-4 lg:absolute lg:top-8 lg:right-6 xl:right-12">
+  <div id="copy-page-trigger">
+    <button
+      type="button"
+      class="js-copy px-3 py-1 inline-flex items-center gap-1"
+      data-url="https://bluedynamics.github.io/cdk8s-mailu/_sources/explanation/front-mail-proxy.md.txt"
+    >
+      <i class="i-lucide" data-icon="copy"></i>
+      <span>Copy page</span>
+    </button>
+    <button class="js-menu px-2 py-1" type="button" aria-label="More actions"
+      aria-haspopup="menu" aria-expanded="false" aria-controls="copy-page-content">
+      <i class="i-lucide chevron-down"></i>
+    </button>
+  </div>
+  <div id="copy-page-content" role="menu" aria-orientation="vertical" aria-hidden="true">
+    <div role="presentation">
+      <div class="flex flex-col" role="group">
+        <button class="js-copy" type="button" role="menuitem"
+          data-url="https://bluedynamics.github.io/cdk8s-mailu/_sources/explanation/front-mail-proxy.md.txt">
+          <span class="iconify-icon">
+            <i class="i-lucide" data-icon="copy"></i>
+          </span>
+          <span>Copy page</span>
+        </button>
+        <a role="menuitem" href="https://bluedynamics.github.io/cdk8s-mailu/_sources/explanation/front-mail-proxy.md.txt" target="_blank" rel="nofollow"><iconify-icon icon="bi:markdown"></iconify-icon>
+            <span>View as Markdown</span></a><a role="menuitem" href="https://chatgpt.com/?hints=search&q=Read%20https%3A//bluedynamics.github.io/cdk8s-mailu/_sources/explanation/front-mail-proxy.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:openai"></iconify-icon>
+          <span>Open in ChatGPT</span>
+        </a><a role="menuitem" href="https://claude.ai/new?q=Read%20https%3A//bluedynamics.github.io/cdk8s-mailu/_sources/explanation/front-mail-proxy.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:claude"></iconify-icon>
+          <span>Open in Claude</span>
+        </a></div>
+    </div>
+  </div>
+</div><article class="yue dark-code" role="main">
+          <section id="the-front-mail-proxy">
+<h1>The front mail proxy<a class="headerlink" href="#the-front-mail-proxy" title="Link to this heading">#</a></h1>
+<p>The front is the door for mail clients: it accepts SMTPS (465), IMAPS (993), and POP3S (995) sessions and authenticates each of them.
+This page explains why the door exists and how it decides who may pass.
+It also explains why the front is a plain nginx instead of the Mailu front image.</p>
+<section id="front-why-a-proxy">
+<span id="why-a-proxy-stands-in-front-of-postfix-and-dovecot"></span><h2>Why a proxy stands in front of postfix and dovecot<a class="headerlink" href="#front-why-a-proxy" title="Link to this heading">#</a></h2>
+<p>Postfix and dovecot in a Mailu deployment do not verify passwords for sessions that arrive from the configured <code class="docutils literal notranslate"><span class="pre">subnet</span></code>.
+Mailu designed them as backends that trust whatever stands in front of them.
+Something else has to check the password before a session reaches them.</p>
+<p>That something is the mail proxy of nginx.
+It speaks SMTP, IMAP, and POP3 with the client until the client has sent its credentials.
+It asks the Mailu admin whether the credentials are valid.
+On success it opens a connection to the backend that admin names and logs in on behalf of the client.
+From then on it relays the session.</p>
+<p>The front is the only authentication gate for mail clients.
+You cannot remove it and point Traefik at dovecot directly.
+For the same reason, treat <code class="docutils literal notranslate"><span class="pre">subnet</span></code> as a trust boundary: whoever reaches the backend ports from inside it bypasses the front.
+The library does not create network policies.</p>
+</section>
+<section id="front-contract-with-admin">
+<span id="the-contract-with-admin"></span><h2>The contract with admin<a class="headerlink" href="#front-contract-with-admin" title="Link to this heading">#</a></h2>
+<p>For every login nginx sends one HTTP request to <code class="docutils literal notranslate"><span class="pre">/internal/auth/email</span></code> on the admin Service.
+The request carries the credentials and the circumstances of the login in headers.
+Admin answers with <code class="docutils literal notranslate"><span class="pre">Auth-Status</span></code>, and on success with the address and port of the backend.</p>
+<p>nginx resolves the name of the admin Service once, when it starts.
+The address of a Service is stable for as long as the Service exists.
+After someone deletes and re-creates the admin Service, the front has to restart.</p>
+<p>nginx sends most headers on its own: <code class="docutils literal notranslate"><span class="pre">Auth-Method</span></code>, <code class="docutils literal notranslate"><span class="pre">Auth-User</span></code>, <code class="docutils literal notranslate"><span class="pre">Auth-Pass</span></code>, <code class="docutils literal notranslate"><span class="pre">Auth-Protocol</span></code>, and <code class="docutils literal notranslate"><span class="pre">Client-IP</span></code>.
+Admin needs two more, <code class="docutils literal notranslate"><span class="pre">Auth-Port</span></code> and <code class="docutils literal notranslate"><span class="pre">Client-Port</span></code>, and fails without them.
+The Mailu front image adds them in its configuration template.
+The configuration of the library adds them with <code class="docutils literal notranslate"><span class="pre">auth_http_header</span></code> in every listener:</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="2"><span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">10993</span><span class="w"> </span><span class="s">proxy_protocol</span><span class="p">;</span>
+</span><span data-line="3"><span class="w">    </span><span class="kn">protocol</span><span class="w"> </span><span class="s">imap</span><span class="p">;</span>
+</span><span data-line="4"><span class="w">    </span><span class="kn">imap_auth</span><span class="w"> </span><span class="s">plain</span><span class="p">;</span>
+</span><span data-line="5"><span class="w">    </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Auth-Port</span><span class="w"> </span><span class="mi">993</span><span class="p">;</span>
+</span><span data-line="6"><span class="w">    </span><span class="kn">auth_http_header</span><span class="w"> </span><span class="s">Client-Port</span><span class="w"> </span><span class="nv">$remote_port</span><span class="p">;</span>
+</span><span data-line="7"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Auth-Port</span></code> is more than a log field.
+Admin reads the port to tell mail clients from the webmail.
+The values 10025, 10143, and 14190 mean “this is the webmail”.
+For them admin accepts the session tokens of the webmail, and for the first two it skips the rate limit.
+The header therefore always carries the public port, never the port the container listens on.
+The container ports are chosen so that none of them collides with those three values.</p>
+<p>The listeners offer only the <code class="docutils literal notranslate"><span class="pre">plain</span></code> mechanism.
+Admin has to see the password to check it, and Traefik has already wrapped the session in TLS.</p>
+</section>
+<section id="front-client-address">
+<span id="the-client-address-and-the-rate-limit"></span><h2>The client address and the rate limit<a class="headerlink" href="#front-client-address" title="Link to this heading">#</a></h2>
+<p>Traefik terminates TLS and opens a new connection to the front.
+Without further measures every session seems to come from Traefik.</p>
+<p>That matters because admin limits failed logins per client network.
+When all sessions share one address, they share one bucket.
+A single attacker who guesses passwords then locks out every legitimate user.</p>
+<p>The PROXY protocol solves this.
+With <code class="docutils literal notranslate"><span class="pre">ingress.traefik.proxyProtocolToFront</span></code> enabled, Traefik sends the address of the real client in a header before the mail protocol starts.
+The listeners of the front expect that header, and <code class="docutils literal notranslate"><span class="pre">set_real_ip_from</span></code> makes nginx use the address from it.
+nginx trusts the header only when the connection comes from <code class="docutils literal notranslate"><span class="pre">subnet</span></code>.
+Traefik therefore has to connect from an address inside <code class="docutils literal notranslate"><span class="pre">subnet</span></code>.
+From any other sender nginx accepts the header and ignores its content.</p>
+<p>Both sides have to agree.
+A listener that waits for a header Traefik never sends hangs every session.
+A header that the listener does not expect breaks the session as well.
+The chart derives the Traefik routes and the front configuration from the same option.</p>
+<p>The client address travels further from there.
+Admin gets it in <code class="docutils literal notranslate"><span class="pre">Client-IP</span></code>, postfix gets it through <code class="docutils literal notranslate"><span class="pre">XCLIENT</span></code>, and nginx writes it to its log for every failed login:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span><span data-line="1">2026/11/22 21:40:08 [info] 21#21: *29 client login failed: "Authentication credentials invalid" while in http auth state, client: 203.0.113.7, server: 0.0.0.0:10993, login: "user@example.com"
+</span></pre></div>
+</div>
+<p>Intrusion detection such as CrowdSec or fail2ban parses this line.
+nginx writes it at level <code class="docutils literal notranslate"><span class="pre">info</span></code>, which is why the configuration sets <code class="docutils literal notranslate"><span class="pre">error_log</span> <span class="pre">/dev/stderr</span> <span class="pre">info</span></code>.</p>
+</section>
+<section id="front-official-nginx">
+<span id="why-the-official-nginx-image"></span><h2>Why the official nginx image<a class="headerlink" href="#front-official-nginx" title="Link to this heading">#</a></h2>
+<p>Up to version 0.4 the front ran the Mailu front image.
+That image renders its nginx configuration from templates at start.
+With TLS terminated by Traefik the result lacked the mail listeners, and a wrapper script patched them in before nginx started.</p>
+<p>By then most duties of the Mailu front had moved elsewhere.
+Traefik terminates TLS and routes HTTP straight to admin and the webmail.
+Port 25 goes straight to postfix.
+What remained was the mail proxy, a few dozen lines of configuration.</p>
+<p>Since version 0.5 the front is the official nginx image with exactly those lines:</p>
+<ul class="simple">
+<li><p>The configuration is complete in the ConfigMap.
+What you read in the manifest is what runs, and nothing rewrites it at start.</p></li>
+<li><p>nginx gets security fixes on its own schedule, independent of Mailu releases.</p></li>
+<li><p>The container needs no Mailu environment and no secret.</p></li>
+<li><p>It runs as an unprivileged user on a read-only root filesystem without capabilities.</p></li>
+</ul>
+<p>The price is that the library now owns the contract with admin.
+When Mailu changes what admin expects, the configuration has to follow.
+An integration test guards this.
+It runs the rendered configuration against a Mailu built from the original images.
+It checks logins, delivery, and the logs of admin and postfix.</p>
+<p>nginx reads its configuration only at start.
+The pod template therefore carries a checksum of the configuration, and every change rolls the pod.</p>
+</section>
+<section id="front-unprivileged-ports">
+<span id="unprivileged-ports"></span><h2>Unprivileged ports<a class="headerlink" href="#front-unprivileged-ports" title="Link to this heading">#</a></h2>
+<p>A process without root and without capabilities cannot bind ports below 1024.
+nginx listens on 10465, 10993, and 10995 inside the container.
+The Service keeps the public ports 465, 993, and 995 and maps them to the container ports.
+Traefik and everything else in the cluster see only the Service.</p>
+<p>A fourth port, 8080, serves <code class="docutils literal notranslate"><span class="pre">/health</span></code> for the probes.
+A TCP probe on a mail port would work, but it sends no PROXY header, and nginx would log an error for every probe.</p>
+</section>
+<section id="front-what-it-does-not-do">
+<span id="what-the-front-does-not-do"></span><h2>What the front does not do<a class="headerlink" href="#front-what-it-does-not-do" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>It does not terminate TLS.
+Traefik does.</p></li>
+<li><p>It does not serve HTTP for admin or the webmail.
+The Ingress routes those directly.</p></li>
+<li><p>It does not receive mail from other servers.
+Port 25 goes from Traefik to postfix.</p></li>
+<li><p>It does not offer submission on port 587.
+Traefik cannot terminate STARTTLS for SMTP, and a plain listener would offer <code class="docutils literal notranslate"><span class="pre">AUTH</span></code> without TLS.
+Mail clients submit with implicit TLS on port 465.</p></li>
+<li><p>It does not serve the webmail.
+The webmail talks to dovecot and to the dovecot submission service directly.</p></li>
+</ul>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="authentication-flows.html"><span class="std std-doc">Authentication flows</span></a> for the other login paths</p></li>
+<li><p><a class="reference internal" href="../reference/component-specifications.html"><span class="std std-doc">Component specifications</span></a> for ports, image, and resources of the front</p></li>
+<li><p><a class="reference internal" href="../how-to/configure-tls.html"><span class="std std-doc">Configure TLS</span></a> for the Traefik side</p></li>
+</ul>
+</div>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="authentication-flows.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Authentication Flows</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="storage-architecture.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Storage Architecture</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024-2025, Blue Dynamics Alliance</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7026087e"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../_static/design-tabs.js?v=fcb327ea"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script>
+      <script src="../_static/logo-fix.js?v=f9d4972b"></script>
+      <script src="../_static/logo-text.js?v=48223095"></script></body>
+</html>

@@ -1,0 +1,123 @@
+/* Custom icon styling for KUP6S documentation */
+
+/* Eyebrow headings - context labels with icons above page titles */
+.eyebrow {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sy-c-link, #00d4ff);
+    margin-bottom: 0.75rem;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.eyebrow img {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Page metadata grid - text left, icon right */
+.page-metadata {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: center;
+    margin: 1.5rem 0;
+    padding: 1.25rem;
+    background: rgba(0, 212, 255, 0.05);
+    border-left: 3px solid var(--sy-c-link, #00d4ff);
+    border-radius: 4px;
+}
+
+.metadata-content p {
+    margin: 0.35rem 0;
+    font-size: 0.95rem;
+}
+
+.metadata-content p:first-child {
+    margin-top: 0;
+}
+
+.metadata-content p:last-child {
+    margin-bottom: 0;
+}
+
+.metadata-icon img {
+    width: 96px;
+    height: 96px;
+    opacity: 0.9;
+    display: block;
+}
+
+/* Link styling - make links visible in content area */
+.sy-c article a:not(.sd-card-link),
+.sy-c article li a,
+.sy-c article ul a,
+.sy-c article ol a,
+.toctree-l1 > a,
+.toctree-l2 > a,
+.toctree-l3 > a,
+.toctree-l4 > a {
+    color: var(--sy-c-link, #00d4ff) !important;
+    text-decoration: underline;
+    text-decoration-color: rgba(0, 212, 255, 0.3);
+    text-underline-offset: 0.2em;
+}
+
+.sy-c article a:not(.sd-card-link):hover,
+.sy-c article li a:hover,
+.sy-c article ul a:hover,
+.sy-c article ol a:hover,
+.toctree-l1 > a:hover,
+.toctree-l2 > a:hover,
+.toctree-l3 > a:hover,
+.toctree-l4 > a:hover {
+    color: var(--sy-c-link-hover, #00f0ff) !important;
+    text-decoration-color: rgba(0, 212, 255, 0.6);
+}
+
+/* Large centered section header icons */
+.section-icon-large {
+    width: 128px !important;
+    height: 128px !important;
+    max-width: 128px !important;
+    display: block;
+    margin: 1rem auto 1rem auto !important;
+}
+
+/* Medium centered section icons */
+.section-icon-medium {
+    width: 96px !important;
+    height: 96px !important;
+    max-width: 96px !important;
+    display: block;
+    margin: 1.5rem auto 1rem auto !important;
+}
+
+/* Small subsection icons (left-aligned) */
+.section-icon-small {
+    width: 48px !important;
+    height: 48px !important;
+    max-width: 48px !important;
+    display: inline-block;
+    margin-right: 0.75rem;
+    vertical-align: middle;
+}
+
+/* Icon container for better spacing */
+.icon-header-wrapper {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.icon-header-wrapper img {
+    width: 120px;
+    height: 120px;
+    display: block;
+    margin: 0 auto;
+}
